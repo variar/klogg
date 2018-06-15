@@ -65,7 +65,7 @@ void FilteredView::setVisibility( Visibility visi )
 AbstractLogView::LineType FilteredView::lineType( LineNumber lineNumber ) const
 {
     const auto type = logFilteredData_->filteredLineTypeByIndex( lineNumber );
-    if ( type == LogFilteredData::FilteredLineType::Mark )
+    if ( ( type & LogFilteredData::FilteredLineType::Mark ) != LogFilteredData::FilteredLineType::None )
         return Marked;
     else
         return Match;

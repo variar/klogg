@@ -103,12 +103,12 @@ class LogFilteredData : public AbstractLogData {
     // Returns the number of marks (independently of the visibility)
     LinesCount getNbMarks() const;
 
-    // Returns the reason why the line at the passed index is in the filtered data.
+    // Flags indicating the reason of the filtered line.
     enum class FilteredLineType
     {
-        None,  // this is for internal use
-        Match,
-        Mark
+        None  = 0,        // this is for internal use
+        Match = 1 << 0,
+        Mark  = 1 << 1
     };
     FilteredLineType filteredLineTypeByIndex( LineNumber index ) const;
 
@@ -217,6 +217,41 @@ class LogFilteredData : public AbstractLogData {
     void regenerateFilteredItemsCache() const;
 };
 
+inline LogFilteredData::FilteredLineType operator|( LogFilteredData::FilteredLineType a, LogFilteredData::FilteredLineType b )
+{
+    using Type = LogFilteredData::FilteredLineType;
+    using IntType = std::underlying_type_t<Type>;
+    auto intA = static_cast<IntType>( a );
+    auto intB = static_cast<IntType>( b );
+    return static_cast<Type>( intA | intB );
+}
+
+inline LogFilteredData::FilteredLineType& operator|=( LogFilteredData::FilteredLineType& a, LogFilteredData::FilteredLineType b )
+{
+    return ( a = a | b );
+}
+
+inline LogFilteredData::FilteredLineType operator&( LogFilteredData::FilteredLineType a, LogFilteredData::FilteredLineType b )
+{
+    using Type = LogFilteredData::FilteredLineType;
+    using IntType = std::underlying_type_t<Type>;
+    auto intA = static_cast<IntType>( a );
+    auto intB = static_cast<IntType>( b );
+    return static_cast<Type>( intA & intB );
+}
+
+inline LogFilteredData::FilteredLineType& operator&=( LogFilteredData::FilteredLineType& a, LogFilteredData::FilteredLineType b )
+{
+    return (a = a & b);
+}
+
+inline LogFilteredData::FilteredLineType operator~( LogFilteredData::FilteredLineType a )
+{
+    using Type = LogFilteredData::FilteredLineType;
+    using IntType = std::underlying_type_t<Type>;
+    return static_cast<Type>( ~static_cast<IntType>( a ) );
+}
+
 // A class representing a Mark or Match.
 // Conceptually it should be a base class for Mark and MatchingLine,
 // but we implement it this way for performance reason as we create plenty of
@@ -235,7 +270,14 @@ class LogFilteredData::FilteredItem {
     FilteredLineType type() const
     { return type_; }
 
-    bool operator <( const LogFilteredData::FilteredItem& other ) const
+    void add( FilteredLineType type )
+    { type_ |= type; }
+
+    // Returns whether any type-flag is left.
+    bool remove( FilteredLineType type )
+    { type_ &= ~type; return type_ != FilteredLineType::None; }
+
+    bool operator <( const FilteredItem& other ) const
     { return lineNumber_ < other.lineNumber_; }
 
     bool operator <( const LineNumber& lineNumber ) const

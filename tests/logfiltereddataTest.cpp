@@ -233,7 +233,7 @@ SCENARIO( "filtered log data", "[logdata]") {
                 }
 
                 WHEN( "Ask for marked line type" ) {
-                    auto type = filtered_data->filteredLineTypeByIndex( 1_lnum );
+                    auto type = filtered_data->filteredLineTypeByIndex( 0_lnum );
                     THEN( "Return mark" ) {
                         REQUIRE( type == LineType::Mark );
                     }
@@ -248,8 +248,8 @@ SCENARIO( "filtered log data", "[logdata]") {
 
                 WHEN( "Ask for mixed line type" ) {
                     auto type = filtered_data->filteredLineTypeByIndex( 1_lnum );
-                    THEN( "Return mark" ) {
-                        REQUIRE( type == LineType::Mark );
+                    THEN( "Return mark and match" ) {
+                        REQUIRE( type == ( LineType::Mark | LineType::Match ) );
                     }
                 }
             }

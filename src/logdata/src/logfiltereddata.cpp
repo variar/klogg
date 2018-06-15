@@ -563,12 +563,9 @@ void LogFilteredData::regenerateFilteredItemsCache() const
     Marks::const_iterator j = marks_.begin();
 
     while ( ( i != matching_lines_.cend() ) || ( j != marks_.end() ) ) {
+        const auto next_mark = ( j != marks_.end() ) ? j->lineNumber() : maxValue<LineNumber>();
 
-        const auto next_mark =
-            ( j != marks_.end() ) ? j->lineNumber() : maxValue<LineNumber>();
-
-        const auto next_match =
-            ( i != matching_lines_.cend() ) ? i->lineNumber() : maxValue<LineNumber>();
+        const auto next_match = ( i != matching_lines_.cend() ) ? i->lineNumber() : maxValue<LineNumber>();
 
         LineNumber line;
         FilteredLineType lineType = FilteredLineType::None;
@@ -576,17 +573,14 @@ void LogFilteredData::regenerateFilteredItemsCache() const
         if ( next_mark >= next_match ) {
             // LOG(logDEBUG) << "Add match at " << next_match;
             line = next_match;
-            lineType = FilteredLineType::Match;
-
+            lineType |= FilteredLineType::Match;
             ++i;
         }
 
-        // We choose a Mark over a Match if a line is both,
-        // just an arbitrary choice really.
         if ( next_mark <= next_match ) {
             // LOG(logDEBUG) << "Add mark at " << next_mark;
             line = next_mark;
-            lineType = FilteredLineType::Mark;
+            lineType |= FilteredLineType::Mark;
             ++j;
         }
 
