@@ -260,10 +260,8 @@ inline LogFilteredData::FilteredLineType operator~( LogFilteredData::FilteredLin
 // of pointer (less small allocations and no RTTI).
 class LogFilteredData::FilteredItem {
   public:
-    // A default ctor seems to be necessary for QVector
-    FilteredItem();
     FilteredItem( LineNumber lineNumber, FilteredLineType type )
-    { lineNumber_ = lineNumber; type_ = type; }
+    : lineNumber_{ lineNumber }, type_{ type } {}
 
     LineNumber lineNumber() const
     { return lineNumber_; }
@@ -278,7 +276,7 @@ class LogFilteredData::FilteredItem {
     { type_ &= ~type; return type_ != FilteredLineType::None; }
 
     bool operator <( const FilteredItem& other ) const
-    { return lineNumber_ < other.lineNumber_; }
+    { return *this < other.lineNumber_; }
 
     bool operator <( const LineNumber& lineNumber ) const
     { return lineNumber_ < lineNumber; }
