@@ -722,21 +722,21 @@ void CrawlerWidget::setup()
     QPixmap marksAndMatchesPixmap( 16, 10 );
     marksAndMatchesPixmap.fill( Qt::gray );
     marksAndMatchesItem->setIcon( QIcon( marksAndMatchesPixmap ) );
-    marksAndMatchesItem->setData( FilteredView::MarksAndMatches );
+    marksAndMatchesItem->setData( QVariant::fromValue( FilteredView::Visibility::MarksAndMatches ) );
     visibilityModel_->appendRow( marksAndMatchesItem );
 
     QStandardItem* marksItem = new QStandardItem( tr( "Marks" ) );
     QPixmap marksPixmap( 16, 10 );
     marksPixmap.fill( Qt::blue );
     marksItem->setIcon( QIcon( marksPixmap ) );
-    marksItem->setData( FilteredView::MarksOnly );
+    marksItem->setData( QVariant::fromValue( FilteredView::Visibility::MarksOnly ) );
     visibilityModel_->appendRow( marksItem );
 
     QStandardItem* matchesItem = new QStandardItem( tr( "Matches" ) );
     QPixmap matchesPixmap( 16, 10 );
     matchesPixmap.fill( Qt::red );
     matchesItem->setIcon( QIcon( matchesPixmap ) );
-    matchesItem->setData( FilteredView::MatchesOnly );
+    matchesItem->setData( QVariant::fromValue( FilteredView::Visibility::MatchesOnly ) );
     visibilityModel_->appendRow( matchesItem );
 
     auto* visibilityView = new QListView( this );

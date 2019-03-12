@@ -143,6 +143,7 @@ class LogFilteredData : public AbstractLogData {
         MarksOnly,
         MarksAndMatches
     };
+    Q_ENUM( Visibility );
     void setVisibility( Visibility visibility );
 
   signals:

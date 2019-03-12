@@ -56,23 +56,7 @@ void FilteredView::setVisibility( Visibility visi )
 {
     assert( logFilteredData_ );
 
-    using FilteredDataVisibility = LogFilteredData::Visibility;
-    FilteredDataVisibility data_visibility;
-    switch ( visi ) {
-        case MarksOnly:
-            data_visibility = FilteredDataVisibility::MarksOnly;
-            break;
-        case MatchesOnly:
-            data_visibility = FilteredDataVisibility::MatchesOnly;
-            break;
-        default:
-            assert( false );
-        case MarksAndMatches:
-            data_visibility = FilteredDataVisibility::MarksAndMatches;
-            break;
-    };
-
-    logFilteredData_->setVisibility( data_visibility );
+    logFilteredData_->setVisibility( visi );
 
     updateData();
 }

@@ -55,7 +55,7 @@ class FilteredView : public AbstractLogView
             QWidget* parent = nullptr );
 
     // What is visible in the view.
-    enum Visibility { MatchesOnly, MarksOnly, MarksAndMatches };
+    using Visibility = LogFilteredData::Visibility;
     void setVisibility( Visibility visi );
 
   protected:
