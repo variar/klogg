@@ -103,10 +103,14 @@ class LogFilteredData : public AbstractLogData {
     // Returns the number of marks (independently of the visibility)
     LinesCount getNbMarks() const;
 
-    // Returns the reason why the line at the passed index is in the filtered
-    // data.  It can be because it is either a mark or a match.
-    enum FilteredLineType { Match, Mark };
-    FilteredLineType filteredLineTypeByIndex(LineNumber index ) const;
+    // Returns the reason why the line at the passed index is in the filtered data.
+    enum class FilteredLineType
+    {
+        None,  // this is for internal use
+        Match,
+        Mark
+    };
+    FilteredLineType filteredLineTypeByIndex( LineNumber index ) const;
 
     // Marks interface (delegated to a Marks object)
 
@@ -128,12 +132,17 @@ class LogFilteredData : public AbstractLogData {
     void deleteMark( LineNumber line );
     // Completely clear the marks list.
     void clearMarks();
-	// Get all marked lines
-	QList<LineNumber> getMarks() const;
+    // Get all marked lines
+    QList<LineNumber> getMarks() const;
 
     // Changes what the AbstractLogData returns via its getXLines/getNbLines
     // API.
-    enum Visibility { MatchesOnly, MarksOnly, MarksAndMatches };
+    enum class Visibility
+    {
+        MatchesOnly,
+        MarksOnly,
+        MarksAndMatches
+    };
     void setVisibility( Visibility visibility );
 
   signals:
