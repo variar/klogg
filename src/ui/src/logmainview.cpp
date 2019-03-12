@@ -43,7 +43,7 @@
 
 #include "logmainview.h"
 
-#include "data/logfiltereddata.h"
+#include "logfiltereddata.h"
 #include "overview.h"
 
 #include <QKeyEvent>

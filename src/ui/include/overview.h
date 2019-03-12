@@ -22,7 +22,7 @@
 
 #include <QList>
 #include <QVector>
-#include "data/linetypes.h"
+#include "linetypes.h"
 
 class LogFilteredData;
 

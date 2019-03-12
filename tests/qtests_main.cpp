@@ -25,7 +25,7 @@
 #include <QtConcurrent>
 
 #include <configuration.h>
-#include <data/linetypes.h>
+#include "linetypes.h"
 #include <persistentinfo.h>
 
 #include <log.h>

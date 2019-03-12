@@ -23,7 +23,7 @@
 
 #include "log.h"
 
-#include "data/logfiltereddata.h"
+#include "logfiltereddata.h"
 
 #include "overview.h"
 

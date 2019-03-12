@@ -25,7 +25,7 @@
 
 #include "selection.h"
 
-#include "data/abstractlogdata.h"
+#include "abstractlogdata.h"
 
 Selection::Selection()
 {

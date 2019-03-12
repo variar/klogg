@@ -23,7 +23,7 @@
 #include <QList>
 #include <QString>
 
-#include "data/linetypes.h"
+#include "linetypes.h"
 
 class AbstractLogData;
 

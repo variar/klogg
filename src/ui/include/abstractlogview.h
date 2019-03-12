@@ -52,7 +52,7 @@
 #include "overviewwidget.h"
 #include "quickfindmux.h"
 #include "viewtools.h"
-#include "data/linetypes.h"
+#include "linetypes.h"
 
 class QMenu;
 class QAction;

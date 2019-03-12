@@ -4,7 +4,7 @@
 #include "log.h"
 #include "test_utils.h"
 
-#include "data/logdata.h"
+#include "logdata.h"
 
 #include "gmock/gmock.h"
 

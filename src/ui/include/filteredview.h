@@ -41,7 +41,7 @@
 
 #include "abstractlogview.h"
 
-#include "data/logfiltereddata.h"
+#include "logfiltereddata.h"
 
 #include <QKeyEvent>
 

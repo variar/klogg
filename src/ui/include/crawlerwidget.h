@@ -51,12 +51,12 @@
 
 #include "logmainview.h"
 #include "filteredview.h"
-#include "data/logdata.h"
-#include "data/logfiltereddata.h"
+#include "logdata.h"
+#include "logfiltereddata.h"
 #include "viewinterface.h"
 #include "signalmux.h"
 #include "overview.h"
-#include "data/loadingstatus.h"
+#include "loadingstatus.h"
 
 class InfoLine;
 class QuickFindPattern;

@@ -41,7 +41,7 @@
 #define LOGMAINVIEW_H
 
 #include "abstractlogview.h"
-#include "data/logdata.h"
+#include "logdata.h"
 
 // Class implementing the main (top) view widget.
 class LogMainView : public AbstractLogView

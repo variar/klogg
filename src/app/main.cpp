@@ -54,7 +54,7 @@
 #endif // _WIN32
 
 #include "configuration.h"
-#include "data/loadingstatus.h"
+#include "loadingstatus.h"
 #include "highlighterset.h"
 #include "mainwindow.h"
 #include "persistentinfo.h"

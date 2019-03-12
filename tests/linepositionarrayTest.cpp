@@ -23,7 +23,7 @@
 
 #include "log.h"
 
-#include "data/linepositionarray.h"
+#include "linepositionarray.h"
 
 #include <random>
 #include <vector>
