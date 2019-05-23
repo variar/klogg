@@ -143,26 +143,6 @@ LinesCount SearchData::getNbMatches() const
     return LinesCount( static_cast<LinesCount::UnderlyingType>( matches_.size() ) );
 }
 
-// This function starts searching from the end since we use it
-// to remove the final match.
-void SearchData::deleteMatch( LineNumber line )
-{
-    QMutexLocker locker( &dataMutex_ );
-
-    auto i = matches_.end();
-    while ( i != matches_.begin() ) {
-        --i;
-        const auto this_line = i->lineNumber();
-        if ( this_line == line ) {
-            matches_.erase( i );
-            break;
-        }
-        // Exit if we have passed the line number to look for.
-        if ( this_line < line )
-            break;
-    }
-}
-
 void SearchData::clear()
 {
     QMutexLocker locker( &dataMutex_ );
@@ -170,6 +150,13 @@ void SearchData::clear()
     maxLength_ = LineLength( 0 );
     nbLinesProcessed_ = LinesCount( 0 );
     matches_.clear();
+}
+
+LineNumber SearchData::getLastMatchedLineNumber() const
+{
+    QMutexLocker locker( &dataMutex_ );
+
+    return matches_.empty() ? LineNumber{ 0 } : matches_.back().lineNumber();
 }
 
 LogFilteredDataWorkerThread::LogFilteredDataWorkerThread( const LogData* sourceLogData )
@@ -504,12 +491,10 @@ void UpdateSearchOperation::start( SearchData& searchData )
 {
     auto initial_line = initialPosition_;
 
-    if ( initial_line.get() >= 1 ) {
+    if ( initial_line.get() >= 1 && searchData.getLastMatchedLineNumber() != initial_line ) {
         // We need to re-search the last line because it might have
         // been updated (if it was not LF-terminated)
         --initial_line;
-        // In case the last line matched, we don't want it to match twice.
-        searchData.deleteMatch( initial_line );
     }
 
     doSearch( searchData, initial_line );
