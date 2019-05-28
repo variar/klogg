@@ -122,17 +122,18 @@ void SearchData::setAll( LineLength length, SearchResultArray&& matches )
 
 void SearchData::addAll( LineLength length, const SearchResultArray& matches, LinesCount lines )
 {
+    using std::begin;
+    using std::end;
+
     QMutexLocker locker( &dataMutex_ );
 
     maxLength_ = qMax( maxLength_, length );
     nbLinesProcessed_ = qMax( nbLinesProcessed_, lines );
 
-    // This does a copy as we want the final array to be
-    // linear.
     if ( !matches.empty() ) {
-        const auto originalSize = matches_.size();
-        matches_.insert( std::end( matches_ ), std::begin( matches ), std::end( matches ) );
-        std::inplace_merge( matches_.begin(), matches_.begin() + originalSize, matches_.end() );
+        auto insertIt = std::lower_bound( begin( matches_ ), end( matches_ ), matches.front() );
+        assert( insertIt == end( matches_ ) || ! ( *insertIt < matches.back() ) );
+        matches_.insert( insertIt, begin( matches ), end( matches ) );
     }
 }
 
