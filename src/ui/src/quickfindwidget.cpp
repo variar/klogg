@@ -61,8 +61,7 @@ QuickFindWidget::QuickFindWidget( QWidget* parent ) : QWidget( parent )
     // setProperty("topBorder", true);
     auto *layout = new QHBoxLayout( this );
 
-    layout->setMargin( 0 );
-    layout->setSpacing( 6 );
+    layout->setContentsMargins( 6, 0, 6, 6 );
 
     closeButton_ = setupToolButton(
             QLatin1String(""), QLatin1String( ":/images/darkclosebutton.png" ) );
@@ -217,10 +216,15 @@ QToolButton* QuickFindWidget::setupToolButton(
 {
     auto *toolButton = new QToolButton(this);
 
-    toolButton->setText(text);
     toolButton->setAutoRaise(true);
     toolButton->setIcon(QIcon(icon));
-    toolButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+    if(text.length()>0) {
+        toolButton->setText(text);
+        toolButton->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+    } else {
+        toolButton->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
 
     return toolButton;
 }
