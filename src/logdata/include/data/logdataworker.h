@@ -40,12 +40,11 @@
 #define LOGDATAWORKERTHREAD_H
 
 #include <QObject>
-#include <QThread>
 #include <QMutex>
-#include <QWaitCondition>
-#include <QVector>
 #include <QTextCodec>
 #include <QSemaphore>
+#include <QFuture>
+#include <QFutureWatcher>
 
 #include "loadingstatus.h"
 #include "linepositionarray.h"
@@ -123,8 +122,11 @@ class IndexOperation : public QObject
 {
   Q_OBJECT
   public:
-    IndexOperation(const QString& fileName,
-            IndexingData* indexingData, AtomicFlag* interruptRequest);
+    IndexOperation(const QString& fileName, IndexingData& indexingData)
+        : fileName_( fileName )
+        , indexing_data_( indexingData )
+    {
+    }
 
     // Start the indexing operation, returns true if it has been done
     // and false if it has been cancelled (results not copied)
@@ -133,6 +135,9 @@ class IndexOperation : public QObject
   signals:
     void indexingProgressed( int );
 
+  public slots:
+    void cancel();
+
   protected:
 
     // Returns the total size indexed
@@ -140,8 +145,8 @@ class IndexOperation : public QObject
     void doIndex( LineOffset initialPosition );
 
     QString fileName_;
-    AtomicFlag* interruptRequest_;
-    IndexingData* indexing_data_;
+    IndexingData& indexing_data_;
+    AtomicFlag interruptRequest_;
 
 private:
     FastLinePositionArray parseDataBlock(
@@ -160,9 +165,8 @@ class FullIndexOperation : public IndexOperation
   Q_OBJECT
   public:
     FullIndexOperation( const QString& fileName,
-            IndexingData* indexingData, AtomicFlag* interruptRequest,
-            QTextCodec* forcedEncoding = nullptr)
-        : IndexOperation( fileName, indexingData, interruptRequest )
+            IndexingData& indexingData, QTextCodec* forcedEncoding = nullptr)
+        : IndexOperation( fileName, indexingData )
         , forcedEncoding_(forcedEncoding)
     { }
     bool start() override;
@@ -174,26 +178,23 @@ class PartialIndexOperation : public IndexOperation
 {
   Q_OBJECT
   public:
-    PartialIndexOperation( const QString& fileName, IndexingData* indexingData,
-            AtomicFlag* interruptRequest );
+    PartialIndexOperation( const QString& fileName, IndexingData& indexingData)
+        : IndexOperation( fileName, indexingData )
+    {
+    }
 
     bool start() override;
 };
 
-// Create and manage the thread doing loading/indexing for
-// the creating LogData. One LogDataWorkerThread is used
-// per LogData instance.
-// Note everything except the run() function is in the LogData's
-// thread.
-class LogDataWorkerThread : public QThread
+class LogDataWorker : public QObject
 {
   Q_OBJECT
 
   public:
     // Pass a pointer to the IndexingData (initially empty)
     // This object will change it when indexing (IndexingData must be thread safe!)
-    LogDataWorkerThread( IndexingData* indexing_data );
-    ~LogDataWorkerThread() override;
+    explicit LogDataWorker( IndexingData& indexing_data );
+    ~LogDataWorker() override;
 
     // Attaches to a file on disk. Attaching to a non existant file
     // will work, it will just appear as an empty file.
@@ -215,25 +216,25 @@ class LogDataWorkerThread : public QThread
     // to copy the new data back.
     void indexingFinished( LoadingStatus status );
 
-  protected:
-    void run() override;
+    void indexingCanceled();
+
+  private slots:
+    void onOperationFinished();
 
   private:
     void doIndexAll();
 
+    bool connectSignalsAndRun(IndexOperation* operationRequested);
+
+    QFuture<bool> operationFuture_;
+    QFutureWatcher<bool> operationWatcher_;
+
     // Mutex to protect operationRequested_ and friends
     QMutex mutex_;
-    QWaitCondition operationRequestedCond_;
-    QWaitCondition nothingToDoCond_;
     QString fileName_;
 
-    // Set when the thread must die
-    AtomicFlag terminate_;
-    AtomicFlag interruptRequested_;
-    IndexOperation* operationRequested_;
-
     // Pointer to the owner's indexing data (we modify it)
-    IndexingData* indexing_data_;
+    IndexingData& indexing_data_;
 };
 
 #endif

@@ -42,9 +42,11 @@
 #include <QObject>
 #include <QThread>
 #include <QMutex>
-#include <QWaitCondition>
 #include <QRegularExpression>
-#include <QList>
+
+#include <QFuture>
+#include <QFutureWatcher>
+
 #include "atomicflag.h"
 #include "linetypes.h"
 
@@ -114,10 +116,9 @@ class SearchOperation : public QObject
 {
   Q_OBJECT
   public:
-    SearchOperation(const LogData* sourceLogData,
+    SearchOperation(const LogData& sourceLogData,
             const QRegularExpression &regExp,
-            LineNumber startLine, LineNumber endLine,
-            AtomicFlag* interruptRequest );
+            LineNumber startLine, LineNumber endLine );
 
     // Start the search operation, returns true if it has been done
     // and false if it has been cancelled (results not copied)
@@ -126,14 +127,17 @@ class SearchOperation : public QObject
   signals:
     void searchProgressed( LinesCount nbMatches, int percent, LineNumber initialLine );
 
+  public slots:
+    void cancel();
+
   protected:
     // Implement the common part of the search, passing
     // the shared results and the line to begin the search from.
     void doSearch( SearchData& result, LineNumber initialLine );
 
-    AtomicFlag* interruptRequested_;
+    AtomicFlag interruptRequested_;
     const QRegularExpression regexp_;
-    const LogData* sourceLogData_;
+    const LogData& sourceLogData_;
     LineNumber startLine_;
     LineNumber endLine_;
 };
@@ -142,9 +146,9 @@ class FullSearchOperation : public SearchOperation
 {
   Q_OBJECT
   public:
-    FullSearchOperation( const LogData* sourceLogData, const QRegularExpression& regExp,
-                         LineNumber startLine, LineNumber endLine, AtomicFlag* interruptRequest )
-        : SearchOperation( sourceLogData, regExp, startLine, endLine, interruptRequest ) {}
+    FullSearchOperation( const LogData& sourceLogData, const QRegularExpression& regExp,
+                         LineNumber startLine, LineNumber endLine )
+        : SearchOperation( sourceLogData, regExp, startLine, endLine ) {}
 
     void start( SearchData& result ) override;
 };
@@ -153,9 +157,9 @@ class UpdateSearchOperation : public SearchOperation
 {
   Q_OBJECT
   public:
-    UpdateSearchOperation( const LogData* sourceLogData, const QRegularExpression& regExp,
-            LineNumber startLine, LineNumber endLine, AtomicFlag* interruptRequest, LineNumber position )
-        : SearchOperation( sourceLogData, regExp, startLine, endLine, interruptRequest ),
+    UpdateSearchOperation( const LogData& sourceLogData, const QRegularExpression& regExp,
+            LineNumber startLine, LineNumber endLine, LineNumber position )
+        : SearchOperation( sourceLogData, regExp, startLine, endLine ),
         initialPosition_( position ) {}
 
     void start( SearchData& result ) override;
@@ -164,18 +168,13 @@ class UpdateSearchOperation : public SearchOperation
     LineNumber initialPosition_;
 };
 
-// Create and manage the thread doing loading/indexing for
-// the creating LogData. One LogDataWorkerThread is used
-// per LogData instance.
-// Note everything except the run() function is in the LogData's
-// thread.
-class LogFilteredDataWorkerThread : public QThread
+class LogFilteredDataWorker : public QObject
 {
   Q_OBJECT
 
   public:
-    LogFilteredDataWorkerThread( const LogData* sourceLogData );
-    ~LogFilteredDataWorkerThread() override;
+    explicit LogFilteredDataWorker( const LogData& sourceLogData );
+    ~LogFilteredDataWorker() override;
 
     // Start the search with the passed regexp
     void search(const QRegularExpression &regExp, LineNumber startLine, LineNumber endLine );
@@ -198,21 +197,17 @@ class LogFilteredDataWorkerThread : public QThread
     // to copy the new data back.
     void searchFinished();
 
-  protected:
-    void run() override;
+    void searchCanceled();
 
   private:
-    const LogData* sourceLogData_;
+    void connectSignalsAndRun(SearchOperation* operationRequested);
+  private:
+    const LogData& sourceLogData_;
 
     // Mutex to protect operationRequested_ and friends
     QMutex mutex_;
-    QWaitCondition operationRequestedCond_;
-    QWaitCondition nothingToDoCond_;
-
-    // Set when the thread must die
-    AtomicFlag terminate_;
-    AtomicFlag interruptRequested_;
-    SearchOperation* operationRequested_;
+    QFuture<void> operationFuture_;
+    QFutureWatcher<void> operationWatcher_;
 
     // Shared indexing data
     SearchData searchData_;

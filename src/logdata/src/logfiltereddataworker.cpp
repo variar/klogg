@@ -42,7 +42,7 @@
 #include "log.h"
 
 #include "logdata.h"
-#include "logfiltereddataworkerthread.h"
+#include "logfiltereddataworker.h"
 
 #include "configuration.h"
 
@@ -132,8 +132,9 @@ void SearchData::addAll( LineLength length, const SearchResultArray& matches, Li
     // This does a copy as we want the final array to be
     // linear.
     if ( !matches.empty() ) {
-        const auto insertIt = std::lower_bound( begin( matches_ ), end( matches_ ), matches.front() );
-        assert( insertIt == end( matches_ ) || ! ( *insertIt < matches.back() ) );
+        const auto insertIt
+            = std::lower_bound( begin( matches_ ), end( matches_ ), matches.front() );
+        assert( insertIt == end( matches_ ) || !( *insertIt < matches.back() ) );
         matches_.insert( insertIt, begin( matches ), end( matches ) );
     }
 }
@@ -147,7 +148,7 @@ LinesCount SearchData::getNbMatches() const
 
 LineNumber SearchData::getLastMatchedLineNumber() const
 {
-     return matches_.empty() ? LineNumber{ 0 } : matches_.back().lineNumber();
+    return matches_.empty() ? LineNumber{ 0 } : matches_.back().lineNumber();
 }
 
 void SearchData::deleteMatch( LineNumber line )
@@ -177,137 +178,115 @@ void SearchData::clear()
     matches_.clear();
 }
 
-LogFilteredDataWorkerThread::LogFilteredDataWorkerThread( const LogData* sourceLogData )
-    : QThread()
+LogFilteredDataWorker::LogFilteredDataWorker( const LogData& sourceLogData )
+    : sourceLogData_( sourceLogData )
     , mutex_()
-    , operationRequestedCond_()
-    , nothingToDoCond_()
     , searchData_()
 {
-    operationRequested_ = nullptr;
-    sourceLogData_ = sourceLogData;
+    connect( &operationWatcher_, &QFutureWatcher<void>::finished, this,
+             &LogFilteredDataWorker::searchFinished );
 }
 
-LogFilteredDataWorkerThread::~LogFilteredDataWorkerThread()
+LogFilteredDataWorker::~LogFilteredDataWorker()
 {
-    {
-        QMutexLocker locker( &mutex_ );
-        terminate_.set();
-        operationRequestedCond_.wakeAll();
-    }
-    wait();
+    emit searchCanceled();
+
+    QMutexLocker locker( &mutex_ );
+    operationWatcher_.waitForFinished();
 }
 
-void LogFilteredDataWorkerThread::search( const QRegularExpression& regExp, LineNumber startLine,
+void LogFilteredDataWorker::connectSignalsAndRun( SearchOperation* operationRequested )
+{
+    connect( operationRequested, &SearchOperation::searchProgressed, this,
+             &LogFilteredDataWorker::searchProgressed );
+
+    connect( this, &LogFilteredDataWorker::searchCanceled, operationRequested,
+             &SearchOperation::cancel, Qt::DirectConnection );
+
+    connect( &operationWatcher_, &QFutureWatcher<void>::finished, operationRequested,
+             &QObject::deleteLater );
+
+    return operationRequested->start( searchData_ );
+}
+
+void LogFilteredDataWorker::search( const QRegularExpression& regExp, LineNumber startLine,
                                           LineNumber endLine )
 {
     QMutexLocker locker( &mutex_ ); // to protect operationRequested_
 
     LOG( logDEBUG ) << "Search requested";
 
-    // If an operation is ongoing, we will block
-    while ( ( operationRequested_ != nullptr ) )
-        nothingToDoCond_.wait( &mutex_ );
+    operationWatcher_.waitForFinished();
 
-    interruptRequested_.clear();
-    operationRequested_ = new FullSearchOperation( sourceLogData_, regExp, startLine, endLine,
-                                                   &interruptRequested_ );
-    operationRequestedCond_.wakeAll();
+    operationFuture_ = QtConcurrent::run( [this, regExp, startLine, endLine] {
+        auto operationRequested
+            = new FullSearchOperation( sourceLogData_, regExp, startLine, endLine );
+        connectSignalsAndRun( operationRequested );
+    } );
+
+    operationWatcher_.setFuture( operationFuture_ );
 }
 
-void LogFilteredDataWorkerThread::updateSearch( const QRegularExpression& regExp,
+void LogFilteredDataWorker::updateSearch( const QRegularExpression& regExp,
                                                 LineNumber startLine, LineNumber endLine,
                                                 LineNumber position )
 {
     QMutexLocker locker( &mutex_ ); // to protect operationRequested_
 
-    LOG( logDEBUG ) << "Search requested";
+    LOG( logDEBUG ) << "Search update requested";
 
-    // If an operation is ongoing, we will block
-    while ( ( operationRequested_ != nullptr ) )
-        nothingToDoCond_.wait( &mutex_ );
+    operationWatcher_.waitForFinished();
 
-    interruptRequested_.clear();
-    operationRequested_ = new UpdateSearchOperation( sourceLogData_, regExp, startLine, endLine,
-                                                     &interruptRequested_, position );
-    operationRequestedCond_.wakeAll();
+    operationFuture_ = QtConcurrent::run( [this, regExp, startLine, endLine, position] {
+        auto operationRequested
+            = new UpdateSearchOperation( sourceLogData_, regExp, startLine, endLine, position );
+        connectSignalsAndRun( operationRequested );
+    } );
+
+    operationWatcher_.setFuture( operationFuture_ );
 }
 
-void LogFilteredDataWorkerThread::interrupt()
+void LogFilteredDataWorker::interrupt()
 {
-    LOG( logDEBUG ) << "Search interruption requested";
+    LOG( logINFO ) << "Search interruption requested";
 
-    interruptRequested_.set();
-
-    // We wait for the interruption to be done
-    {
-        QMutexLocker locker( &mutex_ );
-        while ( ( operationRequested_ != nullptr ) )
-            nothingToDoCond_.wait( &mutex_ );
-    }
+    emit searchCanceled();
 }
 
 // This will do an atomic copy of the object
-void LogFilteredDataWorkerThread::getSearchResult( LineLength* maxLength,
+void LogFilteredDataWorker::getSearchResult( LineLength* maxLength,
                                                    SearchResultArray* searchMatches,
                                                    LinesCount* nbLinesProcessed )
 {
     searchData_.getAll( maxLength, searchMatches, nbLinesProcessed );
 }
 
-// This is the thread's main loop
-void LogFilteredDataWorkerThread::run()
-{
-    QMutexLocker locker( &mutex_ );
-
-    forever
-    {
-        while ( !terminate_ && ( operationRequested_ == nullptr ) )
-            operationRequestedCond_.wait( &mutex_ );
-        LOG( logDEBUG ) << "Worker thread signaled";
-
-        // Look at what needs to be done
-        if ( terminate_ )
-            return; // We must die
-
-        if ( operationRequested_ ) {
-            connect( operationRequested_, &SearchOperation::searchProgressed, this,
-                     &LogFilteredDataWorkerThread::searchProgressed, Qt::QueuedConnection );
-
-            // Run the search operation
-            operationRequested_->start( searchData_ );
-
-            LOG( logDEBUG ) << "... finished copy in workerThread.";
-
-            emit searchFinished();
-            delete operationRequested_;
-            operationRequested_ = nullptr;
-            nothingToDoCond_.wakeAll();
-        }
-    }
-}
-
 //
 // Operations implementation
 //
 
-SearchOperation::SearchOperation( const LogData* sourceLogData, const QRegularExpression& regExp,
-                                  LineNumber startLine, LineNumber endLine,
-                                  AtomicFlag* interruptRequest )
+SearchOperation::SearchOperation( const LogData& sourceLogData, const QRegularExpression& regExp,
+                                  LineNumber startLine, LineNumber endLine )
+
     : regexp_( regExp )
     , sourceLogData_( sourceLogData )
     , startLine_( startLine )
     , endLine_( endLine )
 
 {
-    interruptRequested_ = interruptRequest;
+}
+
+void SearchOperation::cancel()
+{
+    LOG( logINFO ) << "Cancel search";
+    interruptRequested_.set();
 }
 
 void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
 {
     const auto& config = Persistable::get<Configuration>();
 
-    const auto nbSourceLines = sourceLogData_->getNbLine();
+    const auto nbSourceLines = sourceLogData_.getNbLine();
     LineLength maxLength = 0_length;
     LinesCount nbMatches = searchData.getNbMatches();
 
@@ -335,15 +314,14 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
 
     std::vector<QFuture<void>> matchers;
 
-    const auto matchingThreadsCount = [&config]()
-    {
+    const auto matchingThreadsCount = [&config]() {
         if ( !config.useParallelSearch() ) {
             return 1;
         }
 
-        return qMax( 1,  config.searchThreadPoolSize() == 0
-                        ? QThread::idealThreadCount() - 1
-                        : static_cast<int>( config.searchThreadPoolSize() ) );
+        return qMax( 1, config.searchThreadPoolSize() == 0
+                            ? QThread::idealThreadCount() - 1
+                            : static_cast<int>( config.searchThreadPoolSize() ) );
     }();
 
     LOG( logINFO ) << "Using " << matchingThreadsCount << " matching threads";
@@ -431,8 +409,8 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
                 matchersDone++;
             }
 
-            const int percentage
-                = static_cast<int>( std::floor( 100.f * ( totalProcessedLines ).get() / totalLines.get() ) );
+            const int percentage = static_cast<int>(
+                std::floor( 100.f * ( totalProcessedLines ).get() / totalLines.get() ) );
 
             if ( percentage > reportedPercentage || nbMatches > reportedMatches ) {
 
@@ -449,20 +427,20 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
         }
     } );
 
-    auto pToken =  moodycamel::ProducerToken{ searchBlockQueue };
+    auto pToken = moodycamel::ProducerToken{ searchBlockQueue };
 
     blocksDone.release( nbLinesInChunk.get() * ( static_cast<uint32_t>( matchers.size() ) + 1 ) );
 
     for ( auto chunkStart = initialLine; chunkStart < endLine;
           chunkStart = chunkStart + nbLinesInChunk ) {
-        if ( *interruptRequested_ )
+        if ( interruptRequested_ )
             break;
 
         LOG( logDEBUG ) << "Reading chunk starting at " << chunkStart;
 
         const auto linesInChunk
             = LinesCount( qMin( nbLinesInChunk.get(), ( endLine - chunkStart ).get() ) );
-        auto lines = sourceLogData_->getLines( chunkStart, linesInChunk );
+        auto lines = sourceLogData_.getLines( chunkStart, linesInChunk );
 
         LOG( logDEBUG ) << "Sending chunk starting at " << chunkStart << ", " << lines.size()
                         << " lines read.";

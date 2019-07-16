@@ -112,7 +112,7 @@ namespace
 // Implementation of the 'start' functions for each operation
 
 void LogData::AttachOperation::doStart(
-        LogDataWorkerThread& workerThread ) const
+        LogDataWorker& workerThread ) const
 {
     LOG(logDEBUG) << "Attaching " << filename_.toStdString();
     workerThread.attachFile( filename_ );
@@ -120,14 +120,14 @@ void LogData::AttachOperation::doStart(
 }
 
 void LogData::FullIndexOperation::doStart(
-        LogDataWorkerThread& workerThread ) const
+        LogDataWorker& workerThread ) const
 {
     LOG(logDEBUG) << "Reindexing (full)";
     workerThread.indexAll(forcedEncoding_);
 }
 
 void LogData::PartialIndexOperation::doStart(
-        LogDataWorkerThread& workerThread ) const
+        LogDataWorker& workerThread ) const
 {
     LOG(logDEBUG) << "Reindexing (partial)";
     workerThread.indexAdditionalLines();
@@ -137,7 +137,7 @@ void LogData::PartialIndexOperation::doStart(
 // Constructs an empty log file.
 // It must be displayed without error.
 LogData::LogData() : AbstractLogData(), indexing_data_(),
-    fileMutex_(), workerThread_( &indexing_data_ )
+    fileMutex_(), workerThread_( indexing_data_ )
 {
     // Start with an "empty" log
     attached_file_ = nullptr;
@@ -151,9 +151,9 @@ LogData::LogData() : AbstractLogData(), indexing_data_(),
             this, &LogData::fileChangedOnDisk, Qt::QueuedConnection );
 
     // Forward the update signal
-    connect( &workerThread_, &LogDataWorkerThread::indexingProgressed,
+    connect( &workerThread_, &LogDataWorker::indexingProgressed,
             this, &LogData::loadingProgressed );
-    connect( &workerThread_, &LogDataWorkerThread::indexingFinished,
+    connect( &workerThread_, &LogDataWorker::indexingFinished,
             this, &LogData::indexingFinished );
 
     const auto& config = Persistable::get<Configuration>();
@@ -162,9 +162,6 @@ LogData::LogData() : AbstractLogData(), indexing_data_(),
     if ( keepFileClosed_ ) {
         LOG(logINFO) << "Keep file closed option is set";
     }
-
-    // Starts the worker thread
-    workerThread_.start();
 }
 
 LogData::~LogData()
@@ -172,9 +169,6 @@ LogData::~LogData()
     // Remove the current file from the watch list
     if ( attached_file_ )
         FileWatcher::getFileWatcher().removeFile( indexingFileName_ );
-
-    // FIXME
-    // workerThread_.stop();
 }
 
 //

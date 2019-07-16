@@ -48,7 +48,7 @@
 #include <QRegularExpression>
 
 #include "abstractlogdata.h"
-#include "logfiltereddataworkerthread.h"
+#include "logfiltereddataworker.h"
 #include "marks.h"
 
 class LogData;
@@ -63,12 +63,8 @@ class LogFilteredData : public AbstractLogData {
   Q_OBJECT
 
   public:
-    // Creates an empty LogFilteredData
-    LogFilteredData();
     // Constructor used by LogData
-    LogFilteredData( const LogData* logData );
-
-    ~LogFilteredData() override;
+    explicit LogFilteredData( const LogData* logData );
 
     // Starts the async search, sending newDataAvailable() when new data found.
     // If a search is already in progress this function will block until
@@ -177,6 +173,7 @@ class LogFilteredData : public AbstractLogData {
     SearchResultArray matching_lines_;
 
     const LogData* sourceLogData_;
+
     QRegularExpression currentRegExp_;
     bool searchDone_;
     LineLength maxLength_;
@@ -192,7 +189,7 @@ class LogFilteredData : public AbstractLogData {
     mutable std::vector<FilteredItem> filteredItemsCache_;
     mutable bool filteredItemsCacheDirty_;
 
-    LogFilteredDataWorkerThread workerThread_;
+    LogFilteredDataWorker workerThread_;
     Marks marks_;
 
     struct CachedSearchResult

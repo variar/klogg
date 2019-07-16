@@ -44,13 +44,12 @@
 #include <QObject>
 #include <QString>
 #include <QFile>
-#include <QVector>
 #include <QMutex>
 #include <QDateTime>
 #include <QTextCodec>
 
 #include "abstractlogdata.h"
-#include "logdataworkerthread.h"
+#include "logdataworker.h"
 #include "filewatcher.h"
 #include "loadingstatus.h"
 
@@ -125,12 +124,12 @@ class LogData : public AbstractLogData {
         // Permit each child to have its destructor
         virtual ~LogDataOperation() = default;
 
-        void start( LogDataWorkerThread& workerThread ) const
+        void start( LogDataWorker& workerThread ) const
         { doStart( workerThread ); }
         const QString& getFilename() const { return filename_; }
 
       protected:
-        virtual void doStart( LogDataWorkerThread& workerThread ) const = 0;
+        virtual void doStart( LogDataWorker& workerThread ) const = 0;
         QString filename_;
     };
 
@@ -141,7 +140,7 @@ class LogData : public AbstractLogData {
             : LogDataOperation( fileName ) {}
 
       protected:
-        void doStart( LogDataWorkerThread& workerThread ) const override;
+        void doStart( LogDataWorker& workerThread ) const override;
     };
 
     // Reindexing the current file
@@ -152,7 +151,7 @@ class LogData : public AbstractLogData {
         {}
 
       protected:
-        void doStart( LogDataWorkerThread& workerThread ) const override;
+        void doStart( LogDataWorker& workerThread ) const override;
 
       private:
         QTextCodec* forcedEncoding_;
@@ -161,7 +160,7 @@ class LogData : public AbstractLogData {
     // Indexing part of the current file (from fileSize)
     class PartialIndexOperation : public LogDataOperation {
       protected:
-        void doStart( LogDataWorkerThread& workerThread ) const override;
+        void doStart( LogDataWorker& workerThread ) const override;
     };
 
     MonitoredFileStatus fileChangedOnDisk_;
@@ -207,7 +206,7 @@ class LogData : public AbstractLogData {
     // while remaining const)
     // When acquiring both, data should be help before locking file.
 
-    LogDataWorkerThread workerThread_;
+    LogDataWorker workerThread_;
 };
 
 Q_DECLARE_METATYPE( LogData::MonitoredFileStatus )

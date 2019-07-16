@@ -56,25 +56,6 @@ namespace {
 
 }
 
-// Creates an empty set. It must be possible to display it without error.
-// FIXME
-LogFilteredData::LogFilteredData() : AbstractLogData(),
-    matching_lines_(),
-    currentRegExp_(),
-    visibility_(),
-    filteredItemsCache_(),
-    workerThread_( nullptr ),
-    marks_()
-{
-    /* Prevent any more searching */
-    maxLength_ = 0_length;
-    maxLengthMarks_ = 0_length;
-    nbLinesProcessed_ = 0_lcount;
-    visibility_ = Visibility::MarksAndMatches;
-
-    filteredItemsCacheDirty_ = true;
-}
-
 // Usual constructor: just copy the data, the search is started by runSearch()
 LogFilteredData::LogFilteredData( const LogData* logData )
     : AbstractLogData(),
@@ -82,7 +63,7 @@ LogFilteredData::LogFilteredData( const LogData* logData )
     currentRegExp_(),
     visibility_(),
     filteredItemsCache_(),
-    workerThread_( logData ),
+    workerThread_( *logData ),
     marks_()
 {
     // Starts with an empty result list
@@ -97,22 +78,9 @@ LogFilteredData::LogFilteredData( const LogData* logData )
     filteredItemsCacheDirty_ = true;
 
     // Forward the update signal
-    connect( &workerThread_, &LogFilteredDataWorkerThread::searchProgressed,
+    connect( &workerThread_, &LogFilteredDataWorker::searchProgressed,
             this, &LogFilteredData::handleSearchProgressed );
-
-    // Starts the worker thread
-    workerThread_.start();
 }
-
-LogFilteredData::~LogFilteredData()
-{
-    // FIXME
-    // workerThread_.stop();
-}
-
-//
-// Public functions
-//
 
 void LogFilteredData::runSearch(const QRegularExpression& regExp)
 {
