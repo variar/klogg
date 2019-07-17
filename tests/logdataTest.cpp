@@ -36,44 +36,44 @@
 
 
 static const qint64 SL_NB_LINES = 500LL;
-static const qint64 VBL_NB_LINES = 5000LL;
+static const qint64 VBL_NB_LINES = 50000LL;
 
 namespace {
 
-	class WriteFileThread : public QThread
-	{
-		Q_OBJECT
-	public:
-		WriteFileThread(QFile* file, int numberOfLines = 200, WriteFileModification flag = WriteFileModification::None)
-			: file_{ file }, numberOfLines_{numberOfLines}, flag_{flag}
-		{}
+    class WriteFileThread : public QThread
+    {
+        Q_OBJECT
+    public:
+        WriteFileThread(QFile* file, int numberOfLines = 200, WriteFileModification flag = WriteFileModification::None)
+            : file_{ file }, numberOfLines_{numberOfLines}, flag_{flag}
+        {}
 
-	protected:
-		void run() override
-		{
-			QString writeHelper = QCoreApplication::applicationDirPath() + QDir::separator() + QLatin1Literal("file_write_helper");
-			QStringList arguments;
-			arguments << file_->fileName() << QString::number(numberOfLines_) << QString::number(static_cast<uint8_t>(flag_));
+    protected:
+        void run() override
+        {
+            QString writeHelper = QCoreApplication::applicationDirPath() + QDir::separator() + QLatin1Literal("file_write_helper");
+            QStringList arguments;
+            arguments << file_->fileName() << QString::number(numberOfLines_) << QString::number(static_cast<uint8_t>(flag_));
 
-			const auto result = QProcess::execute(writeHelper, arguments);
-			LOG(logINFO) << "Write helper result " << result;
-		}
+            const auto result = QProcess::execute(writeHelper, arguments);
+            LOG(logINFO) << "Write helper result " << result;
+        }
 
-	private:
-		QFile* file_;
-		int numberOfLines_;
-		WriteFileModification flag_;
+    private:
+        QFile* file_;
+        int numberOfLines_;
+        WriteFileModification flag_;
 
-	};
+    };
 
 #include "logdataTest.moc"
 
 #ifdef _WIN32
-	void writeDataToFileBackground(QFile& file, int numberOfLines = 200, WriteFileModification flag = WriteFileModification::None) {
-		auto thread = new WriteFileThread(&file, numberOfLines, flag);
-		thread->start();
-		QObject::connect(thread, &WriteFileThread::finished, thread, &WriteFileThread::deleteLater);
-	}
+    void writeDataToFileBackground(QFile& file, int numberOfLines = 200, WriteFileModification flag = WriteFileModification::None) {
+        auto thread = new WriteFileThread(&file, numberOfLines, flag);
+        thread->start();
+        QObject::connect(thread, &WriteFileThread::finished, thread, &WriteFileThread::deleteLater);
+    }
 #endif
     void writeDataToFile(QFile& file, int numberOfLines = 200, WriteFileModification flag = WriteFileModification::None) {
         auto thread = new WriteFileThread(&file, numberOfLines, flag);

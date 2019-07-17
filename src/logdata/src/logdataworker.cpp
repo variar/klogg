@@ -131,8 +131,7 @@ LogDataWorker::LogDataWorker( IndexingData& indexing_data )
 
 LogDataWorker::~LogDataWorker()
 {
-    emit indexingCanceled();
-
+    interruptRequest_.set();
     QMutexLocker locker( &mutex_ );
     operationWatcher_.waitForFinished();
 }
@@ -149,11 +148,12 @@ void LogDataWorker::indexAll( QTextCodec* forcedEncoding )
     LOG( logDEBUG ) << "FullIndex requested";
 
     operationWatcher_.waitForFinished();
+    interruptRequest_.clear();
 
     operationFuture_ = QtConcurrent::run( [this, forcedEncoding, fileName = fileName_] {
-        auto operationRequested
-            = new FullIndexOperation( fileName, indexing_data_, forcedEncoding );
-        return connectSignalsAndRun( operationRequested );
+        auto operationRequested = std::make_unique<FullIndexOperation>(
+            fileName, indexing_data_, interruptRequest_, forcedEncoding );
+        return connectSignalsAndRun( operationRequested.get() );
     } );
 
     operationWatcher_.setFuture( operationFuture_ );
@@ -165,10 +165,12 @@ void LogDataWorker::indexAdditionalLines()
     LOG( logDEBUG ) << "AddLines requested";
 
     operationWatcher_.waitForFinished();
+    interruptRequest_.clear();
 
     operationFuture_ = QtConcurrent::run( [this, fileName = fileName_] {
-        auto operationRequested = new PartialIndexOperation( fileName, indexing_data_ );
-        return connectSignalsAndRun( operationRequested );
+        auto operationRequested = std::make_unique<PartialIndexOperation>( fileName, indexing_data_,
+                                                                           interruptRequest_ );
+        return connectSignalsAndRun( operationRequested.get() );
     } );
 
     operationWatcher_.setFuture( operationFuture_ );
@@ -179,19 +181,13 @@ bool LogDataWorker::connectSignalsAndRun( IndexOperation* operationRequested )
     connect( operationRequested, &IndexOperation::indexingProgressed, this,
              &LogDataWorker::indexingProgressed );
 
-    connect( this, &LogDataWorker::indexingCanceled,
-             operationRequested, &IndexOperation::cancel, Qt::DirectConnection );
-
-    connect( &operationWatcher_, &QFutureWatcher<bool>::finished, operationRequested,
-             &QObject::deleteLater );
-
     return operationRequested->start();
 }
 
 void LogDataWorker::interrupt()
 {
-    LOG( logDEBUG ) << "Load interrupt requested";
-    emit indexingCanceled();
+    LOG( logINFO ) << "Load interrupt requested";
+    interruptRequest_.set();
 }
 
 void LogDataWorker::onOperationFinished()
@@ -201,6 +197,7 @@ void LogDataWorker::onOperationFinished()
         emit indexingFinished( LoadingStatus::Successful );
     }
     else {
+        LOG( logINFO ) << "indexing interrupted";
         emit indexingFinished( LoadingStatus::Interrupted );
     }
 }
@@ -208,11 +205,6 @@ void LogDataWorker::onOperationFinished()
 //
 // Operations implementation
 //
-
-void IndexOperation::cancel()
-{
-    interruptRequest_.set();
-}
 
 FastLinePositionArray IndexOperation::parseDataBlock( LineOffset::UnderlyingType block_beginning,
                                                       const QByteArray& block,

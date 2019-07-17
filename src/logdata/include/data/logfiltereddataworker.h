@@ -39,9 +39,8 @@
 #ifndef LOGFILTEREDDATAWORKERTHREAD_H
 #define LOGFILTEREDDATAWORKERTHREAD_H
 
-#include <QObject>
-#include <QThread>
 #include <QMutex>
+#include <QObject>
 #include <QRegularExpression>
 
 #include <QFuture>
@@ -56,14 +55,21 @@ class LogData;
 // Contains the line number the line was found in and its content.
 class MatchingLine {
   public:
-    MatchingLine( LineNumber line ) : lineNumber_{ line }
-    {}
+    MatchingLine( LineNumber line )
+        : lineNumber_{ line }
+    {
+    }
 
     // Accessors
-    LineNumber lineNumber() const { return lineNumber_; }
+    LineNumber lineNumber() const
+    {
+        return lineNumber_;
+    }
 
-    bool operator <( const MatchingLine& other) const
-    { return lineNumber_ < other.lineNumber_; }
+    bool operator<( const MatchingLine& other ) const
+    {
+        return lineNumber_ < other.lineNumber_;
+    }
 
   private:
     LineNumber lineNumber_;
@@ -76,15 +82,17 @@ using SearchResultArray = std::vector<MatchingLine>;
 
 // This class is a mutex protected set of search result data.
 // It is thread safe.
-class SearchData
-{
+class SearchData {
   public:
-    SearchData() : maxLength_{0} { }
+    SearchData()
+        : maxLength_{ 0 }
+    {
+    }
 
     // Atomically get all the search data
     // appending more results to passed array
     void getAll( LineLength* length, SearchResultArray* matches,
-            LinesCount* nbLinesProcessed ) const;
+                 LinesCount* nbLinesProcessed ) const;
     // Atomically set all the search data
     // (overwriting the existing)
     // (the matches are always moved)
@@ -112,13 +120,11 @@ class SearchData
     LinesCount nbLinesProcessed_;
 };
 
-class SearchOperation : public QObject
-{
-  Q_OBJECT
+class SearchOperation : public QObject {
+    Q_OBJECT
   public:
-    SearchOperation(const LogData& sourceLogData,
-            const QRegularExpression &regExp,
-            LineNumber startLine, LineNumber endLine );
+    SearchOperation( const LogData& sourceLogData, AtomicFlag& interruptRequested,
+                     const QRegularExpression& regExp, LineNumber startLine, LineNumber endLine );
 
     // Start the search operation, returns true if it has been done
     // and false if it has been cancelled (results not copied)
@@ -127,40 +133,41 @@ class SearchOperation : public QObject
   signals:
     void searchProgressed( LinesCount nbMatches, int percent, LineNumber initialLine );
 
-  public slots:
-    void cancel();
-
   protected:
     // Implement the common part of the search, passing
     // the shared results and the line to begin the search from.
     void doSearch( SearchData& result, LineNumber initialLine );
 
-    AtomicFlag interruptRequested_;
+    AtomicFlag& interruptRequested_;
     const QRegularExpression regexp_;
     const LogData& sourceLogData_;
     LineNumber startLine_;
     LineNumber endLine_;
 };
 
-class FullSearchOperation : public SearchOperation
-{
-  Q_OBJECT
+class FullSearchOperation : public SearchOperation {
+    Q_OBJECT
   public:
-    FullSearchOperation( const LogData& sourceLogData, const QRegularExpression& regExp,
-                         LineNumber startLine, LineNumber endLine )
-        : SearchOperation( sourceLogData, regExp, startLine, endLine ) {}
+    FullSearchOperation( const LogData& sourceLogData, AtomicFlag& interruptRequested,
+                         const QRegularExpression& regExp, LineNumber startLine,
+                         LineNumber endLine )
+        : SearchOperation( sourceLogData, interruptRequested, regExp, startLine, endLine )
+    {
+    }
 
     void start( SearchData& result ) override;
 };
 
-class UpdateSearchOperation : public SearchOperation
-{
-  Q_OBJECT
+class UpdateSearchOperation : public SearchOperation {
+    Q_OBJECT
   public:
-    UpdateSearchOperation( const LogData& sourceLogData, const QRegularExpression& regExp,
-            LineNumber startLine, LineNumber endLine, LineNumber position )
-        : SearchOperation( sourceLogData, regExp, startLine, endLine ),
-        initialPosition_( position ) {}
+    UpdateSearchOperation( const LogData& sourceLogData, AtomicFlag& interruptRequested,
+                           const QRegularExpression& regExp, LineNumber startLine,
+                           LineNumber endLine, LineNumber position )
+        : SearchOperation( sourceLogData, interruptRequested, regExp, startLine, endLine )
+        , initialPosition_( position )
+    {
+    }
 
     void start( SearchData& result ) override;
 
@@ -168,26 +175,26 @@ class UpdateSearchOperation : public SearchOperation
     LineNumber initialPosition_;
 };
 
-class LogFilteredDataWorker : public QObject
-{
-  Q_OBJECT
+class LogFilteredDataWorker : public QObject {
+    Q_OBJECT
 
   public:
     explicit LogFilteredDataWorker( const LogData& sourceLogData );
     ~LogFilteredDataWorker() override;
 
     // Start the search with the passed regexp
-    void search(const QRegularExpression &regExp, LineNumber startLine, LineNumber endLine );
+    void search( const QRegularExpression& regExp, LineNumber startLine, LineNumber endLine );
     // Continue the previous search starting at the passed position
     // in the source file (line number)
-    void updateSearch( const QRegularExpression& regExp, LineNumber startLine, LineNumber endLine, LineNumber position );
+    void updateSearch( const QRegularExpression& regExp, LineNumber startLine, LineNumber endLine,
+                       LineNumber position );
 
     // Interrupts the search if one is in progress
     void interrupt();
 
     // Returns a copy of the current indexing data
     void getSearchResult( LineLength* maxLength, SearchResultArray* searchMatches,
-           LinesCount* nbLinesProcessed );
+                          LinesCount* nbLinesProcessed );
 
   signals:
     // Sent during the indexing process to signal progress
@@ -197,12 +204,12 @@ class LogFilteredDataWorker : public QObject
     // to copy the new data back.
     void searchFinished();
 
-    void searchCanceled();
+  private:
+    void connectSignalsAndRun( SearchOperation* operationRequested );
 
   private:
-    void connectSignalsAndRun(SearchOperation* operationRequested);
-  private:
     const LogData& sourceLogData_;
+    AtomicFlag interruptRequested_;
 
     // Mutex to protect operationRequested_ and friends
     QMutex mutex_;

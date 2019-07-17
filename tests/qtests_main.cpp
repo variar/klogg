@@ -46,8 +46,9 @@ int main( int argc, char* argv[] )
 
     auto& config = Persistable::getSynced<Configuration>();
     config.setSearchReadBufferSizeLines( 10 );
+    config.setIndexReadBufferSizeMb(1);
     config.setUseSearchResultsCache( false );
-    
+
 
 #ifdef Q_OS_WIN
     config.setPollingEnabled( true );
@@ -56,6 +57,7 @@ int main( int argc, char* argv[] )
     config.setPollingEnabled( false );
 #endif
 
+    QThreadPool::globalInstance()->reserveThread();
     QtConcurrent::run( [&a, &argc, &argv]() {
         int result = Catch::Session().run( argc, argv );
         a.processEvents();

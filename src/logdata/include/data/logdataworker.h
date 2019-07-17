@@ -39,28 +39,31 @@
 #ifndef LOGDATAWORKERTHREAD_H
 #define LOGDATAWORKERTHREAD_H
 
-#include <QObject>
-#include <QMutex>
-#include <QTextCodec>
-#include <QSemaphore>
 #include <QFuture>
 #include <QFutureWatcher>
+#include <QMutex>
+#include <QObject>
+#include <QSemaphore>
+#include <QTextCodec>
 
-#include "loadingstatus.h"
-#include "linepositionarray.h"
 #include "encodingdetector.h"
+#include "linepositionarray.h"
+#include "loadingstatus.h"
 
 #include "atomicflag.h"
 
 // This class is a thread-safe set of indexing data.
-class IndexingData
-{
+class IndexingData {
   public:
-    IndexingData() : dataMutex_(), linePosition_(), maxLength_(0),
-        indexedSize_(0),
-        encodingGuess_(QTextCodec::codecForLocale()),
-        encodingForced_(nullptr)
-    { }
+    IndexingData()
+        : dataMutex_()
+        , linePosition_()
+        , maxLength_( 0 )
+        , indexedSize_( 0 )
+        , encodingGuess_( QTextCodec::codecForLocale() )
+        , encodingForced_( nullptr )
+    {
+    }
 
     // Get the total indexed size
     qint64 getSize() const;
@@ -79,14 +82,12 @@ class IndexingData
     QTextCodec* getEncodingGuess() const;
 
     QTextCodec* getForcedEncoding() const;
-    void forceEncoding(QTextCodec* codec);
-
+    void forceEncoding( QTextCodec* codec );
 
     // Atomically add to all the existing
     // indexing data.
-    void addAll(qint64 size, LineLength length,
-            const FastLinePositionArray& linePosition,
-            QTextCodec* encoding );
+    void addAll( qint64 size, LineLength length, const FastLinePositionArray& linePosition,
+                 QTextCodec* encoding );
 
     // Completely clear the indexing data.
     void clear();
@@ -102,8 +103,7 @@ class IndexingData
     QTextCodec* encodingForced_;
 };
 
-struct IndexingState
-{
+struct IndexingState {
     EncodingParameters encodingParams;
     LineOffset::UnderlyingType pos;
     LineLength::UnderlyingType max_length;
@@ -118,13 +118,14 @@ struct IndexingState
     QSemaphore blockSem;
 };
 
-class IndexOperation : public QObject
-{
-  Q_OBJECT
+class IndexOperation : public QObject {
+    Q_OBJECT
   public:
-    IndexOperation(const QString& fileName, IndexingData& indexingData)
+    IndexOperation( const QString& fileName, IndexingData& indexingData,
+                    AtomicFlag& interruptRequest )
         : fileName_( fileName )
         , indexing_data_( indexingData )
+        , interruptRequest_( interruptRequest )
     {
     }
 
@@ -135,60 +136,52 @@ class IndexOperation : public QObject
   signals:
     void indexingProgressed( int );
 
-  public slots:
-    void cancel();
-
   protected:
-
     // Returns the total size indexed
     // Modify the passed linePosition and maxLength
     void doIndex( LineOffset initialPosition );
 
     QString fileName_;
     IndexingData& indexing_data_;
-    AtomicFlag interruptRequest_;
+    AtomicFlag& interruptRequest_;
 
-private:
-    FastLinePositionArray parseDataBlock(
-            LineOffset::UnderlyingType blockBegining,
-            const QByteArray& block,
-            IndexingState& state ) const;
+  private:
+    FastLinePositionArray parseDataBlock( LineOffset::UnderlyingType blockBegining,
+                                          const QByteArray& block, IndexingState& state ) const;
 
-    void guessEncoding( const QByteArray& block,
-                       IndexingState &state ) const;
+    void guessEncoding( const QByteArray& block, IndexingState& state ) const;
 
-    auto setupIndexingProcess(IndexingState& state);
+    auto setupIndexingProcess( IndexingState& state );
 };
 
-class FullIndexOperation : public IndexOperation
-{
-  Q_OBJECT
+class FullIndexOperation : public IndexOperation {
+    Q_OBJECT
   public:
-    FullIndexOperation( const QString& fileName,
-            IndexingData& indexingData, QTextCodec* forcedEncoding = nullptr)
-        : IndexOperation( fileName, indexingData )
-        , forcedEncoding_(forcedEncoding)
-    { }
+    FullIndexOperation( const QString& fileName, IndexingData& indexingData,
+                        AtomicFlag& interruptRequest, QTextCodec* forcedEncoding = nullptr )
+        : IndexOperation( fileName, indexingData, interruptRequest )
+        , forcedEncoding_( forcedEncoding )
+    {
+    }
     bool start() override;
+
   private:
     QTextCodec* forcedEncoding_;
 };
 
-class PartialIndexOperation : public IndexOperation
-{
-  Q_OBJECT
+class PartialIndexOperation : public IndexOperation {
+    Q_OBJECT
   public:
-    PartialIndexOperation( const QString& fileName, IndexingData& indexingData)
-        : IndexOperation( fileName, indexingData )
+    PartialIndexOperation( const QString& fileName, IndexingData& indexingData, AtomicFlag& interruptRequest )
+        : IndexOperation( fileName, indexingData, interruptRequest )
     {
     }
 
     bool start() override;
 };
 
-class LogDataWorker : public QObject
-{
-  Q_OBJECT
+class LogDataWorker : public QObject {
+    Q_OBJECT
 
   public:
     // Pass a pointer to the IndexingData (initially empty)
@@ -201,7 +194,7 @@ class LogDataWorker : public QObject
     void attachFile( const QString& fileName );
     // Instructs the thread to start a new full indexing of the file, sending
     // signals as it progresses.
-    void indexAll(QTextCodec *forcedEncoding = nullptr);
+    void indexAll( QTextCodec* forcedEncoding = nullptr );
     // Instructs the thread to start a partial indexing (starting at
     // the end of the file as indexed).
     void indexAdditionalLines();
@@ -216,18 +209,17 @@ class LogDataWorker : public QObject
     // to copy the new data back.
     void indexingFinished( LoadingStatus status );
 
-    void indexingCanceled();
-
   private slots:
     void onOperationFinished();
 
   private:
     void doIndexAll();
 
-    bool connectSignalsAndRun(IndexOperation* operationRequested);
+    bool connectSignalsAndRun( IndexOperation* operationRequested );
 
     QFuture<bool> operationFuture_;
     QFutureWatcher<bool> operationWatcher_;
+    AtomicFlag interruptRequest_;
 
     // Mutex to protect operationRequested_ and friends
     QMutex mutex_;

@@ -189,8 +189,7 @@ LogFilteredDataWorker::LogFilteredDataWorker( const LogData& sourceLogData )
 
 LogFilteredDataWorker::~LogFilteredDataWorker()
 {
-    emit searchCanceled();
-
+    interruptRequested_.set();
     QMutexLocker locker( &mutex_ );
     operationWatcher_.waitForFinished();
 }
@@ -200,47 +199,42 @@ void LogFilteredDataWorker::connectSignalsAndRun( SearchOperation* operationRequ
     connect( operationRequested, &SearchOperation::searchProgressed, this,
              &LogFilteredDataWorker::searchProgressed );
 
-    connect( this, &LogFilteredDataWorker::searchCanceled, operationRequested,
-             &SearchOperation::cancel, Qt::DirectConnection );
-
-    connect( &operationWatcher_, &QFutureWatcher<void>::finished, operationRequested,
-             &QObject::deleteLater );
-
-    return operationRequested->start( searchData_ );
+    operationRequested->start( searchData_ );
 }
 
 void LogFilteredDataWorker::search( const QRegularExpression& regExp, LineNumber startLine,
-                                          LineNumber endLine )
+                                    LineNumber endLine )
 {
     QMutexLocker locker( &mutex_ ); // to protect operationRequested_
 
     LOG( logDEBUG ) << "Search requested";
 
     operationWatcher_.waitForFinished();
+    interruptRequested_.clear();
 
     operationFuture_ = QtConcurrent::run( [this, regExp, startLine, endLine] {
-        auto operationRequested
-            = new FullSearchOperation( sourceLogData_, regExp, startLine, endLine );
-        connectSignalsAndRun( operationRequested );
+        auto operationRequested = std::make_unique<FullSearchOperation>(
+            sourceLogData_, interruptRequested_, regExp, startLine, endLine );
+        connectSignalsAndRun( operationRequested.get() );
     } );
 
     operationWatcher_.setFuture( operationFuture_ );
 }
 
-void LogFilteredDataWorker::updateSearch( const QRegularExpression& regExp,
-                                                LineNumber startLine, LineNumber endLine,
-                                                LineNumber position )
+void LogFilteredDataWorker::updateSearch( const QRegularExpression& regExp, LineNumber startLine,
+                                          LineNumber endLine, LineNumber position )
 {
     QMutexLocker locker( &mutex_ ); // to protect operationRequested_
 
     LOG( logDEBUG ) << "Search update requested";
 
     operationWatcher_.waitForFinished();
+    interruptRequested_.clear();
 
     operationFuture_ = QtConcurrent::run( [this, regExp, startLine, endLine, position] {
-        auto operationRequested
-            = new UpdateSearchOperation( sourceLogData_, regExp, startLine, endLine, position );
-        connectSignalsAndRun( operationRequested );
+        auto operationRequested = std::make_unique<UpdateSearchOperation>(
+            sourceLogData_, interruptRequested_, regExp, startLine, endLine, position );
+        connectSignalsAndRun( operationRequested.get() );
     } );
 
     operationWatcher_.setFuture( operationFuture_ );
@@ -249,14 +243,13 @@ void LogFilteredDataWorker::updateSearch( const QRegularExpression& regExp,
 void LogFilteredDataWorker::interrupt()
 {
     LOG( logINFO ) << "Search interruption requested";
-
-    emit searchCanceled();
+    interruptRequested_.set();
 }
 
 // This will do an atomic copy of the object
 void LogFilteredDataWorker::getSearchResult( LineLength* maxLength,
-                                                   SearchResultArray* searchMatches,
-                                                   LinesCount* nbLinesProcessed )
+                                             SearchResultArray* searchMatches,
+                                             LinesCount* nbLinesProcessed )
 {
     searchData_.getAll( maxLength, searchMatches, nbLinesProcessed );
 }
@@ -265,21 +258,17 @@ void LogFilteredDataWorker::getSearchResult( LineLength* maxLength,
 // Operations implementation
 //
 
-SearchOperation::SearchOperation( const LogData& sourceLogData, const QRegularExpression& regExp,
-                                  LineNumber startLine, LineNumber endLine )
+SearchOperation::SearchOperation( const LogData& sourceLogData, AtomicFlag& interruptRequested,
+                                  const QRegularExpression& regExp, LineNumber startLine,
+                                  LineNumber endLine )
 
-    : regexp_( regExp )
+    : interruptRequested_( interruptRequested )
+    , regexp_( regExp )
     , sourceLogData_( sourceLogData )
     , startLine_( startLine )
     , endLine_( endLine )
 
 {
-}
-
-void SearchOperation::cancel()
-{
-    LOG( logINFO ) << "Cancel search";
-    interruptRequested_.set();
 }
 
 void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
