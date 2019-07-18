@@ -177,6 +177,8 @@ void CompressedLinePositionStorage::move_from( CompressedLinePositionStorage&& o
     previous_block_offset_ = orig.previous_block_offset_;
 
     orig.nb_lines_ = 0_lcount;
+
+    cache_.clear();
 }
 
 // Move constructor
@@ -194,7 +196,6 @@ operator=( CompressedLinePositionStorage&& orig )
     pool32_ = std::move( orig.pool32_ );
     pool64_ = std::move( orig.pool64_ );
     move_from( std::move( orig ) );
-
     return *this;
 }
 
@@ -383,4 +384,6 @@ void CompressedLinePositionStorage::pop_back()
 
     --nb_lines_;
     current_pos_ = at( nb_lines_.get() - 1 );
+
+    cache_.clear();
 }
