@@ -362,6 +362,8 @@ void CrawlerWidget::updateFilteredView( LinesCount nbMatches, int progress,
 {
     LOG( logDEBUG ) << "updateFilteredView received.";
 
+    searchInfoLine->show();
+
     if ( progress == 100 ) {
         // Searching done
         printSearchInfoMessage( nbMatches );
@@ -783,6 +785,9 @@ void CrawlerWidget::setup()
     searchInfoLine = new InfoLine();
     searchInfoLine->setFrameStyle( QFrame::WinPanel | QFrame::Sunken );
     searchInfoLine->setLineWidth( 1 );
+    auto searchInfoLineSizePolicy = searchInfoLine->sizePolicy();
+    searchInfoLineSizePolicy.setRetainSizeWhenHidden( true );
+    searchInfoLine->setSizePolicy( searchInfoLineSizePolicy );
     searchInfoLineDefaultPalette = searchInfoLine->palette();
 
     matchCaseButton = new QPushButton();
@@ -999,6 +1004,7 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
             logFilteredData_->runSearch( regexp, searchStartLine_, searchEndLine_ );
             // Accept auto-refresh of the search
             searchState_.startSearch();
+            searchInfoLine->hide();
         }
         else {
             // The regexp is wrong
@@ -1017,6 +1023,7 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
             errorMessage += regexp.errorString();
             searchInfoLine->setPalette( errorPalette );
             searchInfoLine->setText( errorMessage );
+            searchInfoLine->show();
         }
     }
     else {
@@ -1063,6 +1070,7 @@ void CrawlerWidget::printSearchInfoMessage( LinesCount nbMatches )
 
     searchInfoLine->setPalette( searchInfoLineDefaultPalette );
     searchInfoLine->setText( text );
+    searchInfoLine->setVisible( ! text.isEmpty() );
 }
 
 // Change the data status and, if needed, advise upstream.
