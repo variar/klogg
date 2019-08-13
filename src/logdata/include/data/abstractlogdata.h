@@ -101,6 +101,15 @@ class AbstractLogData : public QObject {
         return LineLength( line.length() + total_spaces );
     }
 
+    // The "type" of a line, which will appear in the FilteredView
+    enum class LineTypeFlags
+    {
+        Plain = 0,      // 0 can be checked like a proper flag in QFlags
+        Match = 1 << 0,
+        Mark  = 1 << 1,
+    };
+    Q_DECLARE_FLAGS( LineType, LineTypeFlags )
+
   protected:
     // Internal function called to get a given line
     virtual QString doGetLineString( LineNumber line ) const = 0;
@@ -147,5 +156,7 @@ class AbstractLogData : public QObject {
         return untabified_line;
     }
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS( AbstractLogData::LineType )
 
 #endif

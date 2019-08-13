@@ -53,10 +53,10 @@
 #include "quickfindmux.h"
 #include "viewtools.h"
 #include "data/linetypes.h"
+#include "data/abstractlogdata.h"
 
 class QMenu;
 class QAction;
-class AbstractLogData;
 
 class LineChunk
 {
@@ -213,10 +213,9 @@ class AbstractLogView :
     void wheelEvent( QWheelEvent* wheelEvent ) override;
     bool event( QEvent * e ) override;
 
-    // Must be implemented to return wether the line number is
-    // a match, a mark or just a normal line (used for coloured bullets)
-    enum LineType { Normal, Marked, Match };
-    virtual LineType lineType( LineNumber lineNumber ) const = 0;
+    // Must be implemented to return what LineType the line number is
+    // (used for coloured bullets)
+    virtual AbstractLogData::LineType lineType( LineNumber lineNumber ) const = 0;
 
     // Line number to display for line at the given index
     virtual LineNumber displayLineNumber( LineNumber lineNumber ) const;

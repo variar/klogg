@@ -1620,6 +1620,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t delta_y 
     static const QBrush normalBulletBrush = QBrush( Qt::white );
     static const QBrush matchBulletBrush = QBrush( Qt::red );
     static const QBrush markBrush = QBrush( "dodgerblue" );
+    static const QBrush markedMatchBrush = QBrush( "maroon" );
 
     static const int SEPARATOR_WIDTH = 1;
     static const qreal BULLET_AREA_WIDTH = 11;
@@ -1829,8 +1830,9 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t delta_y 
         const qreal middleXLine = BULLET_AREA_WIDTH / 2;
         const qreal middleYLine = yPos + ( fontHeight / 2 );
 
-        const LineType line_type = lineType( line_index );
-        if ( line_type == Marked ) {
+        using LineTypeFlags = AbstractLogData::LineTypeFlags;
+        const AbstractLogData::LineType line_type = lineType( line_index );
+        if ( line_type.testFlag( LineTypeFlags::Mark ) ) {
             // A pretty arrow if the line is marked
             const QPointF points[ 7 ] = {
                 QPointF( 1, middleYLine - 2 ),
@@ -1842,17 +1844,17 @@ void AbstractLogView::drawTextArea( QPaintDevice* paint_device, int32_t delta_y 
                 QPointF( 1, middleYLine + 2 ),
             };
 
-            painter.setBrush( markBrush );
+            painter.setBrush( line_type.testFlag( LineTypeFlags::Match ) ? markedMatchBrush : markBrush );
             painter.drawPolygon( points, 7 );
         }
         else {
             // For pretty circles
             painter.setRenderHint( QPainter::Antialiasing );
 
-            if ( lineType( line_index ) == Match )
-                painter.setBrush( matchBulletBrush );
-            else
-                painter.setBrush( normalBulletBrush );
+            QBrush brush = normalBulletBrush;;
+            if ( line_type.testFlag( LineTypeFlags::Match ) )
+                brush = matchBulletBrush;
+            painter.setBrush( brush );
             painter.drawEllipse( middleXLine - circleSize, middleYLine - circleSize, circleSize * 2,
                                  circleSize * 2 );
         }

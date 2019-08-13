@@ -59,7 +59,7 @@ class FilteredView : public AbstractLogView
     void setVisibility( Visibility visi );
 
   protected:
-    LineType lineType(LineNumber lineNumber ) const override;
+    LogFilteredData::LineType lineType( LineNumber lineNumber ) const override;
 
     // Number of the filtered line relative to the unfiltered source
     LineNumber displayLineNumber(LineNumber lineNumber ) const override;

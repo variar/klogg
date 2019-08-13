@@ -61,7 +61,7 @@ class LogMainView : public AbstractLogView
 
   protected:
     // Implements the virtual function
-    LineType lineType( LineNumber lineNumber ) const override;
+    LogData::LineType lineType( LineNumber lineNumber ) const override;
 
     void keyPressEvent( QKeyEvent* keyEvent ) override;
 

@@ -112,11 +112,11 @@ void Overview::recalculatesLines()
         if ( linesInFile_.get() > 0 ) {
             const auto nbLines = logFilteredData_->getNbLine();
             for ( auto i = 0_lnum; i < nbLines; ++i ) {
-                LogFilteredData::FilteredLineType line_type =
-                    logFilteredData_->filteredLineTypeByIndex( i );
+                LogFilteredData::LineType line_type =
+                    logFilteredData_->lineTypeByIndex( i );
                 const auto line = logFilteredData_->getMatchingLineNumber( i );
                 const auto position = static_cast<int>( (qint64)(line.get()) * height_ / linesInFile_.get() );
-                if ( line_type.testFlag( LogFilteredData::FilteredLineTypeFlags::Match ) ) {
+                if ( line_type.testFlag( LogFilteredData::LineTypeFlags::Match ) ) {
                     if ( ( ! matchLines_.empty() ) && matchLines_.back().position() == position ) {
                         // If the line is already there, we increase its weight
                         matchLines_.back().load();

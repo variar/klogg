@@ -62,16 +62,10 @@ void FilteredView::setVisibility( Visibility visi )
 }
 
 // For the filtered view, a line is always matching!
-AbstractLogView::LineType FilteredView::lineType( LineNumber lineNumber ) const
+AbstractLogData::LineType FilteredView::lineType( LineNumber lineNumber ) const
 {
-    const auto line_in_file = logFilteredData_->getMatchingLineNumber( lineNumber );
-
-    if ( logFilteredData_->isLineMarked( line_in_file ) ) {
-        return Marked;
-    }
-    else {
-        return Match;
-    }
+    // line in filteredview corresponds to index
+    return logFilteredData_->lineTypeByIndex( lineNumber );
 }
 
 LineNumber FilteredView::displayLineNumber( LineNumber lineNumber ) const
@@ -99,17 +93,18 @@ void FilteredView::keyPressEvent( QKeyEvent* keyEvent )
         switch ( keyEvent->key() ) {
             case Qt::Key_BracketLeft:
             {
+                using LineTypeFlags = LogFilteredData::LineTypeFlags;
                 auto i = getViewPosition() - 1_lcount;
                 bool foundMark = false;
                 for (; i != 0_lnum; --i ) {
-                    if ( lineType( i ) == Marked ) {
+                    if ( lineType( i ).testFlag( LineTypeFlags::Mark ) ) {
                         foundMark = true;
                         break;
                     }
                 }
 
                 if ( !foundMark ) {
-                    foundMark = lineType( i ) == Marked;
+                    foundMark = lineType( i ).testFlag( LineTypeFlags::Mark );
                 }
 
                 if ( foundMark ) {
@@ -123,7 +118,7 @@ void FilteredView::keyPressEvent( QKeyEvent* keyEvent )
             {
                 const auto nbLines = logFilteredData_->getNbLine();
                 for ( auto i = getViewPosition() + 1_lcount; i < nbLines; ++i ) {
-                    if ( lineType( i ) == Marked ) {
+                    if ( lineType( i ).testFlag( LogFilteredData::LineTypeFlags::Mark ) ) {
                         selectAndDisplayLine( i );
                         break;
                     }

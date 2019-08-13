@@ -90,9 +90,6 @@ class LogFilteredData : public AbstractLogData {
     // given original line number
     LineNumber getLineIndexNumber( LineNumber lineNumber ) const;
 
-    // Returns whether the line number passed is in our list of matching ones.
-    bool isLineInMatchingList( LineNumber lineNumber );
-
     // Returns the number of lines in the source log data
     LinesCount getNbTotalLines() const;
     // Returns the number of matches (independently of the visibility)
@@ -100,18 +97,8 @@ class LogFilteredData : public AbstractLogData {
     // Returns the number of marks (independently of the visibility)
     LinesCount getNbMarks() const;
 
-    // Returns the reason why the line at the passed index is in the filtered
-    // data.  It can be because it is either a mark or a match.
-    enum class FilteredLineTypeFlags
-    {
-        None  = 0,        // this is for internal use
-        Match = 1 << 0,
-        Mark  = 1 << 1,
-    };
-
-    Q_DECLARE_FLAGS(FilteredLineType, FilteredLineTypeFlags)
-
-    FilteredLineType filteredLineTypeByIndex(LineNumber index ) const;
+    LineType lineTypeByIndex( LineNumber index ) const;
+    LineType lineTypeByLine( LineNumber index ) const;
 
     // Marks interface (delegated to a Marks object)
 
@@ -120,8 +107,6 @@ class LogFilteredData : public AbstractLogData {
     void addMark( LineNumber line, QChar mark = QChar() );
     // Get the (unique) mark identified by the passed char.
     LineNumber getMark( QChar mark ) const;
-    // Returns wheither the passed line has a mark on it.
-    bool isLineMarked( LineNumber line ) const;
     // Get the first mark after the line passed
     OptionalLineNumber getMarkAfter( LineNumber line ) const;
     // Get the first mark before the line passed
@@ -138,13 +123,14 @@ class LogFilteredData : public AbstractLogData {
 
     // Changes what the AbstractLogData returns via its getXLines/getNbLines
     // API.
-    enum class Visibility
+    enum class VisibilityFlags
     {
-        MatchesOnly,
-        MarksOnly,
-        MarksAndMatches
+        None    = static_cast<LineType::Int>( LineTypeFlags::Plain ), //this is for internal use
+        Matches = static_cast<LineType::Int>( LineTypeFlags::Match ),
+        Marks   = static_cast<LineType::Int>( LineTypeFlags::Mark  ),
     };
-    Q_ENUM( Visibility );
+    Q_ENUM( VisibilityFlags );
+    Q_DECLARE_FLAGS( Visibility, VisibilityFlags )
     void setVisibility( Visibility visibility );
 
   signals:
@@ -172,6 +158,11 @@ class LogFilteredData : public AbstractLogData {
 
     void doAttachReader() const override;
     void doDetachReader() const override;
+
+    // Returns whether the line number passed is in our list of matching ones.
+    bool isLineMatched( LineNumber lineNumber ) const;
+    // Returns wheither the passed line has a mark on it.
+    bool isLineMarked( LineNumber line ) const;
 
     // List of the matching line numbers
     SearchResultArray matching_lines_;
@@ -229,7 +220,7 @@ class LogFilteredData : public AbstractLogData {
     // It refers to the index of the singular arrays (Marks or SearchResultArray) where the item was removed.
     void removeFromFilteredItemsCache( size_t remove_index, FilteredItem&& item );
     void removeFromFilteredItemsCache( FilteredItem&& item );
-    void removeAllFromFilteredItemsCache( FilteredLineType type );
+    void removeAllFromFilteredItemsCache( LineType type );
 
     // update maxLengthMarks_ when a Mark was removed.
     void updateMaxLengthMarks( LineNumber removed_line );
@@ -245,7 +236,7 @@ class LogFilteredData::FilteredItem {
   public:
     // A default ctor seems to be necessary for QVector
     FilteredItem();
-    FilteredItem( LineNumber lineNumber, FilteredLineType type )
+    FilteredItem( LineNumber lineNumber, LineType type )
         : lineNumber_{ lineNumber }
         , type_ { type }
     {}
@@ -253,14 +244,14 @@ class LogFilteredData::FilteredItem {
     LineNumber lineNumber() const
     { return lineNumber_; }
 
-    FilteredLineType type() const
+    LineType type() const
     { return type_; }
 
-    void add( FilteredLineType type )
+    void add( LineType type )
     { type_ |= type; }
 
     // Returns whether any type-flag is left.
-    bool remove( FilteredLineType type )
+    bool remove( LineType type )
     {
         type_ &= ~type;
         return !!type_;
@@ -274,10 +265,10 @@ class LogFilteredData::FilteredItem {
 
   private:
     LineNumber lineNumber_;
-    FilteredLineType type_;
+    LineType type_;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(LogFilteredData::FilteredLineType)
-
+Q_DECLARE_OPERATORS_FOR_FLAGS( LogFilteredData::Visibility )
+Q_DECLARE_METATYPE( LogFilteredData::Visibility )
 
 #endif

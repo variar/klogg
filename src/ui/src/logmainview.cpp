@@ -70,21 +70,12 @@ void LogMainView::useNewFiltering( LogFilteredData* filteredData )
         getOverview()->setFilteredData( filteredData_ );
 }
 
-AbstractLogView::LineType LogMainView::lineType(LineNumber lineNumber ) const
+AbstractLogData::LineType LogMainView::lineType( LineNumber lineNumber ) const
 {
-    if ( filteredData_ != nullptr ) {
-        LineType line_type;
-        if ( filteredData_->isLineMarked( lineNumber ) )
-            line_type = Marked;
-        else if ( filteredData_->isLineInMatchingList( lineNumber ) )
-            line_type = Match;
-        else
-            line_type = Normal;
-
-        return line_type;
+    if ( filteredData_ ) {
+        return filteredData_->lineTypeByLine( lineNumber );
     }
-    else
-        return Normal;
+    return AbstractLogData::LineTypeFlags::Plain;
 }
 
 void LogMainView::keyPressEvent( QKeyEvent* keyEvent )
