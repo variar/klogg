@@ -227,7 +227,9 @@ int main( int argc, char* argv[] )
 
     // No icon in menus
     QCoreApplication::setAttribute( Qt::AA_DontShowIconsInMenus );
+#ifdef Q_OS_WIN
     QCoreApplication::setAttribute( Qt::AA_DisableWindowContextHelpButton );
+#endif
 
     // FIXME: should be replaced by a two staged init of MainWindow
     Configuration::getSynced();
