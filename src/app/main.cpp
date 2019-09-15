@@ -87,6 +87,10 @@ static void print_version();
 
 int main( int argc, char* argv[] )
 {
+    // This attribute must be set before QGuiApplication is constructed:
+    QCoreApplication::setAttribute( Qt::AA_EnableHighDpiScaling );
+    // We support high-dpi (aka Retina) displays
+    QCoreApplication::setAttribute( Qt::AA_UseHighDpiPixmaps );
     SingleApplication app( argc, argv, true, SingleApplication::SecondaryNotification );
 
     // Register types for Qt
@@ -221,11 +225,9 @@ int main( int argc, char* argv[] )
                           &MessageReceiver::receiveMessage, Qt::QueuedConnection );
     }
 
-    // We support high-dpi (aka Retina) displays
-    app.setAttribute( Qt::AA_UseHighDpiPixmaps );
-
     // No icon in menus
-    app.setAttribute( Qt::AA_DontShowIconsInMenus );
+    QCoreApplication::setAttribute( Qt::AA_DontShowIconsInMenus );
+    QCoreApplication::setAttribute( Qt::AA_DisableWindowContextHelpButton );
 
     // FIXME: should be replaced by a two staged init of MainWindow
     Configuration::getSynced();
