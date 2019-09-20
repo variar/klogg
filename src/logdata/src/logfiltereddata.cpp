@@ -106,10 +106,7 @@ void LogFilteredData::runSearch( const QRegularExpression& regExp, LineNumber st
             matching_lines_ = cachedResults.value().matching_lines;
             maxLength_ = cachedResults.value().maxLength;
 
-            if ( visibility_ == Visibility::MarksAndMatches ) {
-                filteredItemsCache_.clear();
-                regenerateFilteredItemsCache();
-            }
+            regenerateFilteredItemsCache();
 
             emit searchProgressed(
                 LinesCount( static_cast<LinesCount::UnderlyingType>( matching_lines_.size() ) ),
@@ -184,17 +181,9 @@ LinesCount LogFilteredData::getNbMarks() const
 
 LogFilteredData::FilteredLineType LogFilteredData::filteredLineTypeByIndex( LineNumber index ) const
 {
-    // If we are only showing one type, the line is there because
-    // it is of this type.
-    if ( visibility_ == Visibility::MatchesOnly )
-        return FilteredLineTypeFlags::Match;
-    else if ( visibility_ == Visibility::MarksOnly )
-        return FilteredLineTypeFlags::Mark;
-    else {
-        auto type = filteredItemsCache_[ index.get() ].type();
-        assert( !!type );
-        return type;
-    }
+    auto type = filteredItemsCache_[ index.get() ].type();
+    assert( !!type );
+    return type;
 }
 
 // Delegation to our Marks object
@@ -304,9 +293,7 @@ QList<LineNumber> LogFilteredData::getMarks() const
 void LogFilteredData::setVisibility( Visibility visi )
 {
     visibility_ = visi;
-
-    if ( visibility_ == Visibility::MarksAndMatches )
-        regenerateFilteredItemsCache();
+    regenerateFilteredItemsCache();
 }
 
 //
@@ -378,56 +365,18 @@ void LogFilteredData::handleSearchProgressed( LinesCount nbMatches, int progress
 
 LineNumber LogFilteredData::findLogDataLine( LineNumber lineNum ) const
 {
-    auto line = maxValue<LineNumber>();
-    if ( visibility_ == Visibility::MatchesOnly ) {
-        if ( lineNum.get() < matching_lines_.size() ) {
-            line = matching_lines_[ lineNum.get() ].lineNumber();
-        }
-        else {
-            LOG( logERROR ) << "Index too big in LogFilteredData: " << lineNum << " matches size "
-                            << matching_lines_.size();
-        }
-    }
-    else if ( visibility_ == Visibility::MarksOnly ) {
-        if ( lineNum.get() < marks_.size() )
-            line = marks_.getLineMarkedByIndex( lineNum.get() );
-        else
-            LOG( logERROR ) << "Index too big in LogFilteredData: " << lineNum << " marks size "
-                            << marks_.size();
-    }
-    else {
-        assert( visibility_ == Visibility::MarksAndMatches );
-
-        if ( lineNum.get() < filteredItemsCache_.size() ) {
-            line = filteredItemsCache_[ lineNum.get() ].lineNumber();
-        }
-        else {
-            LOG( logERROR ) << "Index too big in LogFilteredData: " << lineNum << " cache size "
-                            << filteredItemsCache_.size();
-        }
+    if ( lineNum.get() >= filteredItemsCache_.size() ) {
+        LOG( logERROR ) << "Index too big in LogFilteredData: " << lineNum << " cache size "
+                        << filteredItemsCache_.size();
+        return maxValue<LineNumber>();
     }
 
-    return line;
+    return filteredItemsCache_[ lineNum.get() ].lineNumber();
 }
 
 LineNumber LogFilteredData::findFilteredLine( LineNumber lineNum ) const
 {
-    auto lineIndex = maxValue<LineNumber>();
-
-    if ( visibility_ == Visibility::MatchesOnly ) {
-        lineIndex = lookupLineNumber( matching_lines_.begin(), matching_lines_.end(), lineNum );
-    }
-    else if ( visibility_ == Visibility::MarksOnly ) {
-        lineIndex = lookupLineNumber( marks_.begin(), marks_.end(), lineNum );
-    }
-    else {
-        assert( visibility_ == Visibility::MarksAndMatches );
-
-        lineIndex
-            = lookupLineNumber( filteredItemsCache_.begin(), filteredItemsCache_.end(), lineNum );
-    }
-
-    return lineIndex;
+    return lookupLineNumber( filteredItemsCache_.begin(), filteredItemsCache_.end(), lineNum );
 }
 
 // Implementation of the virtual function.
@@ -474,37 +423,14 @@ std::vector<QString> LogFilteredData::doGetExpandedLines( LineNumber first_line,
 // Implementation of the virtual function.
 LinesCount LogFilteredData::doGetNbLine() const
 {
-    size_t nbLines{};
-
-    if ( visibility_ == Visibility::MatchesOnly )
-        nbLines = matching_lines_.size();
-    else if ( visibility_ == Visibility::MarksOnly )
-        nbLines = marks_.size();
-    else {
-        assert( visibility_ == Visibility::MarksAndMatches );
-
-        nbLines = filteredItemsCache_.size();
-    }
-
+    size_t nbLines = filteredItemsCache_.size();
     return LinesCount( static_cast<LinesCount::UnderlyingType>( nbLines ) );
 }
 
 // Implementation of the virtual function.
 LineLength LogFilteredData::doGetMaxLength() const
 {
-    LineLength max_length;
-
-    if ( visibility_ == Visibility::MatchesOnly )
-        max_length = maxLength_;
-    else if ( visibility_ == Visibility::MarksOnly )
-        max_length = maxLengthMarks_;
-    else {
-        assert( visibility_ == Visibility::MarksAndMatches );
-
-        max_length = qMax( maxLength_, maxLengthMarks_ );
-    }
-
-    return max_length;
+    return qMax( maxLength_, maxLengthMarks_ );
 }
 
 // Implementation of the virtual function.
@@ -534,8 +460,6 @@ void LogFilteredData::doDetachReader() const
     sourceLogData_->detachReader();
 }
 
-// TODO: We might be a bit smarter and not regenerate the whole thing when
-// e.g. stuff is added at the end of the search.
 void LogFilteredData::regenerateFilteredItemsCache() const
 {
     using namespace std::chrono;
@@ -544,12 +468,7 @@ void LogFilteredData::regenerateFilteredItemsCache() const
 
     LOG( logDEBUG ) << "regenerateFilteredItemsCache";
 
-    if ( filteredItemsCache_.size() > 0 ) {
-        // the cache was not invalidated, so we can keep it
-        LOG( logDEBUG ) << "cache was not invalidated";
-        return;
-    }
-
+    filteredItemsCache_.clear();
     filteredItemsCache_.reserve( matching_lines_.size() + marks_.size() );
     // (it's an overestimate but probably not by much so it's fine)
 
@@ -598,12 +517,6 @@ void LogFilteredData::insertIntoFilteredItemsCache( size_t insert_index, Filtere
     using std::end;
     using std::next;
 
-    if ( visibility_ != Visibility::MarksAndMatches ) {
-        // this is invalidated and will be regenerated when we need it
-        filteredItemsCache_.clear();
-        LOG( logDEBUG ) << "cache is invalidated";
-    }
-
     // Search for the corresponding index.
     // We can start the search from insert_index, since lineNumber >= index is always true.
     auto found = std::lower_bound( next( begin( filteredItemsCache_ ), insert_index ),
@@ -626,15 +539,6 @@ void LogFilteredData::insertNewMatches( const SearchResultArray& new_matches )
 {
     using std::begin;
     using std::end;
-
-    if ( visibility_ != Visibility::MarksAndMatches ) {
-        // this is invalidated and will be regenerated when we need it
-        filteredItemsCache_.clear();
-        if ( matching_lines_.size() == 0 ) {
-            LOG( logDEBUG ) << "cache is invalidated";
-        }
-        return;
-    }
 
     filteredItemsCache_.reserve( matching_lines_.size() + marks_.size() );
 
@@ -660,13 +564,6 @@ void LogFilteredData::removeFromFilteredItemsCache( size_t remove_index, Filtere
     using std::begin;
     using std::end;
     using std::next;
-
-    if ( visibility_ != Visibility::MarksAndMatches ) {
-        // this is invalidated and will be regenerated when we need it
-        filteredItemsCache_.clear();
-        LOG( logDEBUG ) << "cache is invalidated";
-        return;
-    }
 
     // Search for the corresponding index.
     // We can start the search from remove_index, since lineNumber >= index is always true.
@@ -698,13 +595,6 @@ void LogFilteredData::removeAllFromFilteredItemsCache( FilteredLineType type )
 {
     using std::begin;
     using std::end;
-
-    if ( visibility_ != Visibility::MarksAndMatches ) {
-        // this is invalidated and will be regenerated when we need it
-        filteredItemsCache_.clear();
-        LOG( logDEBUG ) << "cache is invalidated";
-        return;
-    }
 
     auto erase_begin
         = std::remove_if( begin( filteredItemsCache_ ), end( filteredItemsCache_ ),
