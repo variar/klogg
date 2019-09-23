@@ -65,10 +65,16 @@ void runSearch( LogFilteredData* filtered_data,  const QString& regexp,
 
 }
 
-SCENARIO( "filtered log data", "[logdata]") {
+static LogFilteredData::LineTypeFlags toFlags( LogFilteredData::LineType type )
+{
+    using LineTypeFlags = LogFilteredData::LineTypeFlags;
+    using LineType = LogFilteredData::LineType;
+    return static_cast<LineTypeFlags>( static_cast<LineType::Int>( type ) );
+}
 
-    using Visibility = LogFilteredData::Visibility;
-    using LineType = LogFilteredData::FilteredLineTypeFlags;
+SCENARIO( "filtered log data", "[logdata]") {
+    using VisibilityFlags = LogFilteredData::VisibilityFlags;
+    using LineTypeFlags = LogFilteredData::LineTypeFlags;
 
     auto useParallelSearch = GENERATE(true, false);
     auto& config = Configuration::get();
@@ -90,7 +96,7 @@ SCENARIO( "filtered log data", "[logdata]") {
 
             THEN( "No marked lines stored" ) {
                 for ( LineNumber i = 0_lnum; i < LineNumber( SL_NB_LINES ); ++i )
-                    REQUIRE_FALSE( filtered_data->isLineMarked( i ) );
+                    REQUIRE_FALSE( filtered_data->lineTypeByLine( i ).testFlag( LineTypeFlags::Mark ) );
             }
         }
 
@@ -100,8 +106,8 @@ SCENARIO( "filtered log data", "[logdata]") {
 
             WHEN( "Check for marked line") {
                 THEN( "Return true") {
-                    REQUIRE( filtered_data->isLineMarked( 10_lnum ) );
-                    REQUIRE( filtered_data->isLineMarked( 25_lnum ) );
+                    REQUIRE( filtered_data->lineTypeByLine( 10_lnum ).testFlag( LineTypeFlags::Mark ) );
+                    REQUIRE( filtered_data->lineTypeByLine( 25_lnum ).testFlag( LineTypeFlags::Mark ) );
                 }
             }
 
@@ -151,7 +157,7 @@ SCENARIO( "filtered log data", "[logdata]") {
             WHEN( "Delete mark" ) {
                 filtered_data->deleteMark( 10_lnum );
                 THEN( "Mark is removed" ) {
-                    REQUIRE_FALSE( filtered_data->isLineMarked( 10_lnum ) );
+                    REQUIRE_FALSE( filtered_data->lineTypeByLine( 10_lnum ).testFlag( LineTypeFlags::Mark ) );
                     REQUIRE( filtered_data->getNbMarks() == 1_lcount );
                 }
             }
@@ -219,41 +225,102 @@ SCENARIO( "filtered log data", "[logdata]") {
                 filtered_data->addMark( 5_lnum );
 
                 WHEN( "Only marks are visible" ) {
-
-                    filtered_data->setVisibility( Visibility::MarksOnly );
+                    filtered_data->setVisibility( VisibilityFlags::Marks );
 
                     THEN( "Has only marked lines count" ) {
                         REQUIRE( filtered_data->getNbLine() == 2_lcount );
                     }
+
+                    WHEN( "Ask for line type by line" ) {
+                        THEN( "Return mark" ) {
+                            auto type = filtered_data->lineTypeByLine( 5_lnum );
+                            REQUIRE( toFlags( type ) == LineTypeFlags::Mark );
+                        }
+                        THEN( "Return match" ) {
+                            auto type = filtered_data->lineTypeByLine( 19_lnum );
+                            REQUIRE( toFlags( type ) == LineTypeFlags::Match );
+                        }
+                        THEN( "Return mark & match" ) {
+                            auto type = filtered_data->lineTypeByLine( 9_lnum );
+                            REQUIRE( toFlags( type ) == toFlags( LineTypeFlags::Mark | LineTypeFlags::Match ) );
+                        }
+                    }
+
+                    WHEN( "Ask for line type by index" ) {
+                        THEN( "Return mark" ) {
+                            auto type = filtered_data->lineTypeByIndex( 0_lnum );
+                            REQUIRE( toFlags( type ) == LineTypeFlags::Mark );
+                        }
+                        THEN( "Return mark & match" ) {
+                            auto type = filtered_data->lineTypeByIndex( 1_lnum );
+                            REQUIRE( toFlags( type ) == toFlags( LineTypeFlags::Mark | LineTypeFlags::Match ) );
+                        }
+                    }
                 }
 
                 WHEN( "Only matches are visible" ) {
-                    filtered_data->setVisibility( Visibility::MatchesOnly );
+                    filtered_data->setVisibility( VisibilityFlags::Matches );
 
                     THEN( "Has only matches lines count" ) {
                         REQUIRE( filtered_data->getNbLine() == 50_lcount );
                     }
-                }
 
-                WHEN( "Ask for marked line type" ) {
-                    auto type = filtered_data->filteredLineTypeByIndex( 0_lnum );
-                    THEN( "Return mark" ) {
-                        REQUIRE( type.testFlag( LineType::Mark ) );
+                    WHEN( "Ask for line type by line" ) {
+                        THEN( "Return mark" ) {
+                            auto type = filtered_data->lineTypeByLine( 5_lnum );
+                            REQUIRE( toFlags( type ) == LineTypeFlags::Mark );
+                        }
+                        THEN( "Return match" ) {
+                            auto type = filtered_data->lineTypeByLine( 19_lnum );
+                            REQUIRE( toFlags( type ) == LineTypeFlags::Match );
+                        }
+                        THEN( "Return mark & match" ) {
+                            auto type = filtered_data->lineTypeByLine( 9_lnum );
+                            REQUIRE( toFlags( type ) == toFlags( LineTypeFlags::Mark | LineTypeFlags::Match ) );
+                        }
+                    }
+
+                    WHEN( "Ask for line type by index" ) {
+                        THEN( "Return match" ) {
+                            auto type = filtered_data->lineTypeByIndex( 1_lnum );
+                            REQUIRE( toFlags( type ) == LineTypeFlags::Match );
+                        }
+                        THEN( "Return mark & match" ) {
+                            auto type = filtered_data->lineTypeByIndex( 0_lnum );
+                            REQUIRE( toFlags( type ) == toFlags( LineTypeFlags::Mark | LineTypeFlags::Match ) );
+                        }
                     }
                 }
 
-                WHEN( "Ask for matched line type" ) {
-                    auto type = filtered_data->filteredLineTypeByIndex( 50_lnum );
+                filtered_data->setVisibility( VisibilityFlags::Matches | VisibilityFlags::Marks );
+
+                WHEN( "Ask for line type by line" ) {
+                    THEN( "Return Mark" ) {
+                        auto type = filtered_data->lineTypeByLine( 5_lnum );
+                        REQUIRE( toFlags( type ) == LineTypeFlags::Mark );
+                    }
                     THEN( "Return match" ) {
-                        REQUIRE( type.testFlag( LineType::Match ) );
+                        auto type = filtered_data->lineTypeByLine( 19_lnum );
+                        REQUIRE( toFlags( type ) == LineTypeFlags::Match );
+                    }
+                    THEN( "Return mark & match" ) {
+                        auto type = filtered_data->lineTypeByLine( 9_lnum );
+                        REQUIRE( toFlags( type ) == toFlags( LineTypeFlags::Mark | LineTypeFlags::Match ) );
                     }
                 }
 
-                WHEN( "Ask for mixed line type" ) {
-                    auto type = filtered_data->filteredLineTypeByIndex( 1_lnum );
+                WHEN( "Ask for line type by index" ) {
                     THEN( "Return mark" ) {
-                        REQUIRE( type.testFlag( LineType::Mark ) );
-                        REQUIRE( type.testFlag( LineType::Match ) );
+                        auto type = filtered_data->lineTypeByIndex( 0_lnum );
+                        REQUIRE( toFlags( type ) == LineTypeFlags::Mark );
+                    }
+                    THEN( "Return match" ) {
+                        auto type = filtered_data->lineTypeByIndex( 2_lnum );
+                        REQUIRE( toFlags( type ) == LineTypeFlags::Match );
+                    }
+                    THEN( "Return mark & match" ) {
+                        auto type = filtered_data->lineTypeByIndex( 1_lnum );
+                        REQUIRE( toFlags( type ) == toFlags( LineTypeFlags::Mark | LineTypeFlags::Match ) );
                     }
                 }
             }
