@@ -104,6 +104,27 @@ uint32_t Marks::deleteMark( LineNumber line )
     return index;
 }
 
+bool Marks::toggleMark( LineNumber line, QChar mark, uint32_t &index )
+{
+    // 'mark' is not used yet
+    Q_UNUSED(mark);
+
+    // Look for the index immediately before
+    if ( lookupLineNumber( marks_, line, index ) )
+    {
+        marks_.erase( marks_.begin() + index );
+        return false;
+    }
+    else
+    {
+        // If a mark is not already set for this line
+        LOG(logDEBUG) << "Inserting mark at line " << line
+            << " (index " << index << ")";
+        marks_.emplace( marks_.begin() + index,  line );
+        return true;
+    }
+}
+
 void Marks::clear()
 {
     marks_.clear();

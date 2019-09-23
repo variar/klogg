@@ -222,16 +222,42 @@ LogFilteredData::LineType LogFilteredData::lineTypeByLine( LineNumber lineNumber
 
 // Delegation to our Marks object
 
+void LogFilteredData::toggleMark( LineNumber line, QChar mark )
+{
+    if ( ( line >= 0_lnum ) && line < sourceLogData_->getNbLine() ) {
+        uint32_t index;
+        if ( marks_.toggleMark( line, mark, index ) ) {
+            updateCacheWithMark( index, line );
+        } else {
+            updateMaxLengthMarks( line );
+            removeFromFilteredItemsCache(
+                index, { static_cast<LineNumber>( line ), LineTypeFlags::Mark } );
+        }
+    }
+    else {
+        LOG( logERROR ) << "LogFilteredData::toggleMark trying to toggle a mark outside of the file.";
+    }
+}
+
 void LogFilteredData::addMark( LineNumber line, QChar mark )
 {
     if ( ( line >= 0_lnum ) && line < sourceLogData_->getNbLine() ) {
         uint32_t index = marks_.addMark( line, mark );
-        maxLengthMarks_ = qMax( maxLengthMarks_, sourceLogData_->getLineLength( line ) );
-        insertIntoFilteredItemsCache( index, { line, LineTypeFlags::Mark } );
+        updateCacheWithMark( index, line );
     }
     else {
         LOG( logERROR ) << "LogFilteredData::addMark trying to create a mark outside of the file.";
     }
+}
+
+void LogFilteredData::updateCacheWithMark( uint32_t index, LineNumber line )
+{
+    maxLengthMarks_ = qMax( maxLengthMarks_, sourceLogData_->getLineLength( line ) );
+    LineType type = LineTypeFlags::Mark;
+    if ( ! visibility_.testFlag( VisibilityFlags::Matches ) && isLineMatched( line ) ) {
+        type |= LineTypeFlags::Match;
+    }
+    insertIntoFilteredItemsCache( index, { line, type } );
 }
 
 LineNumber LogFilteredData::getMark( QChar mark ) const
@@ -587,6 +613,9 @@ void LogFilteredData::insertNewMatches( const SearchResultArray& new_matches )
         if ( filteredIt == end( filteredItemsCache_ )
              || filteredIt->lineNumber() > item.lineNumber() ) {
             if ( item.type() & visibility_ ) {
+                if ( ! visibility_.testFlag( VisibilityFlags::Marks ) && isLineMarked( line.lineNumber() ) ) {
+                    item.add( LineTypeFlags::Mark );
+                }
                 filteredIt = filteredItemsCache_.insert( filteredIt, item );
             }
         }
@@ -619,7 +648,7 @@ void LogFilteredData::removeFromFilteredItemsCache( size_t remove_index, Filtere
         // FIXME: collapse them?
     }
 
-    if ( !found.first->remove( item.type() ) ) {
+    if ( ! ( found.first->remove( item.type() ) & visibility_ ) ) {
         filteredItemsCache_.erase( found.first );
     }
 }
@@ -636,6 +665,6 @@ void LogFilteredData::removeAllFromFilteredItemsCache( LineType type )
 
     auto erase_begin
         = std::remove_if( begin( filteredItemsCache_ ), end( filteredItemsCache_ ),
-                          [type]( FilteredItem& item ) { return !item.remove( type ); } );
+                          [type, this]( FilteredItem& item ) { return ! ( item.remove( type ) & visibility_ ); } );
     filteredItemsCache_.erase( erase_begin, end( filteredItemsCache_ ) );
 }

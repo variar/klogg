@@ -116,6 +116,8 @@ class LogFilteredData : public AbstractLogData {
     // Delete the mark present on the passed line or do nothing if there is
     // none.
     void deleteMark( LineNumber line );
+    // Toggle presence of the mark on the passed line.
+    void toggleMark( LineNumber line, QChar mark = {} );
     // Completely clear the marks list.
     void clearMarks();
     // Get all marked lines
@@ -158,6 +160,9 @@ class LogFilteredData : public AbstractLogData {
 
     void doAttachReader() const override;
     void doDetachReader() const override;
+
+    // Insert new mark into filteredItemsCache_.
+    void updateCacheWithMark( uint32_t index, LineNumber line );
 
     // Returns whether the line number passed is in our list of matching ones.
     bool isLineMatched( LineNumber lineNumber ) const;
@@ -250,11 +255,11 @@ class LogFilteredData::FilteredItem {
     void add( LineType type )
     { type_ |= type; }
 
-    // Returns whether any type-flag is left.
-    bool remove( LineType type )
+    // Returns the new type flags.
+    LineType remove( LineType type )
     {
         type_ &= ~type;
-        return !!type_;
+        return type_;
     }
 
     bool operator <( const LogFilteredData::FilteredItem& other ) const

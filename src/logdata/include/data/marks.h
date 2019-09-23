@@ -83,6 +83,9 @@ class Marks {
     // none.
     // Returns the index at which the mark was deleted.
     uint32_t deleteMark( LineNumber line );
+    // Toggle presence of the mark on the passed line.
+    // Returns true if a mark is added, false if it is removed.
+    bool toggleMark( LineNumber line, QChar mark, uint32_t &index );
     // Get the line marked identified by the index (in this list) passed.
     LineNumber getLineMarkedByIndex( int index ) const
     { return marks_[index].lineNumber(); }

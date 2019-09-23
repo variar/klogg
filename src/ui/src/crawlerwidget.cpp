@@ -441,10 +441,7 @@ void CrawlerWidget::updateLineNumberHandler( LineNumber line )
 void CrawlerWidget::markLineFromMain( LineNumber line )
 {
     if ( line < logData_->getNbLine() ) {
-        if ( logFilteredData_->isLineMarked( line ) )
-            logFilteredData_->deleteMark( line );
-        else
-            logFilteredData_->addMark( line );
+        logFilteredData_->toggleMark( line );
 
         // Recompute the content of both window.
         filteredView->updateData();
@@ -462,10 +459,7 @@ void CrawlerWidget::markLineFromFiltered( LineNumber line )
 {
     if ( line < logFilteredData_->getNbLine() ) {
         const auto line_in_file = logFilteredData_->getMatchingLineNumber( line );
-        if ( logFilteredData_->lineTypeByIndex( line ).testFlag( LogFilteredData::LineTypeFlags::Mark ) )
-            logFilteredData_->deleteMark( line_in_file );
-        else
-            logFilteredData_->addMark( line_in_file );
+        logFilteredData_->toggleMark( line_in_file );
 
         // Recompute the content of both window.
         filteredView->updateData();
