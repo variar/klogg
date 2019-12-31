@@ -15,4 +15,8 @@ mark_as_advanced(FORCE TBB_BUILD_TESTS)
 mark_as_advanced(FORCE TBB_CI_BUILD)
 add_subdirectory(singleapp) #3.0.15
 add_subdirectory(immer)
+add_subdirectory(cmzlib)
+add_subdirectory(cmbzip2)
+add_subdirectory(cmliblzma)
+add_subdirectory(karchive)
 

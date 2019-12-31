@@ -1,0 +1,11 @@
+#include <QtCore/qglobal.h>
+
+#ifdef DEBAO_BUILDING_KDE5TIER1
+#  define KARCHIVE_EXPORT Q_DECL_EXPORT
+#elif defined(DEBAO_USING_KDE5TIER1)
+#  define KARCHIVE_EXPORT Q_DECL_IMPORT
+#else
+#  define KARCHIVE_EXPORT
+#endif
+
+#define KARCHIVE_DEPRECATED Q_DECL_DEPRECATED
