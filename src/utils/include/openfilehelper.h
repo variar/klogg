@@ -55,6 +55,10 @@
 
 #include "log.h"
 
+#include "kzip.h"
+#include "k7zip.h"
+#include "ktar.h"
+
 inline void showPathInFileExplorer( const QString& file_path )
 {
     const QFileInfo file_info( file_path );
@@ -86,4 +90,63 @@ inline void openFileInDefaultApplication( const QString& file_path )
 
     const QFileInfo file_info( file_path );
     QDesktopServices::openUrl( QUrl::fromLocalFile( file_info.canonicalFilePath() ) );
+}
+
+enum class Archive {
+    None,
+    Zip7,
+    Tar,
+    Zip,
+};
+
+inline Archive getArhiveType( const QString& archiveFilePath )
+{
+    const auto info = QFileInfo( archiveFilePath );
+    const auto extension = info.completeSuffix();
+    if ( extension == "zip" ) {
+        return Archive::Zip;
+    }
+    else if ( extension == "7z" ) {
+        return Archive::Zip7;
+    }
+    else if ( extension == "tar.gz" || extension == "tar.bz2" || extension == "tar.xz" ) {
+        return Archive::Tar;
+    }
+    else {
+        return Archive::None;
+    }
+}
+
+inline bool extractArchive( const QString& archiveFilePath, const QString& destination )
+{
+    std::unique_ptr<KArchive> archive;
+
+    const auto archiveType = getArhiveType(archiveFilePath);
+    switch (archiveType)
+    {
+    case Archive::Zip:
+        archive = std::make_unique<KZip>(archiveFilePath);
+        break;
+    case Archive::Zip7:
+        archive = std::make_unique<K7Zip>(archiveFilePath);
+        break;
+    case Archive::Tar:
+        archive = std::make_unique<KTar>(archiveFilePath);
+        break;
+    case Archive::None:
+        LOG( logWARNING ) << "Unsupported archive " << archiveFilePath.constData();
+        return false;
+    }
+
+    // Open the archive
+    if ( !archive->open( QIODevice::ReadOnly ) ) {
+        LOG( logWARNING ) << "Cannot open " << archiveFilePath.constData();
+        return false;
+    }
+
+    const KArchiveDirectory* root = archive->directory();
+    const auto recursive = true;
+    root->copyTo( destination, recursive );
+    archive->close();
+    return true;
 }

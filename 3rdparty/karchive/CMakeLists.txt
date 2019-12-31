@@ -4,6 +4,7 @@ set(HAVE_XZ_SUPPORT 1)
 #configure_file(src/config-compression.h.cmake ${CMAKE_CURRENT_BINARY_DIR}/config-compression.h)
 
 set(karchive_SRCS
+    src/loggingcategory.cpp
     src/karchive.cpp
     src/kar.cpp
     src/kcompressiondevice.cpp
@@ -21,6 +22,8 @@ set(karchive_SRCS
 )
 
 add_library(klogg_karchive ${karchive_SRCS} ${karchive_OPTIONAL_SRCS})
+
+set_target_properties(klogg_karchive PROPERTIES AUTOMOC ON)
 
 target_include_directories(klogg_karchive PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(klogg_karchive PRIVATE ${CMAKE_CURRENT_BINARY_DIR})

@@ -101,6 +101,7 @@ MainWindow::MainWindow( WindowSession session )
     , signalMux_()
     , quickFindMux_( session_.getQuickFindPattern() )
     , mainTabWidget_()
+    , tempDir_( QDir::temp().filePath( "klogg_temp_" ) )
 {
     createActions();
     createMenus();
@@ -619,7 +620,7 @@ void MainWindow::openRemoteFile( const QUrl& url )
              [&progressDialog]( bool isOk ) { progressDialog.done( isOk ? 0 : 1 ); } );
 
     auto tempFile
-        = new QTemporaryFile( QDir::temp().filePath( "klogg_download_" + url.fileName() ), this );
+        = new QTemporaryFile( tempDir_.filePath( url.fileName() ), this );
     if ( tempFile->open() ) {
         downloader.download( url, tempFile );
         if ( !progressDialog.exec() ) {
@@ -726,7 +727,7 @@ void MainWindow::openClipboard()
         return;
     }
 
-    auto tempFile = new QTemporaryFile( QDir::temp().filePath( "klogg_clipboard" ), this );
+    auto tempFile = new QTemporaryFile( tempDir_.filePath( "klogg_clipboard" ), this );
     if ( tempFile->open() ) {
         tempFile->write( text.toUtf8() );
         tempFile->flush();
@@ -1080,7 +1081,23 @@ void MainWindow::dropEvent( QDropEvent* event )
         if ( fileName.isEmpty() )
             continue;
 
-        loadFile( fileName );
+        if ( getArhiveType( fileName ) == Archive::None ) {
+            loadFile( fileName );
+        }
+        else {
+            QTemporaryDir archiveDir{tempDir_.filePath( QFileInfo(fileName).fileName() )};
+            archiveDir.setAutoRemove(false);
+
+            if (extractArchive(fileName, archiveDir.path())) {
+                const auto selectedFiles = QFileDialog::getOpenFileNames(
+                    this, tr( "Open file from archive" ), archiveDir.path(), tr( "All files (*)" ) );
+
+                for ( const auto& extractedFile : selectedFiles ) {
+                    loadFile( extractedFile );
+                }
+            }
+
+        }
     }
 }
 

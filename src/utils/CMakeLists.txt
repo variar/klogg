@@ -23,4 +23,5 @@ target_link_libraries(utils PUBLIC
         absl::optional
         absl::symbolize
         absl::failure_signal_handler
+        klogg_karchive
         plog)
