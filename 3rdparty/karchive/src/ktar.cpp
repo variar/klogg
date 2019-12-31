@@ -24,11 +24,11 @@
 #include <stdlib.h> // strtol
 #include <assert.h>
 
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
-#include <QtCore/QFile>
+#include <QDebug>
+#include <QDir>
+#include <QFile>
 #include <qmimedatabase.h>
-#include <QtCore/QTemporaryFile>
+#include <QTemporaryFile>
 
 #include <kfilterdev.h>
 #include <kfilterbase.h>
@@ -196,12 +196,12 @@ qint64 KTar::KTarPrivate::readRawHeader(char *buffer)
 
             int check = 0;
             for (uint j = 0; j < 0x200; ++j) {
-                check += buffer[j];
+                check += static_cast<unsigned char>(buffer[j]);
             }
 
             // adjust checksum to count the checksum fields as blanks
             for (uint j = 0; j < 8 /*size of the checksum field including the \0 and the space*/; j++) {
-                check -= buffer[148 + j];
+                check -= static_cast<unsigned char>(buffer[148 + j]);
             }
             check += 8 * ' ';
 
@@ -238,6 +238,14 @@ bool KTar::KTarPrivate::readLonglink(char *buffer, QByteArray &longlink)
     qint64 size = QByteArray(buffer + 0x7c, 12).trimmed().toLongLong(nullptr, 8 /*octal*/);
 
     size--;    // ignore trailing null
+    if (size > std::numeric_limits<int>::max() - 32) { // QByteArray can't really be INT_MAX big, it's max size is something between INT_MAX - 32 and INT_MAX depending the platform so just be safe
+        qCWarning(KArchiveLog) << "Failed to allocate memory for longlink of size" << size;
+        return false;
+    }
+    if (size < 0) {
+        qCWarning(KArchiveLog) << "Invalid longlink size" << size;
+        return false;
+    }
     longlink.resize(size);
     qint64 offset = 0;
     while (size > 0) {
@@ -274,15 +282,16 @@ qint64 KTar::KTarPrivate::readHeader(char *buffer, QString &name, QString &symli
         if (strcmp(buffer, "././@LongLink") == 0) {
             char typeflag = buffer[0x9c];
             QByteArray longlink;
-            readLonglink(buffer, longlink);
-            switch (typeflag) {
-            case 'L':
-                name = QFile::decodeName(longlink.constData());
-                break;
-            case 'K':
-                symlink = QFile::decodeName(longlink.constData());
-                break;
-            }/*end switch*/
+            if (readLonglink(buffer, longlink)) {
+                switch (typeflag) {
+                case 'L':
+                    name = QFile::decodeName(longlink.constData());
+                    break;
+                case 'K':
+                    symlink = QFile::decodeName(longlink.constData());
+                    break;
+                }/*end switch*/
+            }
         } else {
             break;
         }/*end if*/
@@ -421,8 +430,13 @@ bool KTar::openArchive(QIODevice::OpenMode mode)
             int access = strtol(p, &dummy, 8);
 
             // read user and group
-            QString user = QString::fromLocal8Bit(buffer + 0x109);
-            QString group = QString::fromLocal8Bit(buffer + 0x129);
+            const int maxUserGroupLength = 32;
+            const char *userStart = buffer + 0x109;
+            const int userLen = qstrnlen(userStart, maxUserGroupLength);
+            const QString user = QString::fromLocal8Bit(userStart, userLen);
+            const char *groupStart = buffer + 0x129;
+            const int groupLen = qstrnlen(groupStart, maxUserGroupLength);
+            const QString group = QString::fromLocal8Bit(groupStart, groupLen);
 
             // read time
             buffer[0x93] = 0;
@@ -498,9 +512,13 @@ bool KTar::openArchive(QIODevice::OpenMode mode)
 
             if (pos == -1) {
                 if (nm == QLatin1String(".")) { // special case
-                    Q_ASSERT(isdir);
                     if (isdir) {
-                        setRootDir(static_cast<KArchiveDirectory *>(e));
+                        if (KArchivePrivate::hasRootDir(this)) {
+                            qWarning() << "Broken tar file has two root dir entries";
+                            delete e;
+                        } else {
+                            setRootDir(static_cast<KArchiveDirectory *>(e));
+                        }
                     } else {
                         delete e;
                     }
@@ -512,7 +530,12 @@ bool KTar::openArchive(QIODevice::OpenMode mode)
                 QString path = QDir::cleanPath(name.left(pos));
                 // Ensure container directory exists, create otherwise
                 KArchiveDirectory *d = findOrCreate(path);
-                d->addEntry(e);
+                if (d) {
+                    d->addEntry(e);
+                } else {
+                    delete e;
+                    return false;
+                }
             }
         } else {
             //qCDebug(KArchiveLog) << "Terminating. Read " << n << " bytes, first one is " << buffer[0];
@@ -698,7 +721,7 @@ void KTar::KTarPrivate::fillBuffer(char *buffer,
     // Header check sum
     int check = 32;
     for (uint j = 0; j < 0x200; ++j) {
-        check += buffer[j];
+        check += static_cast<unsigned char>(buffer[j]);
     }
     s = QByteArray::number(check, 8);   // octal
     s = s.rightJustified(6, '0');
@@ -773,8 +796,8 @@ bool KTar::doPrepareWriting(const QString &name, const QString &user,
     const QByteArray uname = user.toLocal8Bit();
     const QByteArray gname = group.toLocal8Bit();
 
-    // If more than 100 chars, we need to use the LongLink trick
-    if (fileName.length() > 99) {
+    // If more than 100 bytes, we need to use the LongLink trick
+    if (encodedFileName.length() > 99) {
         d->writeLonglink(buffer, encodedFileName, 'L', uname.constData(), gname.constData());
     }
 
@@ -838,8 +861,8 @@ bool KTar::doWriteDir(const QString &name, const QString &user,
     QByteArray uname = user.toLocal8Bit();
     QByteArray gname = group.toLocal8Bit();
 
-    // If more than 100 chars, we need to use the LongLink trick
-    if (dirName.length() > 99) {
+    // If more than 100 bytes, we need to use the LongLink trick
+    if (encodedDirname.length() > 99) {
         d->writeLonglink(buffer, encodedDirname, 'L', uname.constData(), gname.constData());
     }
 
@@ -894,11 +917,11 @@ bool KTar::doWriteSymLink(const QString &name, const QString &target,
     QByteArray uname = user.toLocal8Bit();
     QByteArray gname = group.toLocal8Bit();
 
-    // If more than 100 chars, we need to use the LongLink trick
-    if (target.length() > 99) {
+    // If more than 100 bytes, we need to use the LongLink trick
+    if (encodedTarget.length() > 99) {
         d->writeLonglink(buffer, encodedTarget, 'K', uname.constData(), gname.constData());
     }
-    if (fileName.length() > 99) {
+    if (encodedFileName.length() > 99) {
         d->writeLonglink(buffer, encodedFileName, 'L', uname.constData(), gname.constData());
     }
 

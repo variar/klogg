@@ -23,18 +23,17 @@
 #include "klimitediodevice_p.h"
 #include "loggingcategory.h"
 
-#include <QtCore/QHash>
-#include <QtCore/QByteArray>
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
-#include <QtCore/QFile>
-#include <QtCore/QDate>
-#include <QtCore/QList>
+#include <QHash>
+#include <QByteArray>
+#include <QDebug>
+#include <QDir>
+#include <QFile>
+#include <QDate>
+#include <QList>
 #include <qplatformdefs.h>
 
 #include <time.h>
 #include <zlib.h>
-
 #include <string.h>
 
 #ifndef QT_STAT_LNK
@@ -78,7 +77,7 @@ static uint transformFromMsDos(const char *buffer)
     QDate qd(y, o, d);
 
     QDateTime dt(qd, qt);
-    return dt.toTime_t();
+    return dt.toSecsSinceEpoch();
 }
 
 // == parsing routines for zip headers
@@ -312,9 +311,10 @@ static bool parseExtraField(const char *buffer, int size, bool islocal,
  * To be called when a 'P' has been found.
  * @param buffer start of buffer with the 3 bytes behind 'P'
  * @param dev device that is read from
+ * @param dataDescriptor only search for data descriptor
  * @return true if a local or central header begin is or could be reached
  */
-static bool handlePossibleHeaderBegin(const char *buffer, QIODevice *dev)
+static bool handlePossibleHeaderBegin(const char *buffer, QIODevice *dev, bool dataDescriptor)
 {
     // we have to detect three magic tokens here:
     // PK34 for the next local header in case there is no data descriptor
@@ -330,8 +330,8 @@ static bool handlePossibleHeaderBegin(const char *buffer, QIODevice *dev)
             return true;
         }
 
-        if ((buffer[1] == 1 && buffer[2] == 2)
-            || (buffer[1] == 3 && buffer[2] == 4)) {
+        if (!dataDescriptor && ((buffer[1] == 1 && buffer[2] == 2)
+            || (buffer[1] == 3 && buffer[2] == 4))) {
             // central/local header token found
             dev->seek(dev->pos() - 4);
             // go back 4 bytes, so that the magic bytes can be found
@@ -348,7 +348,7 @@ static bool handlePossibleHeaderBegin(const char *buffer, QIODevice *dev)
  * @param dev device that is read from
  * @return true if a local or central header token could be reached, false on error
  */
-static bool seekToNextHeaderToken(QIODevice *dev)
+static bool seekToNextHeaderToken(QIODevice *dev, bool dataDescriptor)
 {
     bool headerTokenFound = false;
     char buffer[3];
@@ -370,7 +370,7 @@ static bool seekToNextHeaderToken(QIODevice *dev)
             return false;
         }
 
-        if (handlePossibleHeaderBegin(buffer, dev)) {
+        if (handlePossibleHeaderBegin(buffer, dev, dataDescriptor)) {
             headerTokenFound = true;
         } else {
             for (int i = 0; i < 3; ++i) {
@@ -509,7 +509,10 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
             */
 
             // read fileName
-            Q_ASSERT(namelen > 0);
+            if (namelen <= 0) {
+                setErrorString(tr("Invalid ZIP file. Negative name length"));
+                return false;
+            }
             QByteArray fileName = dev->read(namelen);
             if (fileName.size() < namelen) {
                 setErrorString(tr("Invalid ZIP file. Name not completely read (#2)"));
@@ -530,7 +533,7 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
 
             n = dev->read(buffer, handledextralen);
             // no error msg necessary as we deliberately truncate the extra field
-            if (!parseExtraField(buffer, handledextralen, true, pfi)) {
+            if (!parseExtraField(buffer, n, true, pfi)) {
                 setErrorString(tr("Invalid ZIP File. Broken ExtraField."));
                 return false;
             }
@@ -544,7 +547,7 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
             if (gpf & 8) {
                 // here we have to read through the compressed data to find
                 // the next PKxx
-                if (!seekToNextHeaderToken(dev)) {
+                if (!seekToNextHeaderToken(dev, true)) {
                     setErrorString(tr("Could not seek to next header token"));
                     return false;
                 }
@@ -567,16 +570,18 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
                     if (compr_size > dev->size()) {
                         // here we cannot trust the compressed size, so scan through the compressed
                         // data to find the next header
-                        if (!seekToNextHeaderToken(dev)) {
+                        if (!seekToNextHeaderToken(dev, false)) {
                             setErrorString(tr("Could not seek to next header token"));
                             return false;
                         }
                         foundSignature = true;
                     } else {
 //          qCDebug(KArchiveLog) << "before interesting dev->pos(): " << dev->pos();
-                        bool success = dev->seek(dev->pos() + compr_size); // can this fail ???
-                        Q_UNUSED(success); // prevent warning in release builds.
-                        Q_ASSERT(success); // let's see...
+                        const bool success = dev->seek(dev->pos() + compr_size);
+                        if (!success) {
+                            setErrorString(tr("Could not seek to file compressed size"));
+                            return false;
+                        }
                         /*          qCDebug(KArchiveLog) << "after interesting dev->pos(): " << dev->pos();
                                                 if (success)
                                                 qCDebug(KArchiveLog) << "dev->at was successful... ";
@@ -595,7 +600,7 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
                         return false;
                     }
 
-                    if (buffer[0] != 'P' || !handlePossibleHeaderBegin(buffer + 1, dev)) {
+                    if (buffer[0] != 'P' || !handlePossibleHeaderBegin(buffer + 1, dev, false)) {
                         // assume data descriptor without signature
                         dev->seek(dev->pos() + 8); // skip rest of the 'data_descriptor'
                     }
@@ -634,7 +639,10 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
             //qCDebug(KArchiveLog) << "general purpose flag=" << gpf;
             // length of the fileName (well, pathname indeed)
             int namelen = (uchar)buffer[29] << 8 | (uchar)buffer[28];
-            Q_ASSERT(namelen > 0);
+            if (namelen <= 0) {
+                setErrorString(tr("Invalid ZIP file, file path name length smaller or equal to zero"));
+                return false;
+            }
             QByteArray bufferName = dev->read(namelen);
             if (bufferName.size() < namelen) {
                 //qCWarning(KArchiveLog) << "Invalid ZIP file. Name not completely read";
@@ -713,7 +721,10 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
             } else {
                 entryName = name.mid(pos + 1);
             }
-            Q_ASSERT(!entryName.isEmpty());
+            if (entryName.isEmpty()) {
+                setErrorString(tr("Invalid ZIP file, found empty entry name"));
+                return false;
+            }
 
             KArchiveEntry *entry;
             if (isdir) {
@@ -751,14 +762,19 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
                     QString path = QDir::cleanPath(name.left(pos));
                     // Ensure container directory exists, create otherwise
                     KArchiveDirectory *tdir = findOrCreate(path);
-                    tdir->addEntry(entry);
+                    if (tdir) {
+                        tdir->addEntry(entry);
+                    } else {
+                        setErrorString(tr("File %1 is in folder %2, but %3 is actually a file.").arg(entryName, path, path));
+                        delete entry;
+                        return false;
+                    }
                 }
             }
 
             //calculate offset to next entry
             offset += 46 + commlen + extralen + namelen;
-            bool b = dev->seek(offset);
-            Q_ASSERT(b);
+            const bool b = dev->seek(offset);
             if (!b) {
                 setErrorString(tr("Could not seek to next entry"));
                 return false;
@@ -808,7 +824,7 @@ bool KZip::openArchive(QIODevice::OpenMode mode)
         } else {
             setErrorString(
                 tr("Invalid ZIP file. Unrecognized header at offset %1")
-                .arg(offset));
+                .arg(dev->pos() - 4));
             return false;
         }
     }
@@ -828,7 +844,7 @@ bool KZip::closeArchive()
 
     // to be written at the end of the file...
     char buffer[22]; // first used for 12, then for 22 at the end
-    uLong crc = crc32(0L, Z_NULL, 0);
+    uLong crc = crc32(0L, nullptr, 0);
 
     qint64 centraldiroffset = device()->pos();
     //qCDebug(KArchiveLog) << "closearchive: centraldiroffset: " << centraldiroffset;
@@ -952,7 +968,7 @@ bool KZip::closeArchive()
             extfield[4] = 1 | 2 | 4;    // specify flags from local field
             // (unless I misread the spec)
             // provide only modification time
-            unsigned long time = (unsigned long)it.value()->date().toTime_t();
+            unsigned long time = (unsigned long)it.value()->date().toSecsSinceEpoch();
             extfield[5] = char(time);
             extfield[6] = char(time >> 8);
             extfield[7] = char(time >> 16);
@@ -1062,9 +1078,9 @@ bool KZip::doPrepareWriting(const QString &name, const QString &user,
         return false;
     }
 
-    uint atime = accessTime.toTime_t();
-    uint mtime = modificationTime.toTime_t();
-    uint ctime = creationTime.toTime_t();
+    uint atime = accessTime.toSecsSinceEpoch();
+    uint mtime = modificationTime.toSecsSinceEpoch();
+    uint ctime = creationTime.toSecsSinceEpoch();
 
     // Find or create parent dir
     KArchiveDirectory *parentDir = rootDir();
@@ -1102,7 +1118,9 @@ bool KZip::doPrepareWriting(const QString &name, const QString &user,
                                          0 /*size unknown yet*/, d->m_compression, 0 /*csize unknown yet*/);
     e->setHeaderStart(device()->pos());
     //qCDebug(KArchiveLog) << "wrote file start: " << e->position() << " name: " << name;
-    parentDir->addEntry(e);
+    if (!parentDir->addEntryV2(e)) {
+        return false;
+    }
 
     d->m_currentFile = e;
     d->m_fileList.append(e);
@@ -1201,8 +1219,7 @@ bool KZip::doPrepareWriting(const QString &name, const QString &user,
         return true;
     }
 
-    KCompressionDevice::CompressionType type = KFilterDev::compressionTypeForMimeType(QStringLiteral("application/x-gzip"));
-    auto compressionDevice = new KCompressionDevice(device(), false, type);
+    auto compressionDevice = new KCompressionDevice(device(), false, KCompressionDevice::GZip);
     d->m_currentDev = compressionDevice;
     compressionDevice->setSkipHeaders(); // Just zlib, not gzip
 
@@ -1436,8 +1453,7 @@ QIODevice *KZipFileEntry::createDevice() const
 
     if (encoding() == 8) {
         // On top of that, create a device that uncompresses the zlib data
-        KCompressionDevice::CompressionType type = KFilterDev::compressionTypeForMimeType(QStringLiteral("application/x-gzip"));
-        KCompressionDevice *filterDev = new KCompressionDevice(limitedDev, true, type);
+        KCompressionDevice *filterDev = new KCompressionDevice(limitedDev, true, KCompressionDevice::GZip);
 
         if (!filterDev) {
             return nullptr;    // ouch

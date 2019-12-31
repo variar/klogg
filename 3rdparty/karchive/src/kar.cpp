@@ -20,11 +20,16 @@
 #include "karchive_p.h"
 #include "loggingcategory.h"
 
-#include <QtCore/QFile>
-#include <QtCore/QDebug>
+#include <QFile>
+#include <QDebug>
+
+#include <limits>
 
 #include "kfilterdev.h"
 //#include "klimitediodevice_p.h"
+
+// As documented in QByteArray
+static constexpr int kMaxQByteArraySize = std::numeric_limits<int>::max() - 32;
 
 ////////////////////////////////////////////////////////////////////////
 /////////////////////////// KAr ///////////////////////////////////////
@@ -112,64 +117,69 @@ bool KAr::openArchive(QIODevice::OpenMode mode)
         return false;
     }
 
-    char *ar_longnames = nullptr;
+    QByteArray ar_longnames;
     while (! dev->atEnd()) {
         QByteArray ar_header;
-        ar_header.resize(61);
+        ar_header.resize(60);
 
         dev->seek(dev->pos() + (2 - (dev->pos() % 2)) % 2);   // Ar headers are padded to byte boundary
 
         if (dev->read(ar_header.data(), 60) != 60) {   // Read ar header
-            //qCWarning(KArchiveLog) << "Couldn't read header";
-            delete[] ar_longnames;
-            //return false;
+            qCWarning(KArchiveLog) << "Couldn't read header";
             return true; // Probably EOF / trailing junk
         }
 
         if (!ar_header.endsWith("`\n")) { // Check header magic // krazy:exclude=strings
             setErrorString(tr("Invalid magic"));
-            delete[] ar_longnames;
             return false;
         }
 
         QByteArray name = ar_header.mid(0, 16);   // Process header
-        const int date = ar_header.mid(16, 12).toInt();
-        //const int uid = ar_header.mid( 28, 6 ).toInt();
-        //const int gid = ar_header.mid( 34, 6 ).toInt();
-        const int mode = ar_header.mid(40, 8).toInt();
-        const qint64 size = ar_header.mid(48, 10).toInt();
+        const int date = ar_header.mid(16, 12).trimmed().toInt();
+        //const int uid = ar_header.mid( 28, 6 ).trimmed().toInt();
+        //const int gid = ar_header.mid( 34, 6 ).trimmed().toInt();
+        const int mode = ar_header.mid(40, 8).trimmed().toInt(nullptr, 8);
+        const qint64 size = ar_header.mid(48, 10).trimmed().toInt();
+        if (size < 0 || size > kMaxQByteArraySize) {
+            setErrorString(tr("Invalid size"));
+            return false;
+        }
 
         bool skip_entry = false; // Deal with special entries
         if (name.mid(0, 1) == "/") {
             if (name.mid(1, 1) == "/") { // Longfilename table entry
-                delete[] ar_longnames;
-                ar_longnames = new char[size + 1];
-                ar_longnames[size] = '\0';
-                dev->read(ar_longnames, size);
+                ar_longnames.resize(size);
+                // Read the table. Note that the QByteArray will contain NUL characters after each entry.
+                dev->read(ar_longnames.data(), size);
                 skip_entry = true;
-                //qCDebug(KArchiveLog) << "Read in longnames entry";
+                qCDebug(KArchiveLog) << "Read in longnames entry";
             } else if (name.mid(1, 1) == " ") { // Symbol table entry
-                //qCDebug(KArchiveLog) << "Skipped symbol entry";
+                qCDebug(KArchiveLog) << "Skipped symbol entry";
                 dev->seek(dev->pos() + size);
                 skip_entry = true;
-            } else { // Longfilename
-                //qCDebug(KArchiveLog) << "Longfilename #" << name.mid(1, 15).toInt();
-                if (! ar_longnames) {
+            } else { // Longfilename, look it up in the table
+                const int ar_longnamesIndex = name.mid(1, 15).trimmed().toInt();
+                qCDebug(KArchiveLog) << "Longfilename #" << ar_longnamesIndex;
+                if (ar_longnames.isEmpty()) {
                     setErrorString(tr("Invalid longfilename reference"));
-                    delete[] ar_longnames;
                     return false;
                 }
-                name = &ar_longnames[name.mid(1, 15).toInt()];
-                name = name.left(name.indexOf("/"));
+                if (ar_longnamesIndex < 0 || ar_longnamesIndex >= ar_longnames.size()) {
+                    setErrorString(tr("Invalid longfilename position reference"));
+                    return false;
+                }
+                name = QByteArray(ar_longnames.constData() + ar_longnamesIndex);
+                name.truncate(name.indexOf('/'));
             }
         }
         if (skip_entry) {
             continue;
         }
 
-        name = name.trimmed(); // Process filename
+        // Process filename
+        name = name.trimmed();
         name.replace('/', QByteArray());
-        //qCDebug(KArchiveLog) << "Filename: " << name << " Size: " << size;
+        qCDebug(KArchiveLog) << "Filename: " << name << " Size: " << size;
 
         KArchiveEntry *entry = new KArchiveFile(this, QString::fromLocal8Bit(name.constData()), mode, KArchivePrivate::time_tToDateTime(date),
                                                 rootDir()->user(), rootDir()->group(), /*symlink*/ QString(),
@@ -178,7 +188,6 @@ bool KAr::openArchive(QIODevice::OpenMode mode)
 
         dev->seek(dev->pos() + size);   // Skip contents
     }
-    delete[] ar_longnames;
 
     return true;
 }

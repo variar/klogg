@@ -27,10 +27,10 @@
 #include <qplatformdefs.h> // QT_STATBUF, QT_LSTAT
 
 #include <QStack>
-#include <QtCore/QMap>
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
-#include <QtCore/QFile>
+#include <QMap>
+#include <QDebug>
+#include <QDir>
+#include <QFile>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,11 +51,76 @@
 #endif // Q_OS_WIN
 
 ////////////////////////////////////////////////////////////////////////
+/////////////////// KArchiveDirectoryPrivate ///////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+class KArchiveDirectoryPrivate
+{
+public:
+    KArchiveDirectoryPrivate(KArchiveDirectory *parent) : q(parent)
+    {
+    }
+
+    ~KArchiveDirectoryPrivate()
+    {
+        qDeleteAll(entries);
+    }
+
+    KArchiveDirectoryPrivate(const KArchiveDirectoryPrivate &) = delete;
+    KArchiveDirectoryPrivate &operator=(const KArchiveDirectoryPrivate &) = delete;
+
+    static KArchiveDirectoryPrivate *get(KArchiveDirectory *directory)
+    {
+        return directory->d;
+    }
+
+    // Returns in containingDirectory the directory that actually contains the returned entry
+    const KArchiveEntry *entry(const QString &_name, KArchiveDirectory **containingDirectory) const
+    {
+        *containingDirectory = q;
+
+        QString name = QDir::cleanPath(_name);
+        int pos = name.indexOf(QLatin1Char('/'));
+        if (pos == 0) { // ouch absolute path (see also KArchive::findOrCreate)
+            if (name.length() > 1) {
+                name = name.mid(1);   // remove leading slash
+                pos = name.indexOf(QLatin1Char('/'));   // look again
+            } else { // "/"
+                return q;
+            }
+        }
+        // trailing slash ? -> remove
+        if (pos != -1 && pos == name.length() - 1) {
+            name = name.left(pos);
+            pos = name.indexOf(QLatin1Char('/'));   // look again
+        }
+        if (pos != -1) {
+            const QString left = name.left(pos);
+            const QString right = name.mid(pos + 1);
+
+            //qCDebug(KArchiveLog) << "left=" << left << "right=" << right;
+
+            KArchiveEntry *e = entries.value(left);
+            if (!e || !e->isDirectory()) {
+                return nullptr;
+            }
+            *containingDirectory = static_cast<KArchiveDirectory *>(e);
+            return (*containingDirectory)->d->entry(right, containingDirectory);
+        }
+
+        return entries.value(name);
+    }
+
+    KArchiveDirectory *q;
+    QHash<QString, KArchiveEntry *> entries;
+};
+
+////////////////////////////////////////////////////////////////////////
 /////////////////////////// KArchive ///////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
 KArchive::KArchive(const QString &fileName)
-    : d(new KArchivePrivate)
+    : d(new KArchivePrivate(this))
 {
     if (fileName.isEmpty()) {
         qCWarning(KArchiveLog) << "KArchive: No file name specified";
@@ -66,7 +131,7 @@ KArchive::KArchive(const QString &fileName)
 }
 
 KArchive::KArchive(QIODevice *dev)
-    : d(new KArchivePrivate)
+    : d(new KArchivePrivate(this))
 {
     if (!dev) {
         qCWarning(KArchiveLog) << "KArchive: Null device specified";
@@ -121,11 +186,16 @@ bool KArchive::createDevice(QIODevice::OpenMode mode)
             // The use of QSaveFile can't be done in the ctor (no mode known yet)
             //qCDebug(KArchiveLog) << "Writing to a file using QSaveFile";
             d->saveFile = new QSaveFile(d->fileName);
+#ifdef Q_OS_ANDROID
+            // we cannot rename on to Android content: URLs
+            if (d->fileName.startsWith(QLatin1String("content://"))) {
+                d->saveFile->setDirectWriteFallback(true);
+            }
+#endif
             if (!d->saveFile->open(QIODevice::WriteOnly)) {
                 setErrorString(
                     tr("QSaveFile creation for %1 failed: %2")
-                        .arg(d->fileName)
-                        .arg(d->saveFile->errorString()));
+                        .arg(d->fileName, d->saveFile->errorString()));
 
                 delete d->saveFile;
                 d->saveFile = nullptr;
@@ -220,13 +290,13 @@ bool KArchive::addLocalFile(const QString &fileName, const QString &destName)
         setErrorString(
             tr("Failed accessing the file %1 for adding to the archive. The error was: %2")
             .arg(fileName)
-            .arg(QLatin1Literal{strerror(errno)}));
+            .arg(QLatin1String{strerror(errno)}));
         return false;
     }
 
     if (fileInfo.isSymLink()) {
         QString symLinkTarget;
-        // Do NOT use fileInfo.readLink() for unix symlinks!
+        // Do NOT use fileInfo.symLinkTarget() for unix symlinks!
         // It returns the -full- path to the target, while we want the target string "as is".
 #if defined(Q_OS_UNIX) && !defined(Q_OS_OS2EMX)
         const QByteArray encodedFileName = QFile::encodeName(fileName);
@@ -263,8 +333,7 @@ bool KArchive::addLocalFile(const QString &fileName, const QString &destName)
     if (!file.open(QIODevice::ReadOnly)) {
         setErrorString(
             tr("Couldn't open file %1: %2")
-            .arg(fileName)
-            .arg(file.errorString()));
+            .arg(fileName, file.errorString()));
         return false;
     }
 
@@ -309,7 +378,7 @@ bool KArchive::addLocalDirectory(const QString &path, const QString &destName)
     for (QStringList::ConstIterator it = files.begin(); it != files.end(); ++it) {
         if (*it != QLatin1String(".") && *it != QLatin1String("..")) {
             QString fileName = path + QLatin1Char('/') + *it;
-            //qCDebug(KArchiveLog) << "storing " << fileName;
+//            qCDebug(KArchiveLog) << "storing " << fileName;
             QString dest = destName.isEmpty() ? *it : (destName + QLatin1Char('/') + *it);
             QFileInfo fileInfo(fileName);
 
@@ -448,10 +517,23 @@ KArchiveDirectory *KArchive::rootDir()
 
 KArchiveDirectory *KArchive::findOrCreate(const QString &path)
 {
+    return d->findOrCreate(path, 0 /*recursionCounter*/);
+}
+
+KArchiveDirectory *KArchivePrivate::findOrCreate(const QString &path, int recursionCounter)
+{
+    // Check we're not in a path that is ultra deep, this is most probably fine since PATH_MAX on Linux
+    // is defined as 4096, so even on /a/a/a/a/a/a 2500 recursions puts us over that limit
+    // an ultra deep recursion will makes us crash due to not enough stack. Tests show that 1MB stack
+    // (default on Linux seems to be 8MB) gives us up to around 4000 recursions
+    if (recursionCounter > 2500) {
+        qCWarning(KArchiveLog) << "path recursion limit exceeded, bailing out";
+        return nullptr;
+    }
     //qCDebug(KArchiveLog) << path;
     if (path.isEmpty() || path == QLatin1String("/") || path == QLatin1String(".")) { // root dir => found
         //qCDebug(KArchiveLog) << "returning rootdir";
-        return rootDir();
+        return q->rootDir();
     }
     // Important note : for tar files containing absolute paths
     // (i.e. beginning with "/"), this means the leading "/" will
@@ -460,15 +542,25 @@ KArchiveDirectory *KArchive::findOrCreate(const QString &path)
     // See also KArchiveDirectory::entry().
 
     // Already created ? => found
-    const KArchiveEntry *ent = rootDir()->entry(path);
-    if (ent) {
-        if (ent->isDirectory())
+    KArchiveDirectory *existingEntryParentDirectory;
+    const KArchiveEntry *existingEntry = KArchiveDirectoryPrivate::get(q->rootDir())->entry(path, &existingEntryParentDirectory);
+    if (existingEntry) {
+        if (existingEntry->isDirectory())
             //qCDebug(KArchiveLog) << "found it";
         {
-            const KArchiveDirectory *dir = static_cast<const KArchiveDirectory *>(ent);
+            const KArchiveDirectory *dir = static_cast<const KArchiveDirectory *>(existingEntry);
             return const_cast<KArchiveDirectory *>(dir);
         } else {
-            //qCWarning(KArchiveLog) << "Found" << path << "but it's not a directory";
+            const KArchiveFile *file = static_cast<const KArchiveFile *>(existingEntry);
+            if (file->size() > 0) {
+                qCWarning(KArchiveLog) << path << "is normal file, but there are file paths in the archive assuming it is a directory, bailing out";
+                return nullptr;
+            }
+
+            qCDebug(KArchiveLog) << path << " is an empty file, assuming it is actually a directory and replacing";
+            KArchiveEntry *myEntry = const_cast<KArchiveEntry*>(existingEntry);
+            existingEntryParentDirectory->removeEntry(myEntry);
+            delete myEntry;
         }
     }
 
@@ -477,21 +569,28 @@ KArchiveDirectory *KArchive::findOrCreate(const QString &path)
     KArchiveDirectory *parent;
     QString dirname;
     if (pos == -1) { // no more slash => create in root dir
-        parent =  rootDir();
+        parent =  q->rootDir();
         dirname = path;
     } else {
         QString left = path.left(pos);
         dirname = path.mid(pos + 1);
-        parent = findOrCreate(left);   // recursive call... until we find an existing dir.
+        parent = findOrCreate(left, recursionCounter + 1);   // recursive call... until we find an existing dir.
+    }
+
+    if (!parent) {
+        return nullptr;
     }
 
     //qCDebug(KArchiveLog) << "found parent " << parent->name() << " adding " << dirname << " to ensure " << path;
     // Found -> add the missing piece
-    KArchiveDirectory *e = new KArchiveDirectory(this, dirname, d->rootDir->permissions(),
-                                                 d->rootDir->date(), d->rootDir->user(),
-                                                 d->rootDir->group(), QString());
-    parent->addEntry(e);
-    return e; // now a directory to <path> exists
+    KArchiveDirectory *e = new KArchiveDirectory(q, dirname, rootDir->permissions(),
+                                                 rootDir->date(), rootDir->user(),
+                                                 rootDir->group(), QString());
+    if (parent->addEntryV2(e)) {
+        return e; // now a directory to <path> exists
+    } else {
+        return nullptr;
+    }
 }
 
 void KArchive::setDevice(QIODevice *dev)
@@ -506,6 +605,7 @@ void KArchive::setDevice(QIODevice *dev)
 void KArchive::setRootDir(KArchiveDirectory *rootDir)
 {
     Q_ASSERT(!d->rootDir);   // Call setRootDir only once during parsing please ;)
+    delete d->rootDir;       // but if it happens, don't leak
     d->rootDir = rootDir;
 }
 
@@ -545,7 +645,7 @@ QDateTime KArchivePrivate::time_tToDateTime(uint time_t)
     if (time_t == uint(-1)) {
         return QDateTime();
     }
-    return QDateTime::fromTime_t(time_t);
+    return QDateTime::fromSecsSinceEpoch(time_t);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -725,6 +825,10 @@ bool KArchiveFile::copyTo(const QString &dest) const
     QFile f(dest + QLatin1Char('/')  + name());
     if (f.open(QIODevice::ReadWrite | QIODevice::Truncate)) {
         QIODevice *inputDev = createDevice();
+        if (!inputDev) {
+            f.remove();
+            return false;
+        }
 
         // Read and write data in chunks to minimize memory usage
         const qint64 chunkSize = 1024 * 1024;
@@ -753,22 +857,12 @@ bool KArchiveFile::copyTo(const QString &dest) const
 //////////////////////// KArchiveDirectory /////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-class KArchiveDirectoryPrivate
-{
-public:
-    ~KArchiveDirectoryPrivate()
-    {
-        qDeleteAll(entries);
-    }
-    QHash<QString, KArchiveEntry *> entries;
-};
-
 KArchiveDirectory::KArchiveDirectory(KArchive *t, const QString &name, int access,
                                      const QDateTime &date,
                                      const QString &user, const QString &group,
                                      const QString &symlink)
     : KArchiveEntry(t, name, access, date, user, group, symlink)
-    , d(new KArchiveDirectoryPrivate)
+    , d(new KArchiveDirectoryPrivate(this))
 {
 }
 
@@ -784,35 +878,8 @@ QStringList KArchiveDirectory::entries() const
 
 const KArchiveEntry *KArchiveDirectory::entry(const QString &_name) const
 {
-    QString name = QDir::cleanPath(_name);
-    int pos = name.indexOf(QLatin1Char('/'));
-    if (pos == 0) { // ouch absolute path (see also KArchive::findOrCreate)
-        if (name.length() > 1) {
-            name = name.mid(1);   // remove leading slash
-            pos = name.indexOf(QLatin1Char('/'));   // look again
-        } else { // "/"
-            return this;
-        }
-    }
-    // trailing slash ? -> remove
-    if (pos != -1 && pos == name.length() - 1) {
-        name = name.left(pos);
-        pos = name.indexOf(QLatin1Char('/'));   // look again
-    }
-    if (pos != -1) {
-        const QString left = name.left(pos);
-        const QString right = name.mid(pos + 1);
-
-        //qCDebug(KArchiveLog) << "left=" << left << "right=" << right;
-
-        const KArchiveEntry *e = d->entries.value(left);
-        if (!e || !e->isDirectory()) {
-            return nullptr;
-        }
-        return static_cast<const KArchiveDirectory *>(e)->entry(right);
-    }
-
-    return d->entries.value(name);
+    KArchiveDirectory *dummy;
+    return d->entry(_name, &dummy);
 }
 
 const KArchiveFile *KArchiveDirectory::file(const QString &name) const
@@ -826,13 +893,19 @@ const KArchiveFile *KArchiveDirectory::file(const QString &name) const
 
 void KArchiveDirectory::addEntry(KArchiveEntry *entry)
 {
+    addEntryV2(entry);
+}
+
+bool KArchiveDirectory::addEntryV2(KArchiveEntry *entry)
+{
     if (d->entries.value(entry->name())) {
-        /*qCWarning(KArchiveLog) << "directory " << name()
-                    << "has entry" << entry->name() << "already";*/
+        qCWarning(KArchiveLog) << "directory " << name()
+                    << "has entry" << entry->name() << "already";
         delete entry;
-        return;
+        return false;
     }
     d->entries.insert(entry->name(), entry);
+    return true;
 }
 
 void KArchiveDirectory::removeEntry(KArchiveEntry *entry)

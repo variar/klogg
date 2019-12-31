@@ -19,8 +19,8 @@
 #ifndef klimitediodevice_p_h
 #define klimitediodevice_p_h
 
-#include <QtCore/QDebug>
-#include <QtCore/QIODevice>
+#include <QDebug>
+#include <QIODevice>
 /**
  * A readonly device that reads from an underlying device
  * from a given point to another (e.g. to give access to a single
@@ -30,6 +30,7 @@
  */
 class KLimitedIODevice : public QIODevice
 {
+    Q_OBJECT
 public:
     /**
      * Creates a new KLimitedIODevice.
@@ -43,21 +44,21 @@ public:
     {
     }
 
-    bool isSequential() const Q_DECL_OVERRIDE;
+    bool isSequential() const override;
 
-    bool open(QIODevice::OpenMode m) Q_DECL_OVERRIDE;
-    void close() Q_DECL_OVERRIDE;
+    bool open(QIODevice::OpenMode m) override;
+    void close() override;
 
-    qint64 size() const Q_DECL_OVERRIDE;
+    qint64 size() const override;
 
-    qint64 readData(char *data, qint64 maxlen) Q_DECL_OVERRIDE;
-    qint64 writeData(const char *, qint64) Q_DECL_OVERRIDE {
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *, qint64) override {
         return -1;    // unsupported
     }
 
     //virtual qint64 pos() const { return m_dev->pos() - m_start; }
-    bool seek(qint64 pos) Q_DECL_OVERRIDE;
-    qint64 bytesAvailable() const Q_DECL_OVERRIDE;
+    bool seek(qint64 pos) override;
+    qint64 bytesAvailable() const override;
 private:
     QIODevice *m_dev;
     qint64 m_start;

@@ -45,8 +45,6 @@ public:
     }
 
     lzma_stream zStream;
-    lzma_filter filters[5];
-    unsigned char props[5];
     int mode;
     bool isInitialized;
     KXzFilter::Flag flag;
@@ -68,6 +66,13 @@ bool KXzFilter::init(int mode)
     return init(mode, AUTO, props);
 }
 
+static void freeFilters(lzma_filter filters[])
+{
+    for (int i = 0; filters[i].id != LZMA_VLI_UNKNOWN; i++) {
+        free(filters[i].options);
+    }
+}
+
 bool KXzFilter::init(int mode, Flag flag, const QVector<unsigned char> &properties)
 {
     if (d->isInitialized) {
@@ -79,6 +84,10 @@ bool KXzFilter::init(int mode, Flag flag, const QVector<unsigned char> &properti
     d->zStream.next_in = nullptr;
     d->zStream.avail_in = 0;
     if (mode == QIODevice::ReadOnly) {
+        // TODO when we can depend on Qt 5.12 Use a QScopeGuard to call freeFilters
+        lzma_filter filters[5];
+        filters[0].id = LZMA_VLI_UNKNOWN;
+
         switch (flag) {
         case AUTO:
             /* We set the memlimit for decompression to 100MiB which should be
@@ -91,10 +100,10 @@ bool KXzFilter::init(int mode, Flag flag, const QVector<unsigned char> &properti
             }
             break;
         case LZMA: {
-            d->filters[0].id = LZMA_FILTER_LZMA1;
-            d->filters[0].options = nullptr;
-            d->filters[1].id = LZMA_VLI_UNKNOWN;
-            d->filters[1].options = nullptr;
+            filters[0].id = LZMA_FILTER_LZMA1;
+            filters[0].options = nullptr;
+            filters[1].id = LZMA_VLI_UNKNOWN;
+            filters[1].options = nullptr;
 
             Q_ASSERT(properties.size() == 5);
             unsigned char props[5];
@@ -102,46 +111,49 @@ bool KXzFilter::init(int mode, Flag flag, const QVector<unsigned char> &properti
                 props[i] = properties[i];
             }
 
-            result = lzma_properties_decode(&d->filters[0], nullptr, props, sizeof (props));
+            result = lzma_properties_decode(&filters[0], nullptr, props, sizeof (props));
             if (result != LZMA_OK) {
                 qCWarning(KArchiveLog) << "lzma_properties_decode returned" << result;
+                freeFilters(filters);
                 return false;
             }
             break;
         }
         case LZMA2: {
-            d->filters[0].id = LZMA_FILTER_LZMA2;
-            d->filters[0].options = nullptr;
-            d->filters[1].id = LZMA_VLI_UNKNOWN;
-            d->filters[1].options = nullptr;
+            filters[0].id = LZMA_FILTER_LZMA2;
+            filters[0].options = nullptr;
+            filters[1].id = LZMA_VLI_UNKNOWN;
+            filters[1].options = nullptr;
 
             Q_ASSERT(properties.size() == 1);
             unsigned char props[1];
             props[0] = properties[0];
 
-            result = lzma_properties_decode(&d->filters[0], nullptr, props, sizeof (props));
+            result = lzma_properties_decode(&filters[0], nullptr, props, sizeof (props));
             if (result != LZMA_OK) {
                 qCWarning(KArchiveLog) << "lzma_properties_decode returned" << result;
+                freeFilters(filters);
                 return false;
             }
             break;
         }
         case BCJ: {
-            d->filters[0].id = LZMA_FILTER_X86;
-            d->filters[0].options = nullptr;
+            filters[0].id = LZMA_FILTER_X86;
+            filters[0].options = nullptr;
 
             unsigned char props[5] = { 0x5d, 0x00, 0x00, 0x08, 0x00 }
             ;
-            d->filters[1].id = LZMA_FILTER_LZMA1;
-            d->filters[1].options = nullptr;
-            result = lzma_properties_decode(&d->filters[1], nullptr, props, sizeof (props));
+            filters[1].id = LZMA_FILTER_LZMA1;
+            filters[1].options = nullptr;
+            result = lzma_properties_decode(&filters[1], nullptr, props, sizeof (props));
             if (result != LZMA_OK) {
                 qCWarning(KArchiveLog) << "lzma_properties_decode1 returned" << result;
+                freeFilters(filters);
                 return false;
             }
 
-            d->filters[2].id = LZMA_VLI_UNKNOWN;
-            d->filters[2].options = nullptr;
+            filters[2].id = LZMA_VLI_UNKNOWN;
+            filters[2].options = nullptr;
 
             break;
         }
@@ -155,27 +167,30 @@ bool KXzFilter::init(int mode, Flag flag, const QVector<unsigned char> &properti
         }
 
         if (flag != AUTO) {
-            result = lzma_raw_decoder(&d->zStream, d->filters);
+            result = lzma_raw_decoder(&d->zStream, filters);
             if (result != LZMA_OK) {
                 qCWarning(KArchiveLog) << "lzma_raw_decoder returned" << result;
+                freeFilters(filters);
                 return false;
             }
         }
+        freeFilters(filters);
 
     } else if (mode == QIODevice::WriteOnly) {
         if (flag == AUTO) {
             result = lzma_easy_encoder(&d->zStream, LZMA_PRESET_DEFAULT, LZMA_CHECK_CRC32);
         } else {
+            lzma_filter filters[5];
             if (flag == LZMA2) {
                 lzma_options_lzma lzma_opt;
                 lzma_lzma_preset(&lzma_opt, LZMA_PRESET_DEFAULT);
 
-                d->filters[0].id = LZMA_FILTER_LZMA2;
-                d->filters[0].options = &lzma_opt;
-                d->filters[1].id = LZMA_VLI_UNKNOWN;
-                d->filters[1].options = nullptr;
+                filters[0].id = LZMA_FILTER_LZMA2;
+                filters[0].options = &lzma_opt;
+                filters[1].id = LZMA_VLI_UNKNOWN;
+                filters[1].options = nullptr;
             }
-            result = lzma_raw_encoder(&d->zStream, d->filters);
+            result = lzma_raw_encoder(&d->zStream, filters);
         }
         if (result != LZMA_OK) {
             qCWarning(KArchiveLog) << "lzma_easy_encoder returned" << result;
@@ -237,7 +252,7 @@ int KXzFilter::outBufferAvailable() const
     return d->zStream.avail_out;
 }
 
-KXzFilter::Result KXzFilter::uncompress_()
+KXzFilter::Result KXzFilter::uncompress()
 {
     //qCDebug(KArchiveLog) << "Calling lzma_code with avail_in=" << inBufferAvailable() << " avail_out =" << outBufferAvailable();
     lzma_ret result;
@@ -258,7 +273,7 @@ KXzFilter::Result KXzFilter::uncompress_()
     }
 }
 
-KXzFilter::Result KXzFilter::compress_(bool finish)
+KXzFilter::Result KXzFilter::compress(bool finish)
 {
     //qCDebug(KArchiveLog) << "Calling lzma_code with avail_in=" << inBufferAvailable() << " avail_out=" << outBufferAvailable();
     lzma_ret result = lzma_code(&d->zStream, finish ? LZMA_FINISH : LZMA_RUN);

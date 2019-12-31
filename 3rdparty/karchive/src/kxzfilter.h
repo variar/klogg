@@ -39,7 +39,7 @@ public:
     KXzFilter();
     virtual ~KXzFilter();
 
-    bool init(int) Q_DECL_OVERRIDE;
+    bool init(int) override;
 
     enum Flag {
         AUTO = 0,
@@ -54,23 +54,23 @@ public:
     };
 
     virtual bool init(int, Flag flag, const QVector<unsigned char> &props);
-    int mode() const Q_DECL_OVERRIDE;
-    bool terminate() Q_DECL_OVERRIDE;
-    void reset() Q_DECL_OVERRIDE;
-    bool readHeader() Q_DECL_OVERRIDE
+    int mode() const override;
+    bool terminate() override;
+    void reset() override;
+    bool readHeader() override
     {
         return true;    // lzma handles it by itself ! Cool !
     }
-    bool writeHeader(const QByteArray &) Q_DECL_OVERRIDE
+    bool writeHeader(const QByteArray &) override
     {
         return true;
     }
-    void setOutBuffer(char *data, uint maxlen) Q_DECL_OVERRIDE;
-    void setInBuffer(const char *data, uint size) Q_DECL_OVERRIDE;
-    int  inBufferAvailable() const Q_DECL_OVERRIDE;
-    int  outBufferAvailable() const Q_DECL_OVERRIDE;
-    Result uncompress_() Q_DECL_OVERRIDE;
-    Result compress_(bool finish) Q_DECL_OVERRIDE;
+    void setOutBuffer(char *data, uint maxlen) override;
+    void setInBuffer(const char *data, uint size) override;
+    int  inBufferAvailable() const override;
+    int  outBufferAvailable() const override;
+    Result uncompress() override;
+    Result compress(bool finish) override;
 private:
     class Private;
     Private *const d;

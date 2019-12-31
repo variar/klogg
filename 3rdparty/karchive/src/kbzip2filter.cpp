@@ -155,7 +155,7 @@ int KBzip2Filter::outBufferAvailable() const
     return d->zStream.avail_out;
 }
 
-KBzip2Filter::Result KBzip2Filter::uncompress_()
+KBzip2Filter::Result KBzip2Filter::uncompress()
 {
     //qCDebug(KArchiveLog) << "Calling bzDecompress with avail_in=" << inBufferAvailable() << " avail_out=" << outBufferAvailable();
     int result = bzDecompress(&d->zStream);
@@ -173,7 +173,7 @@ KBzip2Filter::Result KBzip2Filter::uncompress_()
     }
 }
 
-KBzip2Filter::Result KBzip2Filter::compress_(bool finish)
+KBzip2Filter::Result KBzip2Filter::compress(bool finish)
 {
     //qCDebug(KArchiveLog) << "Calling bzCompress with avail_in=" << inBufferAvailable() << " avail_out=" << outBufferAvailable();
     int result = bzCompress(&d->zStream, finish ? BZ_FINISH : BZ_RUN);

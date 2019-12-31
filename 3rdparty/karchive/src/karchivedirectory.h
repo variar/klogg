@@ -24,11 +24,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <QtCore/QDate>
-#include <QtCore/QString>
-#include <QtCore/QStringList>
+#include <QDate>
+#include <QString>
+#include <QStringList>
 
-#include "karchiveentry.h"
+#include <karchiveentry.h>
 
 class KArchiveDirectoryPrivate;
 class KArchiveFile;
@@ -99,14 +99,21 @@ public:
     /**
      * @internal
      * Adds a new entry to the directory.
+     * @return whether the entry was added or not. Non added entries are deleted
      */
-    void removeEntry(KArchiveEntry *);
+    bool addEntryV2(KArchiveEntry *); // KF6 TODO: merge with the one above
+
+    /**
+     * @internal
+     * Removes an entry from the directory.
+     */
+    void removeEntry(KArchiveEntry *); // KF6 TODO: return bool since it can fail
 
     /**
      * Checks whether this entry is a directory.
      * @return true, since this entry is a directory
      */
-    bool isDirectory() const Q_DECL_OVERRIDE;
+    bool isDirectory() const override;
 
     /**
      * Extracts all entries in this archive directory to the directory
@@ -118,8 +125,9 @@ public:
     bool copyTo(const QString &dest, bool recursive = true) const;
 
 protected:
-    void virtual_hook(int id, void *data) Q_DECL_OVERRIDE;
+    void virtual_hook(int id, void *data) override;
 private:
+    friend class KArchiveDirectoryPrivate;
     KArchiveDirectoryPrivate *const d;
 };
 

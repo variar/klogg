@@ -22,8 +22,8 @@
 #include "karchive_p.h"
 #include "loggingcategory.h"
 
-#include <QtCore/QFile>
-#include <QtCore/QDebug>
+#include <QFile>
+#include <QDebug>
 #include <QUuid>
 #include <QDateTime>
 #include <QFileInfo>
@@ -54,7 +54,7 @@ public:
     {
     }
 
-    QByteArray data() const Q_DECL_OVERRIDE
+    QByteArray data() const override
     {
         QFile f(m_resourcePath);
         if (f.open(QIODevice::ReadOnly)) {
@@ -63,7 +63,7 @@ public:
         qCWarning(KArchiveLog) << "Couldn't open" << m_resourcePath;
         return QByteArray();
     }
-    QIODevice *createDevice() const Q_DECL_OVERRIDE
+    QIODevice *createDevice() const override
     {
         return new QFile(m_resourcePath);
     }
@@ -133,8 +133,7 @@ bool KRcc::openArchive(QIODevice::OpenMode mode)
     if (!QResource::registerResource(fileName(), d->m_prefix)) {
         setErrorString(
             tr("Failed to register resource %1 under prefix %2")
-                .arg(fileName())
-                .arg(d->m_prefix));
+                .arg(fileName(), d->m_prefix));
         return false;
     }
 
@@ -145,7 +144,7 @@ bool KRcc::openArchive(QIODevice::OpenMode mode)
 
 void KRcc::KRccPrivate::createEntries(const QDir &dir, KArchiveDirectory *parentDir, KRcc *q)
 {
-    Q_FOREACH (const QString &fileName, dir.entryList()) {
+    for (const QString &fileName : dir.entryList()) {
         const QString entryPath = dir.path() + QLatin1Char('/') + fileName;
         const QFileInfo info(entryPath);
         if (info.isFile()) {
@@ -155,8 +154,9 @@ void KRcc::KRccPrivate::createEntries(const QDir &dir, KArchiveDirectory *parent
         } else {
             KArchiveDirectory *entry = new KArchiveDirectory(q, fileName, 0555, info.lastModified(),
                                                              parentDir->user(), parentDir->group(), /*symlink*/ QString());
-            parentDir->addEntry(entry);
-            createEntries(QDir(entryPath), entry, q);
+            if (parentDir->addEntryV2(entry)) {
+                createEntries(QDir(entryPath), entry, q);
+            }
         }
     }
 }

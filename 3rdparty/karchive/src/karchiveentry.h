@@ -24,7 +24,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "karchive_export.h"
+#include <karchive_export.h>
 
 #ifdef Q_OS_WIN
 #include <qplatformdefs.h> // mode_t

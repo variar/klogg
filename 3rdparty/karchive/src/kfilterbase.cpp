@@ -19,7 +19,7 @@
 
 #include "kfilterbase.h"
 
-#include <QtCore/QIODevice>
+#include <QIODevice>
 
 class KFilterBasePrivate
 {

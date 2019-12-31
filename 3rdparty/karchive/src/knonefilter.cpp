@@ -22,7 +22,7 @@
 
 #include "knonefilter.h"
 
-#include <QtCore/QFile>
+#include <QFile>
 
 class Q_DECL_HIDDEN KNoneFilter::Private
 {
@@ -105,7 +105,7 @@ int KNoneFilter::outBufferAvailable() const
     return d->avail_out;
 }
 
-KNoneFilter::Result KNoneFilter::uncompress_()
+KNoneFilter::Result KNoneFilter::uncompress()
 {
 #ifndef NDEBUG
     if (d->mode != QIODevice::ReadOnly) {
@@ -115,7 +115,7 @@ KNoneFilter::Result KNoneFilter::uncompress_()
     return copyData();
 }
 
-KNoneFilter::Result KNoneFilter::compress_(bool finish)
+KNoneFilter::Result KNoneFilter::compress(bool finish)
 {
     Q_ASSERT(d->mode == QIODevice::WriteOnly);
     Q_UNUSED(finish);

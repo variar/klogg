@@ -18,7 +18,7 @@
 #ifndef KZIP_H
 #define KZIP_H
 
-#include "karchive.h"
+#include <karchive.h>
 
 #include "kzipfileentry.h" // for source compat
 
@@ -127,24 +127,24 @@ public:
      * @param size the size of the chunk
      * @return true if successful, false otherwise
      */
-    bool writeData(const char *data, qint64 size) Q_DECL_OVERRIDE;
+    bool writeData(const char *data, qint64 size) override;
 
 protected:
     /// Reimplemented from KArchive
     bool doWriteSymLink(const QString &name, const QString &target,
                         const QString &user, const QString &group,
-                        mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                        mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
     /// Reimplemented from KArchive
     bool doPrepareWriting(const QString &name, const QString &user,
                           const QString &group, qint64 size, mode_t perm,
-                          const QDateTime &atime, const QDateTime &mtime, const QDateTime &creationTime) Q_DECL_OVERRIDE;
+                          const QDateTime &atime, const QDateTime &mtime, const QDateTime &creationTime) override;
 
     /**
      * Write data to a file that has been created using prepareWriting().
      * @param size the size of the file
      * @return true if successful, false otherwise
      */
-    bool doFinishWriting(qint64 size) Q_DECL_OVERRIDE;
+    bool doFinishWriting(qint64 size) override;
 
     /**
      * Opens the archive for reading.
@@ -152,17 +152,17 @@ protected:
      * and creates the KArchiveDirectory/KArchiveFile entries.
      * @param mode the mode of the file
      */
-    bool openArchive(QIODevice::OpenMode mode) Q_DECL_OVERRIDE;
+    bool openArchive(QIODevice::OpenMode mode) override;
 
     /// Closes the archive
-    bool closeArchive() Q_DECL_OVERRIDE;
+    bool closeArchive() override;
 
     /// Reimplemented from KArchive
     bool doWriteDir(const QString &name, const QString &user, const QString &group, mode_t perm,
-                    const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                    const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
 
 protected:
-    void virtual_hook(int id, void *data) Q_DECL_OVERRIDE;
+    void virtual_hook(int id, void *data) override;
 
 private:
     class KZipPrivate;

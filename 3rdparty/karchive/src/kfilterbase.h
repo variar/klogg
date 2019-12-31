@@ -20,10 +20,10 @@
 #ifndef __kfilterbase__h
 #define __kfilterbase__h
 
-#include "karchive_export.h"
+#include <karchive_export.h>
 
-#include <QtCore/QObject>
-#include <QtCore/QString>
+#include <QObject>
+#include <QString>
 class KFilterBasePrivate;
 
 class QIODevice;
@@ -88,9 +88,9 @@ public:
         Error
     };
     /** \internal */
-    virtual Result uncompress_() = 0;
+    virtual Result uncompress() = 0;
     /** \internal */
-    virtual Result compress_(bool finish) = 0;
+    virtual Result compress(bool finish) = 0;
 
     /**
      * \internal

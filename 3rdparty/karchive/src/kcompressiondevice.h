@@ -19,10 +19,11 @@
 #ifndef __kcompressiondevice_h
 #define __kcompressiondevice_h
 
-#include "karchive_export.h"
-#include <QtCore/QIODevice>
-#include <QtCore/QString>
-#include <QtCore/QMetaType>
+#include <karchive_export.h>
+#include <QIODevice>
+#include <QFileDevice>
+#include <QString>
+#include <QMetaType>
 class KCompressionDevicePrivate;
 
 class KFilterBase;
@@ -36,8 +37,9 @@ class KFilterBase;
  * Use this class to read/write compressed files.
  */
 
-class KARCHIVE_EXPORT KCompressionDevice : public QIODevice
+class KARCHIVE_EXPORT KCompressionDevice : public QIODevice // KF6 TODO: consider inheriting from QFileDevice, so apps can use error() generically ?
 {
+    Q_OBJECT
 public:
     enum CompressionType {
         GZip,
@@ -77,12 +79,12 @@ public:
     /**
      * Open for reading or writing.
      */
-    bool open(QIODevice::OpenMode mode) Q_DECL_OVERRIDE;
+    bool open(QIODevice::OpenMode mode) override;
 
     /**
      * Close after reading or writing.
      */
-    void close() Q_DECL_OVERRIDE;
+    void close() override;
 
     /**
      * For writing gzip compressed files only:
@@ -101,9 +103,9 @@ public:
     /**
      * That one can be quite slow, when going back. Use with care.
      */
-    bool seek(qint64) Q_DECL_OVERRIDE;
+    bool seek(qint64) override;
 
-    bool atEnd() const Q_DECL_OVERRIDE;
+    bool atEnd() const override;
 
     /**
      * Call this to create the appropriate filter for the CompressionType
@@ -113,14 +115,23 @@ public:
      */
     static KFilterBase *filterForCompressionType(CompressionType type);
 
+    /**
+     * Returns the error code from the last failing operation.
+     * This is especially useful after calling close(), which unfortunately returns void
+     * (see https://bugreports.qt.io/browse/QTBUG-70033), to see if the flushing done by close
+     * was able to write all the data to disk.
+     */
+    QFileDevice::FileError error() const;
+
 protected:
     friend class K7Zip;
 
-    qint64 readData(char *data, qint64 maxlen) Q_DECL_OVERRIDE;
-    qint64 writeData(const char *data, qint64 len) Q_DECL_OVERRIDE;
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *data, qint64 len) override;
 
     KFilterBase *filterBase();
 private:
+    friend KCompressionDevicePrivate;
     KCompressionDevicePrivate *const d;
 };
 

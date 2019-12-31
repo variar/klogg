@@ -21,7 +21,7 @@
 #ifndef KARCHIVEFILE_H
 #define KARCHIVEFILE_H
 
-#include "karchiveentry.h"
+#include <karchiveentry.h>
 
 class KArchiveFilePrivate;
 /**
@@ -96,7 +96,7 @@ public:
      * Checks whether this entry is a file.
      * @return true, since this entry is a file
      */
-    bool isFile() const Q_DECL_OVERRIDE;
+    bool isFile() const override;
 
     /**
      * Extracts the file to the directory @p dest
@@ -106,7 +106,7 @@ public:
     bool copyTo(const QString &dest) const;
 
 protected:
-    void virtual_hook(int id, void *data) Q_DECL_OVERRIDE;
+    void virtual_hook(int id, void *data) override;
 private:
     KArchiveFilePrivate *const d;
 };

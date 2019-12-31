@@ -61,19 +61,19 @@ protected:
     /// Reimplemented from KArchive
     bool doWriteSymLink(const QString &name, const QString &target,
                         const QString &user, const QString &group,
-                        mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                        mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
     /// Reimplemented from KArchive
     bool doWriteDir(const QString &name, const QString &user, const QString &group,
-                    mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                    mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
     /// Reimplemented from KArchive
     bool doPrepareWriting(const QString &name, const QString &user,
                           const QString &group, qint64 size, mode_t perm,
-                          const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                          const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
     /// Reimplemented from KArchive
-    bool doFinishWriting(qint64 size) Q_DECL_OVERRIDE;
+    bool doFinishWriting(qint64 size) override;
 
     /// Reimplemented from KArchive
-    bool writeData(const char *data, qint64 size) Q_DECL_OVERRIDE;
+    bool writeData(const char *data, qint64 size) override;
 
     /**
      * Opens the archive for reading.
@@ -81,11 +81,11 @@ protected:
      * and creates the KArchiveDirectory/KArchiveFile entries.
      * @param mode the mode of the file
      */
-    bool openArchive(QIODevice::OpenMode mode) Q_DECL_OVERRIDE;
-    bool closeArchive() Q_DECL_OVERRIDE;
+    bool openArchive(QIODevice::OpenMode mode) override;
+    bool closeArchive() override;
 
 protected:
-    void virtual_hook(int id, void *data) Q_DECL_OVERRIDE;
+    void virtual_hook(int id, void *data) override;
 private:
     class K7ZipPrivate;
     K7ZipPrivate *const d;

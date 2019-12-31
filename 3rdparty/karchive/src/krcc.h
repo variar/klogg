@@ -55,20 +55,20 @@ protected:
      * @return always false
      */
     bool doPrepareWriting(const QString &name, const QString &user, const QString &group, qint64 size,
-                          mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                          mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
 
     /*
      * Writing is not supported by this class, will always fail.
      * @return always false
      */
-    bool doFinishWriting(qint64 size) Q_DECL_OVERRIDE;
+    bool doFinishWriting(qint64 size) override;
 
     /*
      * Writing is not supported by this class, will always fail.
      * @return always false
      */
     bool doWriteDir(const QString &name, const QString &user, const QString &group,
-                    mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                    mode_t perm, const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
 
     /*
      * Writing is not supported by this class, will always fail.
@@ -76,20 +76,20 @@ protected:
      */
     bool doWriteSymLink(const QString &name, const QString &target,
                         const QString &user, const QString &group, mode_t perm,
-                        const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) Q_DECL_OVERRIDE;
+                        const QDateTime &atime, const QDateTime &mtime, const QDateTime &ctime) override;
 
     /**
      * Registers the .rcc resource in the QResource system under a unique identifier,
      * then lists that, and creates the KArchiveFile/KArchiveDirectory entries.
      */
-    bool openArchive(QIODevice::OpenMode mode) Q_DECL_OVERRIDE;
+    bool openArchive(QIODevice::OpenMode mode) override;
     /**
      * Unregisters the .rcc resource from the QResource system.
      */
-    bool closeArchive() Q_DECL_OVERRIDE;
+    bool closeArchive() override;
 
 protected:
-    void virtual_hook(int id, void *data) Q_DECL_OVERRIDE;
+    void virtual_hook(int id, void *data) override;
 private:
     class KRccPrivate;
     KRccPrivate *const d;

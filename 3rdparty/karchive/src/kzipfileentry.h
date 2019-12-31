@@ -64,7 +64,7 @@ public:
      * @return the content of this file.
      * Call data() with care (only once per file), this data isn't cached.
      */
-    QByteArray data() const Q_DECL_OVERRIDE;
+    QByteArray data() const override;
 
     /**
      * This method returns a QIODevice to read the file contents.
@@ -73,7 +73,7 @@ public:
      * who will have to delete it.
      * The returned device auto-opens (in readonly mode), no need to open it.
      */
-    QIODevice *createDevice() const Q_DECL_OVERRIDE;
+    QIODevice *createDevice() const override;
 
 private:
     class KZipFileEntryPrivate;

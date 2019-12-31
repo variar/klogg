@@ -21,9 +21,10 @@
 #include "loggingcategory.h"
 
 #include <time.h>
+
 #include <zlib.h>
 #include <QDebug>
-#include <QtCore/QIODevice>
+#include <QIODevice>
 
 /* gzip flag byte */
 #define ORIG_NAME    0x08 /* bit 3 set: original file name present */
@@ -222,7 +223,7 @@ bool KGzipFilter::writeHeader(const QByteArray &fileName)
     int headerSize = p - d->zStream.next_out;
     i -= headerSize;
     Q_ASSERT(i > 0);
-    d->crc = crc32(0L, Z_NULL, 0);
+    d->crc = crc32(0L, nullptr, 0);
     d->zStream.next_out = p;
     d->zStream.avail_out = i;
     d->headerWritten = true;
@@ -284,7 +285,7 @@ KGzipFilter::Result KGzipFilter::uncompress_noop()
     }
 }
 
-KGzipFilter::Result KGzipFilter::uncompress_()
+KGzipFilter::Result KGzipFilter::uncompress()
 {
 #ifndef NDEBUG
     if (d->mode == 0) {
@@ -346,7 +347,7 @@ KGzipFilter::Result KGzipFilter::uncompress_()
     return KFilterBase::End;
 }
 
-KGzipFilter::Result KGzipFilter::compress_(bool finish)
+KGzipFilter::Result KGzipFilter::compress(bool finish)
 {
     Q_ASSERT(d->compressed);
     Q_ASSERT(d->mode == QIODevice::WriteOnly);

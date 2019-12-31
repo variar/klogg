@@ -20,10 +20,10 @@
 #include "karchive_p.h"
 #include "loggingcategory.h"
 
-#include <QtCore/QDebug>
-#include <QtCore/QDir>
-#include <QtCore/QBuffer>
-#include <QtCore/QFile>
+#include <QDebug>
+#include <QDir>
+#include <QBuffer>
+#include <QFile>
 #include <qplatformdefs.h>
 
 #include "kcompressiondevice.h"
@@ -177,7 +177,7 @@ public:
      * @return the content of this file.
      * Call data() with care (only once per file), this data isn't cached.
      */
-    QByteArray data() const Q_DECL_OVERRIDE;
+    QByteArray data() const override;
 
     /**
      * This method returns QIODevice (internal class: KLimitedIODevice)
@@ -189,7 +189,7 @@ public:
      * The returned device auto-opens (in readonly mode), no need to open it.
      * @return the QIODevice of the file
      */
-    QIODevice *createDevice() const Q_DECL_OVERRIDE;
+    QIODevice *createDevice() const override;
 
 private:
     const QByteArray m_data;
@@ -1114,7 +1114,7 @@ static uint toTimeT(const long long liTime)
 
     QDateTime t(QDate(year, month, day), QTime(hour, minute, second));
     t.setTimeSpec(Qt::UTC);
-    return t.toTime_t();
+    return t.toSecsSinceEpoch();
 }
 
 long long rtlSecondsSince1970ToSpecTime(quint32 seconds)
@@ -1446,6 +1446,15 @@ static QByteArray decodeBCJ2(const QByteArray &mainStream, const QByteArray &cal
 
         unsigned index = getIndex(prevByte, b);
         if (statusDecoder[index].decode(&rangeDecoder) == 1) {
+            if (b == 0xE8) {
+                if (callStreamPos + 4 > callStream.size()) {
+                    return QByteArray();
+                }
+            } else {
+                if (jumpStreamPos + 4 > jumpStream.size()) {
+                    return QByteArray();
+                }
+            }
             quint32 src = 0;
             for (int i = 0; i < 4; i++) {
                 unsigned char b0;
@@ -1644,7 +1653,7 @@ QByteArray K7Zip::K7ZipPrivate::readAndDecodePackedStreams(bool readMainStreamIn
             QByteArray inflatedDataTmp;
             while (result != KFilterBase::End && result != KFilterBase::Error && !filter->inBufferEmpty()) {
                 filter->setOutBuffer(outBuffer.data(), outBuffer.size());
-                result = filter->uncompress_();
+                result = filter->uncompress();
                 if (result == KFilterBase::Error) {
                     qCDebug(KArchiveLog) << " decode error";
                     filter->terminate();
@@ -1676,13 +1685,17 @@ QByteArray K7Zip::K7ZipPrivate::readAndDecodePackedStreams(bool readMainStreamIn
         }
 
         QByteArray inflated;
-        Q_FOREACH (const QByteArray& data, inflatedDatas) {
+        for (const QByteArray& data : qAsConst(inflatedDatas)) {
             inflated.append(data);
         }
 
         inflatedDatas.clear();
 
         if (folder->unpackCRCDefined) {
+            if ((size_t)inflated.size() < unpackSize) {
+                qCDebug(KArchiveLog) << "wrong crc size data";
+                return QByteArray();
+            }
             quint32 crc = crc32(0, (Bytef *)(inflated.data()), unpackSize);
             if (crc != folder->unpackCRC) {
                 qCDebug(KArchiveLog) << "wrong crc";
@@ -1710,7 +1723,7 @@ void K7Zip::K7ZipPrivate::createItemsFromEntities(const KArchiveDirectory *dir, 
 
         fileInfo->path = path + entry->name();
         mTimesDefined.append(true);
-        mTimes.append(rtlSecondsSince1970ToSpecTime(entry->date().toTime_t()));
+        mTimes.append(rtlSecondsSince1970ToSpecTime(entry->date().toSecsSinceEpoch()));
 
         if (entry->isFile()) {
             const K7ZipFileEntry *fileEntry = static_cast<const K7ZipFileEntry *>(entry);
@@ -2075,7 +2088,7 @@ QByteArray K7Zip::K7ZipPrivate::encodeStream(QVector<quint64> &packSizes, QVecto
 
     //compress data
     QByteArray encodedData;
-    if (header.size() > 0) {
+    if (!header.isEmpty()) {
         QByteArray enc;
         QBuffer inBuffer(&enc);
 
@@ -2113,7 +2126,7 @@ void K7Zip::K7ZipPrivate::writeHeader(quint64 &headerOffset)
 
     // Archive Properties
 
-    if (folders.size() > 0) {
+    if (!folders.isEmpty()) {
         writeByte(kMainStreamsInfo);
         writePackInfo(0, packSizes, packCRCsDefined, packCRCs);
 
@@ -2759,7 +2772,7 @@ bool K7Zip::closeArchive()
 
     //compress data
     QByteArray encodedData;
-    if (d->outData.size() > 0) {
+    if (!d->outData.isEmpty()) {
         QByteArray enc;
         QBuffer inBuffer(&enc);
 
@@ -2893,7 +2906,8 @@ bool K7Zip::doPrepareWriting(const QString &name, const QString &user,
     const KArchiveEntry *entry = parentDir->entry(fileName);
     if (!entry) {
         K7ZipFileEntry *e = new K7ZipFileEntry(this, fileName, perm, mtime, user, group, QString()/*symlink*/, d->outData.size(), 0 /*unknown yet*/, d->outData);
-        parentDir->addEntry(e);
+        if (!parentDir->addEntryV2(e))
+            return false;
         d->m_entryList << e;
         d->m_currentFile = e;
     } else {
@@ -2972,7 +2986,9 @@ bool K7Zip::doWriteSymLink(const QString &name, const QString &target,
     K7ZipFileEntry *e = new K7ZipFileEntry(this, fileName, perm, mtime, user, group, target, 0, 0, nullptr);
     d->outData.append(encodedTarget);
 
-    parentDir->addEntry(e);
+    if (!parentDir->addEntryV2(e))
+        return false;
+
     d->m_entryList << e;
 
     return true;
