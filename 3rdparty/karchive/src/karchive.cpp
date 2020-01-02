@@ -337,11 +337,19 @@ bool KArchive::addLocalFile(const QString &fileName, const QString &destName)
         return false;
     }
 
+#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
     if (!prepareWriting(destName, fileInfo.owner(), fileInfo.group(), size,
                         fi.st_mode, fileInfo.lastRead(), fileInfo.lastModified(), fileInfo.birthTime())) {
         //qCWarning(KArchiveLog) << " prepareWriting" << destName << "failed";
         return false;
     }
+#else
+    if (!prepareWriting(destName, fileInfo.owner(), fileInfo.group(), size,
+                        fi.st_mode, fileInfo.lastRead(), fileInfo.lastModified(), fileInfo.created())) {
+        //qCWarning(KArchiveLog) << " prepareWriting" << destName << "failed";
+        return false;
+    }
+#endif
 
     // Read and write data in chunks to minimize memory usage
     QByteArray array;
