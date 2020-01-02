@@ -16,33 +16,32 @@
  * You should have received a copy of the GNU General Public License
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifndef KLOGG_DECOMPRESSOR_H
+#define KLOGG_DECOMPRESSOR_H
 
-#ifndef KLOGG_DOWNLOADER_H
-#define KLOGG_DOWNLOADER_H
-
-#include <QNetworkAccessManager>
 #include <QFile>
+#include <QFuture>
+#include <QFutureWatcher>
 
-class Downloader : public QObject {
+
+enum class DecompressAction {None, Extract, Decompress};
+class Decompressor : public QObject {
     Q_OBJECT
   public:
-    explicit Downloader( QObject* parent = nullptr );
+    explicit Decompressor( QObject* parent = nullptr );
 
-    void download( const QUrl& url, QFile* outputFile );
+    bool decompress( const QString& path, QFile* outputFile );
+    bool extract( const QString& archiveFilePath, const QString& destination );
+
+
+    static DecompressAction action(const QString& archiveFilePath );
 
   signals:
-    void downloadProgress( qint64 bytesReceived, qint64 bytesTotal );
     void finished( bool );
 
-  private slots:
-    void downloadFinished();
-    void downloadReadyRead();
-
   private:
-    QNetworkAccessManager manager_;
-    QNetworkReply* currentDownload_ = nullptr;
-
-    QFile* output_;
+    QFuture<bool> future_;
+    QFutureWatcher<bool> watcher_;
 };
 
-#endif // KLOGG_DOWNLOADER_H
+#endif // KLOGG_DECOMPRESSOR_H

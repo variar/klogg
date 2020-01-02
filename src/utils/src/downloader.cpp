@@ -28,7 +28,7 @@ Downloader::Downloader( QObject* parent )
     manager_.setRedirectPolicy( QNetworkRequest::NoLessSafeRedirectPolicy );
 }
 
-void Downloader::download( const QUrl& url, QTemporaryFile* outputFile )
+void Downloader::download( const QUrl& url, QFile* outputFile )
 {
     output_ = outputFile;
 
@@ -57,6 +57,7 @@ void Downloader::downloadFinished()
     }
     else {
         LOG( logINFO ) << "Download done";
+        output_->close();
         emit finished( true );
     }
 }

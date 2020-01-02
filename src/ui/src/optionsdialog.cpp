@@ -69,12 +69,15 @@ OptionsDialog::OptionsDialog( QWidget* parent )
              [this]( auto ) { this->setupSearchResultsCache(); } );
     connect( loggingCheckBox, &QCheckBox::toggled, [this]( auto ) { this->setupLogging(); } );
 
+    connect( extractArchivesCheckBox, &QCheckBox::toggled, [this]( auto ) { this->setupArchives(); } );
+
     updateDialogFromConfig();
 
     setupIncremental();
     setupPolling();
     setupSearchResultsCache();
     setupLogging();
+    setupArchives();
 
 #ifdef Q_OS_MAC
     minimizeToTrayCheckBox->setVisible( false );
@@ -149,6 +152,11 @@ void OptionsDialog::setupLogging()
     verbositySpinBox->setEnabled( loggingCheckBox->isChecked() );
 }
 
+void OptionsDialog::setupArchives()
+{
+    extractArchivesAlwaysCheckBox->setEnabled( extractArchivesCheckBox->isChecked() );
+}
+
 // Convert a regexp type to its index in the list
 int OptionsDialog::getRegexpIndex( SearchRegexpType syntax ) const
 {
@@ -219,6 +227,9 @@ void OptionsDialog::updateDialogFromConfig()
     loggingCheckBox->setChecked( config.enableLogging() );
     verbositySpinBox->setValue( config.loggingLevel() );
 
+    extractArchivesCheckBox->setChecked( config.extractArchives() );
+    extractArchivesAlwaysCheckBox->setChecked( config.extractArchivesAlways() );
+
     // Perf
     parallelSearchCheckBox->setChecked( config.useParallelSearch() );
     searchResultsCacheCheckBox->setChecked( config.useSearchResultsCache() );
@@ -283,6 +294,9 @@ void OptionsDialog::updateConfigFromDialog()
     config.setMinimizeToTray( minimizeToTrayCheckBox->isChecked() );
     config.setEnableLogging( loggingCheckBox->isChecked() );
     config.setLoggingLevel( verbositySpinBox->value() );
+
+    config.setExtractArchives( extractArchivesCheckBox->isChecked());
+    config.setExtractArchivesAlways( extractArchivesAlwaysCheckBox->isChecked());
 
     config.setUseParallelSearch( parallelSearchCheckBox->isChecked() );
     config.setUseSearchResultsCache( searchResultsCacheCheckBox->isChecked() );

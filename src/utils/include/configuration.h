@@ -292,6 +292,24 @@ class Configuration final : public Persistable<Configuration> {
         splitterSizes_ = std::move( sizes );
     }
 
+    bool extractArchives() const
+    {
+        return extractArchives_;
+    }
+    void setExtractArchives(bool extract)
+    {
+        extractArchives_ = extract;
+    }
+
+    bool extractArchivesAlways() const
+    {
+        return extractArchivesAlways_;
+    }
+    void setExtractArchivesAlways(bool extract)
+    {
+        extractArchivesAlways_ = extract;
+    }
+
     // Reads/writes the current config in the QSettings object passed
     void saveToStorage( QSettings& settings ) const;
     void retrieveFromStorage( QSettings& settings );
@@ -342,6 +360,9 @@ class Configuration final : public Persistable<Configuration> {
     uint8_t loggingLevel_ = 4;
 
     bool enableVersionChecking_ = true;
+
+    bool extractArchives_ = true;
+    bool extractArchivesAlways_ = false;
 };
 
 #endif

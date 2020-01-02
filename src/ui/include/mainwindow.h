@@ -175,6 +175,7 @@ class MainWindow : public QMainWindow {
     void readSettings();
     void writeSettings();
     bool loadFile( const QString& fileName, bool followFile = false );
+    bool extractAndLoadFile( const QString& fileName );
     void openRemoteFile( const QUrl& url );
     void updateTitleBar( const QString& file_name );
     void updateRecentFileActions();

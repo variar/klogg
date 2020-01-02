@@ -110,6 +110,12 @@ void Configuration::retrieveFromStorage( QSettings& settings )
     if ( settings.contains( "versionchecker.enabled" ) )
         enableVersionChecking_ = settings.value( "versionchecker.enabled" ).toBool();
 
+    if ( settings.contains( "archives.extract" ) )
+        extractArchives_ = settings.value( "archives.extract" ).toBool();
+
+    if ( settings.contains( "archives.extractAlways" ) )
+        extractArchivesAlways_ = settings.value( "archives.extractAlways" ).toBool();
+
     // "Perf" settings
     if ( settings.contains( "perf.useParallelSearch" ) )
         useParallelSearch_ = settings.value( "perf.useParallelSearch" ).toBool();
@@ -180,6 +186,9 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "logging.verbosity", loggingLevel_ );
 
     settings.setValue( "versionchecker.enabled", enableVersionChecking_ );
+
+    settings.setValue( "archives.extract", extractArchives_ );
+    settings.setValue( "archives.extractAlways", extractArchivesAlways_ );
 
     settings.setValue( "perf.useParallelSearch", useParallelSearch_ );
     settings.setValue( "perf.useSearchResultsCache", useSearchResultsCache_ );

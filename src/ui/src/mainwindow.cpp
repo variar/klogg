@@ -74,6 +74,7 @@
 #include "mainwindow.h"
 
 #include "crawlerwidget.h"
+#include "decompressor.h"
 #include "encodings.h"
 #include "favoritefiles.h"
 #include "highlightersdialog.h"
@@ -619,8 +620,7 @@ void MainWindow::openRemoteFile( const QUrl& url )
     connect( &downloader, &Downloader::finished,
              [&progressDialog]( bool isOk ) { progressDialog.done( isOk ? 0 : 1 ); } );
 
-    auto tempFile
-        = new QTemporaryFile( tempDir_.filePath( url.fileName() ), this );
+    auto tempFile = new QTemporaryFile( tempDir_.filePath( url.fileName() ), this );
     if ( tempFile->open() ) {
         downloader.download( url, tempFile );
         if ( !progressDialog.exec() ) {
@@ -1081,23 +1081,7 @@ void MainWindow::dropEvent( QDropEvent* event )
         if ( fileName.isEmpty() )
             continue;
 
-        if ( getArhiveType( fileName ) == Archive::None ) {
-            loadFile( fileName );
-        }
-        else {
-            QTemporaryDir archiveDir{tempDir_.filePath( QFileInfo(fileName).fileName() )};
-            archiveDir.setAutoRemove(false);
-
-            if (extractArchive(fileName, archiveDir.path())) {
-                const auto selectedFiles = QFileDialog::getOpenFileNames(
-                    this, tr( "Open file from archive" ), archiveDir.path(), tr( "All files (*)" ) );
-
-                for ( const auto& extractedFile : selectedFiles ) {
-                    loadFile( extractedFile );
-                }
-            }
-
-        }
+        loadFile( fileName );
     }
 }
 
@@ -1133,6 +1117,60 @@ bool MainWindow::event( QEvent* event )
 // Private functions
 //
 
+bool MainWindow::extractAndLoadFile( const QString& fileName )
+{
+    const auto& config = Configuration::get();
+
+    if (!config.extractArchives()) {
+        return false;
+    }
+
+    if (!config.extractArchivesAlways()) {
+        const auto userChoice
+            = QMessageBox::question( this, "klogg", "Extract archive to temp folder?" );
+        if ( userChoice == QMessageBox::No ) {
+            return false;
+        }
+    }
+
+    const auto decompressAction = Decompressor::action( fileName );
+
+    Decompressor decompressor;
+
+    QProgressDialog progressDialog;
+    progressDialog.setLabelText( QString( "Extracting %1" ).arg( fileName ) );
+
+    connect( &decompressor, &Decompressor::finished,
+             [&progressDialog]( bool isOk ) { progressDialog.done( isOk ? 0 : 1 ); } );
+
+    if ( decompressAction == DecompressAction::Decompress ) {
+
+        auto tempFile = new QTemporaryFile(
+            this->tempDir_.filePath( QFileInfo( fileName ).fileName() ), this );
+        if ( tempFile->open() && decompressor.decompress( fileName, tempFile )
+             && !progressDialog.exec() ) {
+            return this->loadFile( tempFile->fileName() );
+        }
+    }
+    else if ( decompressAction == DecompressAction::Extract ) {
+        QTemporaryDir archiveDir{ this->tempDir_.filePath( QFileInfo( fileName ).fileName() ) };
+        archiveDir.setAutoRemove( false );
+        if ( decompressor.extract( fileName, archiveDir.path() ) && !progressDialog.exec() ) {
+
+            const auto selectedFiles = QFileDialog::getOpenFileNames(
+                this, tr( "Open file from archive" ), archiveDir.path(), tr( "All files (*)" ) );
+
+            for ( const auto& extractedFile : selectedFiles ) {
+                this->loadFile( extractedFile );
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // Create a CrawlerWidget for the passed file, start its loading
 // and update the title bar.
 // The loading is done asynchronously.
@@ -1150,50 +1188,57 @@ bool MainWindow::loadFile( const QString& fileName, bool followFile )
         return true;
     }
 
-    // Load the file
-    loadingFileName = fileName;
+    const auto decompressAction = Decompressor::action( fileName );
 
-    try {
-        CrawlerWidget* crawler_widget = static_cast<CrawlerWidget*>(
-            session_.open( fileName, []() { return new CrawlerWidget(); } ) );
+    if ( decompressAction == DecompressAction::None || !Configuration::get().extractArchives() ) {
+        // Load the file
+        loadingFileName = fileName;
 
-        if ( !crawler_widget ) {
-            LOG( logERROR ) << "Can't create crawler for " << fileName.toStdString();
+        try {
+            CrawlerWidget* crawler_widget = static_cast<CrawlerWidget*>(
+                session_.open( fileName, []() { return new CrawlerWidget(); } ) );
+
+            if ( !crawler_widget ) {
+                LOG( logERROR ) << "Can't create crawler for " << fileName.toStdString();
+                return false;
+            }
+
+            // We won't show the widget until the file is fully loaded
+            crawler_widget->hide();
+
+            // We disable the tab widget to avoid having someone switch
+            // tab during loading. (maybe FIXME)
+            // mainTabWidget_.setEnabled( false );
+
+            int index = mainTabWidget_.addCrawler( crawler_widget, fileName );
+
+            // Setting the new tab, the user will see a blank page for the duration
+            // of the loading, with no way to switch to another tab
+            mainTabWidget_.setCurrentIndex( index );
+
+            // Update the recent files list
+            // (reload the list first in case another glogg changed it)
+            auto& recentFiles = RecentFiles::getSynced();
+            recentFiles.addRecent( fileName );
+            recentFiles.save();
+            updateRecentFileActions();
+
+            const auto& config = Configuration::get();
+            if ( followFile || config.followFileOnLoad() ) {
+                signalCrawlerToFollowFile( crawler_widget );
+                followAction->setChecked( true );
+            }
+        } catch ( ... ) {
+            LOG( logERROR ) << "Can't open file " << fileName.toStdString();
             return false;
         }
 
-        // We won't show the widget until the file is fully loaded
-        crawler_widget->hide();
-
-        // We disable the tab widget to avoid having someone switch
-        // tab during loading. (maybe FIXME)
-        // mainTabWidget_.setEnabled( false );
-
-        int index = mainTabWidget_.addCrawler( crawler_widget, fileName );
-
-        // Setting the new tab, the user will see a blank page for the duration
-        // of the loading, with no way to switch to another tab
-        mainTabWidget_.setCurrentIndex( index );
-
-        // Update the recent files list
-        // (reload the list first in case another glogg changed it)
-        auto& recentFiles = RecentFiles::getSynced();
-        recentFiles.addRecent( fileName );
-        recentFiles.save();
-        updateRecentFileActions();
-
-        const auto& config = Configuration::get();
-        if ( followFile || config.followFileOnLoad() ) {
-            signalCrawlerToFollowFile( crawler_widget );
-            followAction->setChecked( true );
-        }
-    } catch ( ... ) {
-        LOG( logERROR ) << "Can't open file " << fileName.toStdString();
-        return false;
+        LOG( logDEBUG ) << "Success loading file " << fileName.toStdString();
+        return true;
     }
-
-    LOG( logDEBUG ) << "Success loading file " << fileName.toStdString();
-    return true;
+    else {
+        return extractAndLoadFile( fileName );
+    }
 }
 
 // Strips the passed filename from its directory part.
