@@ -30,6 +30,8 @@ target_include_directories(klogg_karchive PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries(klogg_karchive Qt5::Core cmzlib cmbzip2 cmliblzma)
 
 target_compile_definitions(klogg_karchive PRIVATE -DQT_NO_CAST_FROM_ASCII)
+target_compile_definitions(klogg_karchive PUBLIC -DLZMA_API_STATIC)
+
 
 if (MSVC)
 	target_compile_definitions(klogg_karchive PRIVATE -D_SCL_SECURE_NO_WARNINGS)
