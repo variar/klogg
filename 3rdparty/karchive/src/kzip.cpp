@@ -844,7 +844,7 @@ bool KZip::closeArchive()
 
     // to be written at the end of the file...
     char buffer[22]; // first used for 12, then for 22 at the end
-    uLong crc = crc32(0L, nullptr, 0);
+    uLong crc = zcrc32(0L, nullptr, 0);
 
     qint64 centraldiroffset = device()->pos();
     //qCDebug(KArchiveLog) << "closearchive: centraldiroffset: " << centraldiroffset;
@@ -975,7 +975,7 @@ bool KZip::closeArchive()
             extfield[8] = char(time >> 24);
         }
 
-        crc = crc32(crc, (Bytef *)buffer, bufferSize);
+        crc = zcrc32(crc, (Bytef *)buffer, bufferSize);
         bool ok = (device()->write(buffer, bufferSize) == bufferSize);
         delete[] buffer;
         if (!ok) {
@@ -1319,7 +1319,7 @@ bool KZip::writeData(const char *data, qint64 size)
 
     // crc to be calculated over uncompressed stuff...
     // and they didn't mention it in their docs...
-    d->m_crc = crc32(d->m_crc, (const Bytef *) data, size);
+    d->m_crc = zcrc32(d->m_crc, (const Bytef *) data, size);
 
     qint64 written = d->m_currentDev->write(data, size);
     //qCDebug(KArchiveLog) << "wrote" << size << "bytes.";

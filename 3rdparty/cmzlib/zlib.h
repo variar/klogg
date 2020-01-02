@@ -1006,7 +1006,7 @@ ZEXTERN uLong ZEXPORT zlibCompileFlags OF((void));
    utility functions can easily be modified if you need special options.
 */
 
-ZEXTERN int ZEXPORT compress OF((Bytef *dest,   uLongf *destLen,
+ZEXTERN int ZEXPORT zcompress OF((Bytef *dest,   uLongf *destLen,
                                  const Bytef *source, uLong sourceLen));
 /*
      Compresses the source buffer into the destination buffer.  sourceLen is
@@ -1021,7 +1021,7 @@ ZEXTERN int ZEXPORT compress OF((Bytef *dest,   uLongf *destLen,
    buffer.
 */
 
-ZEXTERN int ZEXPORT compress2 OF((Bytef *dest,   uLongf *destLen,
+ZEXTERN int ZEXPORT zcompress2 OF((Bytef *dest,   uLongf *destLen,
                                   const Bytef *source, uLong sourceLen,
                                   int level));
 /*
@@ -1044,7 +1044,7 @@ ZEXTERN uLong ZEXPORT compressBound OF((uLong sourceLen));
    a compress() or compress2() call to allocate the destination buffer.
 */
 
-ZEXTERN int ZEXPORT uncompress OF((Bytef *dest,   uLongf *destLen,
+ZEXTERN int ZEXPORT zuncompress OF((Bytef *dest,   uLongf *destLen,
                                    const Bytef *source, uLong sourceLen));
 /*
      Decompresses the source buffer into the destination buffer.  sourceLen is
@@ -1282,7 +1282,7 @@ ZEXTERN uLong ZEXPORT adler32_combine OF((uLong adler1, uLong adler2,
    seq1 and seq2 concatenated, requiring only adler1, adler2, and len2.
 */
 
-ZEXTERN uLong ZEXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
+ZEXTERN uLong ZEXPORT zcrc32   OF((uLong crc, const Bytef *buf, uInt len));
 /*
      Update a running CRC-32 with the bytes buf[0..len-1] and return the
    updated CRC-32. If buf is NULL, this function returns the required initial
@@ -1298,7 +1298,7 @@ ZEXTERN uLong ZEXPORT crc32   OF((uLong crc, const Bytef *buf, uInt len));
      if (crc != original_crc) error();
 */
 
-ZEXTERN uLong ZEXPORT crc32_combine OF((uLong crc1, uLong crc2, z_off_t len2));
+ZEXTERN uLong ZEXPORT zcrc32_combine OF((uLong crc1, uLong crc2, z_off_t len2));
 
 /*
      Combine two CRC-32 check values into one.  For two sequences of bytes,

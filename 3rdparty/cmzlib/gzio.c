@@ -120,7 +120,7 @@ local gzFile gz_open (path, mode, fd)
     s->in = 0;
     s->out = 0;
     s->back = EOF;
-    s->crc = crc32(0L, Z_NULL, 0);
+    s->crc = zcrc32(0L, Z_NULL, 0);
     s->msg = NULL;
     s->transparent = 0;
 
@@ -467,7 +467,7 @@ int ZEXPORT gzread (file, buf, len)
 
         if (s->z_err == Z_STREAM_END) {
             /* Check CRC and original size */
-            s->crc = crc32(s->crc, start, (uInt)(s->stream.next_out - start));
+            s->crc = zcrc32(s->crc, start, (uInt)(s->stream.next_out - start));
             start = s->stream.next_out;
 
             if (getLong(s) != s->crc) {
@@ -481,13 +481,13 @@ int ZEXPORT gzread (file, buf, len)
                 check_header(s);
                 if (s->z_err == Z_OK) {
                     inflateReset(&(s->stream));
-                    s->crc = crc32(0L, Z_NULL, 0);
+                    s->crc = zcrc32(0L, Z_NULL, 0);
                 }
             }
         }
         if (s->z_err != Z_OK || s->z_eof) break;
     }
-    s->crc = crc32(s->crc, start, (uInt)(s->stream.next_out - start));
+    s->crc = zcrc32(s->crc, start, (uInt)(s->stream.next_out - start));
 
     if (len == s->stream.avail_out &&
         (s->z_err == Z_DATA_ERROR || s->z_err == Z_ERRNO))
@@ -586,7 +586,7 @@ int ZEXPORT gzwrite (file, buf, len)
         s->out -= s->stream.avail_out;
         if (s->z_err != Z_OK) break;
     }
-    s->crc = crc32(s->crc, (const Bytef *)buf, len);
+    s->crc = zcrc32(s->crc, (const Bytef *)buf, len);
 
     return (int)(len - s->stream.avail_in);
 }
@@ -866,7 +866,7 @@ int ZEXPORT gzrewind (file)
     s->back = EOF;
     s->stream.avail_in = 0;
     s->stream.next_in = s->inbuf;
-    s->crc = crc32(0L, Z_NULL, 0);
+    s->crc = zcrc32(0L, Z_NULL, 0);
     if (!s->transparent) (void)inflateReset(&s->stream);
     s->in = 0;
     s->out = 0;

@@ -223,7 +223,7 @@ bool KGzipFilter::writeHeader(const QByteArray &fileName)
     int headerSize = p - d->zStream.next_out;
     i -= headerSize;
     Q_ASSERT(i > 0);
-    d->crc = crc32(0L, nullptr, 0);
+    d->crc = zcrc32(0L, nullptr, 0);
     d->zStream.next_out = p;
     d->zStream.avail_out = i;
     d->headerWritten = true;
@@ -363,7 +363,7 @@ KGzipFilter::Result KGzipFilter::compress(bool finish)
     }
     if (d->headerWritten) {
         //qCDebug(KArchiveLog) << "Computing CRC for the next " << len - d->zStream.avail_in << " bytes";
-        d->crc = crc32(d->crc, p, len - d->zStream.avail_in);
+        d->crc = zcrc32(d->crc, p, len - d->zStream.avail_in);
     }
     KGzipFilter::Result callerResult = result == Z_OK ? KFilterBase::Ok : (Z_STREAM_END ? KFilterBase::End : KFilterBase::Error);
 

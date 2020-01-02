@@ -216,7 +216,7 @@ const unsigned long FAR * ZEXPORT get_crc_table()
 #define DO8 DO1; DO1; DO1; DO1; DO1; DO1; DO1; DO1
 
 /* ========================================================================= */
-unsigned long ZEXPORT crc32(crc, buf, len)
+unsigned long ZEXPORT zcrc32(crc, buf, len)
     unsigned long crc;
     const unsigned char FAR *buf;
     unsigned len;
@@ -367,7 +367,7 @@ local void gf2_matrix_square(square, mat)
 }
 
 /* ========================================================================= */
-uLong ZEXPORT crc32_combine(crc1, crc2, len2)
+uLong ZEXPORT zcrc32_combine(crc1, crc2, len2)
     uLong crc1;
     uLong crc2;
     z_off_t len2;

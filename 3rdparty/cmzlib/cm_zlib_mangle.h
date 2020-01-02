@@ -19,15 +19,15 @@ nm libcmzlib.so |grep " [TRD] " | awk '{ print "#define "$3" cm_zlib_"$3 }'
 REMOVE the "_init" and "_fini" entries.
 
 */
-#if 0
+#if 1
 
 #define adler32 cm_zlib_adler32
 #define adler32_combine cm_zlib_adler32_combine
-#define compress cm_zlib_compress
-#define compress2 cm_zlib_compress2
+#define zcompress cm_zlib_compress
+#define zcompress2 cm_zlib_compress2
 #define compressBound cm_zlib_compressBound
-#define crc32 cm_zlib_crc32
-#define crc32_combine cm_zlib_crc32_combine
+#define zcrc32 cm_zlib_crc32
+#define zcrc32_combine cm_zlib_crc32_combine
 #define get_crc_table cm_zlib_get_crc_table
 #define deflate cm_zlib_deflate
 #define deflateBound cm_zlib_deflateBound
@@ -83,7 +83,7 @@ REMOVE the "_init" and "_fini" entries.
 #define _tr_init cm_zlib__tr_init
 #define _tr_stored_block cm_zlib__tr_stored_block
 #define _tr_tally cm_zlib__tr_tally
-#define uncompress cm_zlib_uncompress
+#define zuncompress cm_zlib_uncompress
 #define zError cm_zlib_zError
 #define z_errmsg cm_zlib_z_errmsg
 #define zcalloc cm_zlib_zcalloc

@@ -23,7 +23,7 @@
    enough memory, Z_BUF_ERROR if there was not enough room in the output
    buffer, or Z_DATA_ERROR if the input data was corrupted.
 */
-int ZEXPORT uncompress (dest, destLen, source, sourceLen)
+int ZEXPORT zuncompress (dest, destLen, source, sourceLen)
     Bytef *dest;
     uLongf *destLen;
     const Bytef *source;

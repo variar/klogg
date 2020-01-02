@@ -1696,7 +1696,7 @@ QByteArray K7Zip::K7ZipPrivate::readAndDecodePackedStreams(bool readMainStreamIn
                 qCDebug(KArchiveLog) << "wrong crc size data";
                 return QByteArray();
             }
-            quint32 crc = crc32(0, (Bytef *)(inflated.data()), unpackSize);
+            quint32 crc = zcrc32(0, (Bytef *)(inflated.data()), unpackSize);
             if (crc != folder->unpackCRC) {
                 qCDebug(KArchiveLog) << "wrong crc";
                 return QByteArray();
@@ -2060,7 +2060,7 @@ QByteArray K7Zip::K7ZipPrivate::encodeStream(QVector<quint64> &packSizes, QVecto
 {
     Folder *folder = new Folder;
     folder->unpackCRCDefined = true;
-    folder->unpackCRC = crc32(0, (Bytef *)(header.data()), header.size());
+    folder->unpackCRC = zcrc32(0, (Bytef *)(header.data()), header.size());
     folder->unpackSizes.append(header.size());
 
     Folder::FolderInfo *info = new Folder::FolderInfo();
@@ -2292,7 +2292,7 @@ void K7Zip::K7ZipPrivate::writeStartHeader(const quint64 nextHeaderSize, const q
     setUInt64(buf + 4, nextHeaderOffset);
     setUInt64(buf + 12, nextHeaderSize);
     setUInt32(buf + 20, nextHeaderCRC);
-    setUInt32(buf, crc32(0, (Bytef *)(buf + 4), 20));
+    setUInt32(buf, zcrc32(0, (Bytef *)(buf + 4), 20));
     q->device()->write((char *)buf, 24);
 }
 
@@ -2348,7 +2348,7 @@ bool K7Zip::openArchive(QIODevice::OpenMode mode)
     quint64 nextHeaderSize = GetUi64(header, 20);
     quint32 nextHeaderCRC = GetUi32(header, 28);
 
-    quint32 crc = crc32(0, (Bytef *)(header + 0xC), 20);
+    quint32 crc = zcrc32(0, (Bytef *)(header + 0xC), 20);
 
     if (crc != startHeaderCRC) {
         setErrorString(tr("Bad CRC"));
@@ -2387,7 +2387,7 @@ bool K7Zip::openArchive(QIODevice::OpenMode mode)
     d->headerSize = 32 + nextHeaderSize;
     //int physSize = 32 + nextHeaderSize + nextHeaderOffset;
 
-    crc = crc32(0, (Bytef *)(d->buffer), (quint32)nextHeaderSize);
+    crc = zcrc32(0, (Bytef *)(d->buffer), (quint32)nextHeaderSize);
 
     if (crc != nextHeaderCRC) {
         setErrorString(tr("Bad next header CRC"));
@@ -2768,7 +2768,7 @@ bool K7Zip::closeArchive()
     d->outData = data;
 
     folder->unpackCRCDefined = true;
-    folder->unpackCRC = crc32(0, (Bytef *)(d->outData.data()), d->outData.size());
+    folder->unpackCRC = zcrc32(0, (Bytef *)(d->outData.data()), d->outData.size());
 
     //compress data
     QByteArray encodedData;
@@ -2835,7 +2835,7 @@ bool K7Zip::closeArchive()
     // end encode header
 
     quint64 nextHeaderSize = d->header.size();
-    quint32 nextHeaderCRC = crc32(0, (Bytef *)(d->header.data()), d->header.size());
+    quint32 nextHeaderCRC = zcrc32(0, (Bytef *)(d->header.data()), d->header.size());
     quint64 nextHeaderOffset = headerOffset;
 
     device()->seek(0);
