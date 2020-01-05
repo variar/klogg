@@ -1,4 +1,6 @@
-# Overview
+# Klogg
+
+## Overview
 
 Klogg is a multi-platform GUI application that helps browse and search
 through long and complex log files. It is designed with programmers and
@@ -9,7 +11,7 @@ Please refer to the
 [documentation](https://github.com/variar/klogg/blob/master/doc/documentation.rst)
 page for how to use Klogg.
 
-## Current release
+### Current release
 
 [ ![Release](https://img.shields.io/github/v/release/variar/klogg?style=flat)](https://github.com/variar/klogg/releases/tag/v19.9)
 [ ![Bintray](https://img.shields.io/bintray/v/variar/generic/klogg?style=flat)](https://bintray.com/variar/generic/klogg/_latestVersion)
@@ -23,7 +25,7 @@ page for how to use Klogg.
 
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f6db6ef0be3a4a5abff94111a5291c45)](https://www.codacy.com/manual/variar/klogg?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=variar/klogg&amp;utm_campaign=Badge_Grade)
 
-# Table of Contents
+## Table of Contents
 
 1. [About the Project](#about-the-project)
 1. [Project Status](#project-status)
@@ -33,7 +35,7 @@ page for how to use Klogg.
 1. [License](#license)
 1. [Authors](#authors)
 
-# About the Project
+## About the Project
 
 Klogg started as a fork of [glogg](https://github.com/nickbnf/glogg) - the fast, smart log explorer in 2016.
 
@@ -45,7 +47,7 @@ to stay productive as well as feature requests from users on Github and in glogg
 
 Latest news about klogg development can be found at https://klogg.filimonov.dev.
 
-## Common features of klogg and glogg
+### Common features of klogg and glogg
 * Runs on Unix-like systems, Windows and Mac thanks to Qt5
 * Is fast and reads the file directly from disk, without loading it into memory
 * Can operate on huge text files (10+ Gb is not a problem)
@@ -56,7 +58,7 @@ Latest news about klogg development can be found at https://klogg.filimonov.dev.
 * Watches for file changes on disk and reloads it (kind of like tail)
 * Is open source, released under the GPL
 
-## Features of klogg
+### Features of klogg
 * Multithreading support for file indexing and regular expression matching
 * Log encoding detection using [uchardet](https://www.freedesktop.org/wiki/Software/uchardet/) library (support utf8, utf16, cp1251 and more)
 * Limiting search to a part of open file
@@ -66,7 +68,7 @@ Latest news about klogg development can be found at https://klogg.filimonov.dev.
 
 **[Back to top](#table-of-contents)**
 
-# Project Status
+## Project Status
 
 This project uses [Calendar Versioning](https://calver.org/). For a list of available versions, see the [repository tag list](https://github.com/variar/klogg/tags).
 
@@ -90,13 +92,13 @@ Windows installer is also available from Chocolatey:
 
 **[Back to top](#table-of-contents)**
 
-# Building
+## Building
 
 Please review
 [BUILD.md](BUILD.md)
 for how to setup Klogg on your local machine for development and testing purposes.
 
-# How to Get Help
+## How to Get Help
 
 First, please refer to the
 [documentation](https://github.com/variar/klogg/blob/master/doc/documentation.rst)
@@ -105,15 +107,15 @@ page.
 You can open issues using [klogg issues page](https://github.com/variar/klogg/issues)
 or post questions to glogg development [mailing list](http://groups.google.co.uk/group/glogg-devel).
 
-# Contributing
+## Contributing
 
 We encourage public contributions! Please review [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and development process.
 
-# License
+## License
 
 This project is licensed under the GPLv3 or later - see [COPYING](COPYING) file for details.
 
-# Authors
+## Authors
 
 * **[Anton Filimonov](https://github.com/variar)**
 * *Initial work* - **[Nicolas Bonnefon](https://github.com/nickbnf)**

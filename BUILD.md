@@ -1,8 +1,10 @@
-# Overview
+# How to Build Klogg
+
+## Overview
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
 
-# Dependencies
+## Dependencies
 
 * cmake 3.12 or later to generate build files
 * C++ compiler with C++14 support (gcc 5, clang 3.4, msvc 2017)
@@ -19,16 +21,16 @@ These instructions will get you a copy of the project up and running on your loc
 
 All other dependencies are provided in 3rdparty directory.
 
-# Getting the Source
+## Getting the Source
 
 This project is [hosted on GitHub](https://github.com/variar/klogg). You can clone this project directly using this command:
 ```
 git clone https://github.com/variar/klogg
 ```
 
-# Building
+## Building
 
-## Building on Linux
+### Building on Linux
 
 Here is how to build klogg on Ubuntu 18.04.
 
@@ -51,7 +53,7 @@ Binaries are placed into `build/output`.
 
 See `.travis.yml` for more information on build process.
 
-## Building on Windows
+### Building on Windows
 
 Install Microsoft Visual Studio 2017 or 2019 with C++ support.
 Community edition can be downloaded from [Microsoft](https://visualstudio.microsoft.com/vs/).
@@ -93,7 +95,7 @@ CMake should generate `klogg.sln` file in `<path_to_project_root>\build` directo
 
 Binaries are placed into `build/output`.
 
-## Building on Mac OS
+### Building on Mac OS
 
 Klogg requires macOS High Sierra (10.13) or higher.
 
@@ -120,7 +122,7 @@ cmake --build .
 
 Binaries are placed into `build/output`.
 
-# Running tests
+## Running tests
 Tests are built by default. To turn them off pass `-DBUILD_TESTS:BOOL=OFF` to cmake.
 Tests use catch2 (bundled with klogg sources) and require Qt5Test module. Tests can be run using ctest tool provider by CMake:
 ```
