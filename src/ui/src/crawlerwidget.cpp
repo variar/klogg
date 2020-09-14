@@ -46,6 +46,7 @@
 #include <cassert>
 #include <chrono>
 
+#include <QAction>
 #include <QApplication>
 #include <QCompleter>
 #include <QFile>
@@ -345,6 +346,26 @@ void CrawlerWidget::stopSearch()
     logFilteredData_->interruptSearch();
     searchState_.stopSearch();
     printSearchInfoMessage();
+}
+
+void CrawlerWidget::clearSearchItems()
+{
+    // Clear line
+    searchLineEdit->clear();
+
+    // Sync and clear saved searches
+    auto& searches = SavedSearches::getSynced();
+    savedSearches_->clear();
+    searches.save();
+
+    QStringList empty_history{};
+    searchLineCompleter->setModel( new QStringListModel( empty_history, searchLineCompleter ) );
+}
+
+void CrawlerWidget::showSearchContextMenu()
+{
+    if(searchLineContextMenu)
+      searchLineContextMenu->exec(QCursor::pos());
 }
 
 // When receiving the 'newDataAvailable' signal from LogFilteredData
@@ -830,6 +851,12 @@ void CrawlerWidget::setup()
     searchLineEdit->lineEdit()->setMaxLength( std::numeric_limits<int>::max() / 1024 );
     searchLineEdit->setContentsMargins( 2, 2, 2, 2 );
 
+    QAction *clearSearchItemsAction = new QAction( "Clear All Items", this );
+    searchLineContextMenu = searchLineEdit->lineEdit()->createStandardContextMenu();
+    searchLineContextMenu->addSeparator();
+    searchLineContextMenu->addAction(clearSearchItemsAction);
+    searchLineEdit->setContextMenuPolicy(Qt::CustomContextMenu);
+
     setFocusProxy( searchLineEdit );
 
     searchButton = new QToolButton();
@@ -886,6 +913,9 @@ void CrawlerWidget::setup()
              &QToolButton::click );
     connect( searchLineEdit->lineEdit(), &QLineEdit::textEdited, this,
              &CrawlerWidget::searchTextChangeHandler );
+
+    connect( searchLineEdit, &QWidget::customContextMenuRequested, this, &CrawlerWidget::showSearchContextMenu);
+    connect( clearSearchItemsAction, &QAction::triggered, this, &CrawlerWidget::clearSearchItems );
     connect( searchButton, &QToolButton::clicked, this, &CrawlerWidget::startNewSearch );
     connect( stopButton, &QToolButton::clicked, this, &CrawlerWidget::stopSearch );
 

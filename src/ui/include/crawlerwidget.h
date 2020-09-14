@@ -44,6 +44,7 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QMenu>
 #include <QPushButton>
 #include <QSplitter>
 #include <QToolButton>
@@ -204,6 +205,12 @@ class CrawlerWidget : public QSplitter,
     // Called when the user add the string to the search
     void addToSearch( const QString& string );
 
+    // Clear the search items
+    void clearSearchItems();
+
+    // Search Context Menu
+    void showSearchContextMenu();
+
     // Called when a match is hovered on in the filtered view
     void mouseHoveredOverMatch( LineNumber line );
 
@@ -282,6 +289,7 @@ class CrawlerWidget : public QSplitter,
     QWidget* bottomWindow;
     QLabel* searchLabel;
     QComboBox* searchLineEdit;
+    QMenu* searchLineContextMenu;
     QCompleter* searchLineCompleter;
     QToolButton* searchButton;
     QToolButton* stopButton;
