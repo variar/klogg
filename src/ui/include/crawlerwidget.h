@@ -104,6 +104,12 @@ class CrawlerWidget : public QSplitter,
     // Returns whether follow is enabled in this crawler
     bool isFollowEnabled() const;
 
+    // Set content of search line
+    void setSearchLineEditText( const QString& text );
+
+    // Get content of search line
+    QString currentSearchLineEditText() const;
+
   public slots:
     // Stop the asynchoronous loading of the file if one is in progress
     // The file is identified by the view attached to it.
