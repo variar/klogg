@@ -59,6 +59,7 @@ void PredefinedFiltersCollection::retrieveFromStorage( QSettings& settings )
                 filters.insert( QString( settings.value( "name" ).toString() ),
                                 QString( settings.value( "filter" ).toString() ) );
             }
+            settings.endArray();
         }
         else {
             LOG( logERROR ) << "Unknown version of PredefinedFiltersCollection, ignoring it...";
@@ -67,31 +68,64 @@ void PredefinedFiltersCollection::retrieveFromStorage( QSettings& settings )
     }
 }
 
-QMap<QString, QString> PredefinedFiltersCollection::getFilters() const
+void PredefinedFiltersCollection::saveToStorage( QSettings& settings ) const
+{
+    LOG( logDEBUG ) << "PredefinedFiltersCollection::saveToStorage";
+
+    settings.beginGroup( "PredefinedFiltersCollection" );
+    settings.setValue( "version", PredefinedFiltersCollection_VERSION );
+
+    settings.remove( "filters" );
+
+    CollectionIterator iter( filters );
+    settings.beginWriteArray( "filters" );
+    for ( int i = 0; iter.hasNext(); ++i ) {
+        iter.next();
+        settings.setArrayIndex( i );
+        settings.setValue( "name", iter.key() );
+        settings.setValue( "filter", iter.value() );
+    }
+    settings.endArray();
+    settings.endGroup();
+}
+
+void PredefinedFiltersCollection::saveToStorage( const PredefinedFiltersCollection::Collection& f )
+{
+    filters = f;
+    this->save();
+}
+
+PredefinedFiltersCollection::Collection PredefinedFiltersCollection::getFilters() const
 {
     return this->filters;
 }
 
-QMap<QString, QString> PredefinedFiltersCollection::getSyncedFilters()
+PredefinedFiltersCollection::Collection PredefinedFiltersCollection::getSyncedFilters()
 {
     return this->getSynced().getFilters();
 }
 
-PredefinedFiltersComboBox::PredefinedFiltersComboBox( CrawlerWidget* p )
-    : parent( p )
+PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* crawler )
+    : crawlerWidget( crawler )
 {
+    model = new QStandardItemModel();
+
     setup();
 }
 
 void PredefinedFiltersComboBox::setup()
 {
+    this->setFocusPolicy( Qt::NoFocus );
+    populatePredefinedFilters();
+}
+
+void PredefinedFiltersComboBox::populatePredefinedFilters()
+{
+    model->clear();
     const auto filters = filtersCollection.getSyncedFilters();
 
-    this->setFocusPolicy( Qt::NoFocus );
-
-    model = new QStandardItemModel();
-
     setTitle( "Predefined filters" );
+
     insertFilters( filters );
 
     this->setModel( model );
@@ -102,15 +136,15 @@ void PredefinedFiltersComboBox::setup()
 void PredefinedFiltersComboBox::setTitle( const QString& title )
 {
     auto* titleItem = new QStandardItem( title );
-    titleItem->setFlags( titleItem->flags() & ~Qt::ItemIsSelectable );
     model->insertRow( 0, titleItem );
 }
 
-void PredefinedFiltersComboBox::insertFilters( const QMap<QString, QString>& filters )
+void PredefinedFiltersComboBox::insertFilters(
+    const PredefinedFiltersCollection::Collection& filters )
 {
     auto i = model->rowCount();
 
-    QMapIterator<QString, QString> iter( filters );
+    PredefinedFiltersCollection::CollectionIterator iter( filters );
 
     while ( iter.hasNext() ) {
         iter.next();
@@ -123,7 +157,8 @@ void PredefinedFiltersComboBox::insertFilters( const QMap<QString, QString>& fil
     }
 }
 
-void PredefinedFiltersComboBox::connectFilters( const QMap<QString, QString>& filters )
+void PredefinedFiltersComboBox::connectFilters(
+    const PredefinedFiltersCollection::Collection& filters )
 {
     connect( model, &QStandardItemModel::itemChanged, [ = ]( const QStandardItem* changed_item ) {
         (void)changed_item;
@@ -133,7 +168,8 @@ void PredefinedFiltersComboBox::connectFilters( const QMap<QString, QString>& fi
         /* If multiple filters are selected connect those with "|" */
 
         QString filter;
-        parent->setSearchLineEditText( "" );
+        auto crawler = qobject_cast<CrawlerWidget*>( crawlerWidget );
+        crawler->setSearchLineEditText( "" );
 
         for ( auto j = 0; j < size; ++j ) {
             const auto item = model->item( j );
@@ -142,12 +178,12 @@ void PredefinedFiltersComboBox::connectFilters( const QMap<QString, QString>& fi
                 const auto new_filter = filters.find( item->text() );
 
                 if ( filters.end() != new_filter ) {
-                    auto current_filter = parent->currentSearchLineEditText();
+                    auto current_filter = crawler->currentSearchLineEditText();
 
                     if ( current_filter != "" )
                         current_filter += "|";
 
-                    parent->setSearchLineEditText( current_filter + new_filter.value() );
+                    crawler->setSearchLineEditText( current_filter + new_filter.value() );
                 }
             }
         }

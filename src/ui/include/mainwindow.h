@@ -113,6 +113,7 @@ class MainWindow : public QMainWindow {
     void openClipboard();
     void openUrl();
     void editHighlighters();
+    void editPredefinedFilters();
     void options();
     void about();
     void aboutQt();
@@ -253,6 +254,7 @@ class MainWindow : public QMainWindow {
     QAction* showDocumentationAction;
     QAction* aboutAction;
     QAction* aboutQtAction;
+    QAction* predefinedFiltersDialogAction;
     QAction* reportIssueAction;
     QAction* generateDumpAction;
     QActionGroup* encodingGroup;

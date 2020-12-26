@@ -87,6 +87,8 @@
 #include "log.h"
 #include "openfilehelper.h"
 #include "optionsdialog.h"
+#include "predefinedfilters.h"
+#include "predefinedfiltersdialog.h"
 #include "readablesize.h"
 #include "recentfiles.h"
 #include "styles.h"
@@ -444,6 +446,11 @@ void MainWindow::createActions()
              [this]( auto ) { this->selectOpenedFile(); } );
     selectOpenFileAction->setShortcuts( QList<QKeySequence>()
                                         << QKeySequence( Qt::SHIFT | Qt::CTRL | Qt::Key_O ) );
+
+    predefinedFiltersDialogAction = new QAction( tr( "Configure predefined filters" ), this );
+    predefinedFiltersDialogAction->setStatusTip( tr( "Show dialog to configure filters" ) );
+    connect( predefinedFiltersDialogAction, &QAction::triggered,
+             [ this ]( auto ) { this->editPredefinedFilters(); } );
 }
 
 void MainWindow::loadIcons()
@@ -506,6 +513,8 @@ void MainWindow::createMenus()
     highlightersMenu = toolsMenu->addMenu( "Highlighters" );
     connect( highlightersMenu, &QMenu::aboutToShow,
              [this]() { setCurrentHighlighterAction( highlightersActionGroup ); } );
+
+    toolsMenu->addAction( predefinedFiltersDialogAction );
 
     toolsMenu->addSeparator();
     toolsMenu->addAction( optionsAction );
@@ -878,6 +887,17 @@ void MainWindow::editHighlighters()
     signalMux_.connect( &dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ) );
 
     connect( &dialog, &HighlightersDialog::optionsChanged, [this]() { updateHighlightersMenu(); } );
+
+    dialog.exec();
+    signalMux_.disconnect( &dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ) );
+}
+
+// Opens dialog to configure predefined filters
+void MainWindow::editPredefinedFilters()
+{
+    PredefinedFiltersDialog dialog( this );
+
+    signalMux_.connect( &dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ) );
 
     dialog.exec();
     signalMux_.disconnect( &dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ) );

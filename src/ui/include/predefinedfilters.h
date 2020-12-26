@@ -41,43 +41,50 @@
 #define PREDEFINEDFILTERS_H_
 
 #include <QComboBox>
+#include <QStandardItemModel>
 #include <qwidget.h>
 
-#include "crawlerwidget.h"
 #include "persistable.h"
 
 // Represents collection of filters read from settings file.
 class PredefinedFiltersCollection final : public Persistable<PredefinedFiltersCollection> {
   public:
+    using Collection = QMap<QString, QString>;
+    using CollectionIterator = QMapIterator<QString, QString>;
+
     static const char* persistableName()
     {
-        return "PredefinedFiltersCollection";
+        return "PredefinedFiltersCollectin";
     }
 
-    QMap<QString, QString> getSyncedFilters();
-    QMap<QString, QString> getFilters() const;
+    Collection getSyncedFilters();
+    Collection getFilters() const;
 
     void retrieveFromStorage( QSettings& settings );
+    void saveToStorage( QSettings& settings ) const;
+    void saveToStorage( const Collection& filters );
 
   private:
     static constexpr int PredefinedFiltersCollection_VERSION = 1;
 
-    QMap<QString, QString> filters;
+    Collection filters;
 };
 
 class PredefinedFiltersComboBox final : public QComboBox {
     Q_OBJECT
 
   public:
-    PredefinedFiltersComboBox( CrawlerWidget* p );
+    PredefinedFiltersComboBox( QWidget* crawler );
 
     PredefinedFiltersComboBox( const PredefinedFiltersComboBox& other ) = delete;
     PredefinedFiltersComboBox( PredefinedFiltersComboBox&& other ) noexcept = delete;
     PredefinedFiltersComboBox& operator=( const PredefinedFiltersComboBox& other ) = delete;
     PredefinedFiltersComboBox& operator=( PredefinedFiltersComboBox&& other ) = delete;
 
+    void populatePredefinedFilters();
+
   private:
-    CrawlerWidget* parent;
+    QWidget* crawlerWidget;
     PredefinedFiltersCollection filtersCollection;
 
     QStandardItemModel* model;
@@ -85,8 +92,8 @@ class PredefinedFiltersComboBox final : public QComboBox {
     void setup();
 
     void setTitle( const QString& title );
-    void insertFilters( const QMap<QString, QString>& filters );
-    void connectFilters( const QMap<QString, QString>& filters );
+    void insertFilters( const PredefinedFiltersCollection::Collection& filters );
+    void connectFilters( const PredefinedFiltersCollection::Collection& filters );
 };
 
 #endif

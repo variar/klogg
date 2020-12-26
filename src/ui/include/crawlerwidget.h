@@ -56,11 +56,12 @@
 #include "data/logdata.h"
 #include "data/logfiltereddata.h"
 #include "filteredview.h"
+#include "iconloader.h"
 #include "logmainview.h"
 #include "overview.h"
+#include "predefinedfilters.h"
 #include "signalmux.h"
 #include "viewinterface.h"
-#include "iconloader.h"
 
 class InfoLine;
 class QuickFindPattern;
@@ -109,6 +110,9 @@ class CrawlerWidget : public QSplitter,
 
     // Get content of search line
     QString currentSearchLineEditText() const;
+
+    // Reload predefined filters after changing settings
+    void reloadPredefinedFilters() const;
 
   public slots:
     // Stop the asynchoronous loading of the file if one is in progress
@@ -309,6 +313,7 @@ class CrawlerWidget : public QSplitter,
     QToolButton* useRegexpButton;
     QToolButton* searchRefreshButton;
     OverviewWidget* overviewWidget_;
+    PredefinedFiltersComboBox* predefinedFilters;
 
     // Default palette to be remembered
     QPalette searchInfoLineDefaultPalette;

@@ -190,6 +190,11 @@ QString CrawlerWidget::currentSearchLineEditText() const
     return searchLineEdit->currentText();
 }
 
+void CrawlerWidget::reloadPredefinedFilters() const
+{
+    predefinedFilters->populatePredefinedFilters();
+}
+
 QString CrawlerWidget::encodingText() const
 {
     return encoding_text_;
@@ -578,6 +583,8 @@ void CrawlerWidget::applyConfiguration()
     if ( isFollowEnabled() ) {
         changeDataStatus( DataStatus::OLD_DATA );
     }
+
+    reloadPredefinedFilters();
 }
 
 void CrawlerWidget::enteringQuickFind()
@@ -913,7 +920,7 @@ void CrawlerWidget::setup()
     stopButton->setVisible( false );
     stopButton->setContentsMargins( 2, 2, 2, 2 );
 
-    auto* predefinedFilters = new PredefinedFiltersComboBox( this );
+    predefinedFilters = new PredefinedFiltersComboBox( this );
 
     auto* searchLineLayout = new QHBoxLayout;
     searchLineLayout->setContentsMargins( 2, 2, 2, 2 );
