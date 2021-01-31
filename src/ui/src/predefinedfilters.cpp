@@ -104,3 +104,8 @@ PredefinedFiltersCollection::Collection PredefinedFiltersCollection::getSyncedFi
     filters_ = this->getSynced().getFilters();
     return filters_;
 }
+
+void PredefinedFiltersCollection::setFilters( Collection& filters )
+{
+    filters_ = filters;
+}

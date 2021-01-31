@@ -55,6 +55,8 @@ class PredefinedFiltersDialog : public QDialog, public Ui::PredefinedFiltersDial
   private slots:
     void addFilter() const;
     void removeFilter() const;
+    void exportFilters();
+    void importFilters();
 
     void resolveStandardButton( QAbstractButton* button );
 
@@ -64,6 +66,7 @@ class PredefinedFiltersDialog : public QDialog, public Ui::PredefinedFiltersDial
   private:
     void populateFiltersTable() const;
     void saveSettings();
+    void readFiltersTable();
 
   private:
     PredefinedFiltersCollection::Collection filters_;

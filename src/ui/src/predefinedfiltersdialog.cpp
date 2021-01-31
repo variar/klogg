@@ -39,7 +39,9 @@
 #include "predefinedfiltersdialog.h"
 
 #include <QDialogButtonBox>
+#include <QFileDialog>
 #include <QTimer>
+#include <qtoolbutton.h>
 
 #include "iconloader.h"
 #include "log.h"
@@ -57,6 +59,10 @@ PredefinedFiltersDialog::PredefinedFiltersDialog( QWidget* parent )
     connect( addFilterButton, &QToolButton::clicked, this, &PredefinedFiltersDialog::addFilter );
     connect( removeFilterButton, &QToolButton::clicked, this,
              &PredefinedFiltersDialog::removeFilter );
+    connect( importFilterButton, &QToolButton::clicked, this,
+             &PredefinedFiltersDialog::importFilters );
+    connect( exportFilterButton, &QToolButton::clicked, this,
+             &PredefinedFiltersDialog::exportFilters );
 
     connect( buttonBox, &QDialogButtonBox::clicked, this,
              &PredefinedFiltersDialog::resolveStandardButton );
@@ -92,6 +98,13 @@ void PredefinedFiltersDialog::populateFiltersTable() const
 
 void PredefinedFiltersDialog::saveSettings()
 {
+    readFiltersTable();
+
+    PredefinedFiltersCollection::getSynced().saveToStorage( filters_ );
+}
+
+void PredefinedFiltersDialog::readFiltersTable()
+{
     const auto rows = filtersTableWidget->rowCount();
 
     filters_.clear();
@@ -109,8 +122,6 @@ void PredefinedFiltersDialog::saveSettings()
             filters_.emplace( key, value );
         }
     }
-
-    PredefinedFiltersCollection::getSynced().saveToStorage( filters_ );
 }
 
 void PredefinedFiltersDialog::addFilter() const
@@ -121,6 +132,42 @@ void PredefinedFiltersDialog::addFilter() const
 void PredefinedFiltersDialog::removeFilter() const
 {
     filtersTableWidget->removeRow( filtersTableWidget->currentRow() );
+}
+
+void PredefinedFiltersDialog::importFilters()
+{
+    const auto file = QFileDialog::getOpenFileName( this, "Select file to import", "",
+                                                    "Predefined filters (*.conf)" );
+
+    if ( file.isEmpty() ) {
+        return;
+    }
+
+    LOG( logDEBUG ) << "Loading predefined filters from " << file;
+    QSettings settings{ file, QSettings::IniFormat };
+
+    PredefinedFiltersCollection collection;
+    collection.retrieveFromStorage( settings );
+
+    filters_ = collection.getFilters();
+    populateFiltersTable();
+}
+
+void PredefinedFiltersDialog::exportFilters()
+{
+    const auto file = QFileDialog::getSaveFileName( this, "Export predefined filters", "",
+                                                    tr( "Predefined filters (*.conf)" ) );
+
+    if ( file.isEmpty() ) {
+        return;
+    }
+
+    QSettings settings{ file, QSettings::IniFormat };
+    readFiltersTable();
+
+    PredefinedFiltersCollection collection;
+    collection.setFilters( filters_ );
+    collection.saveToStorage( settings );
 }
 
 void PredefinedFiltersDialog::resolveStandardButton( QAbstractButton* button )

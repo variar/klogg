@@ -39,6 +39,26 @@
       </spacer>
      </item>
      <item>
+      <widget class="QToolButton" name="importFilterButton">
+       <property name="toolTip">
+        <string>Import Filters</string>
+       </property>
+       <property name="text">
+        <string>Import</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="exportFilterButton">
+       <property name="toolTip">
+        <string>Export Filters</string>
+       </property>
+       <property name="text">
+        <string>Export</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QToolButton" name="addFilterButton">
        <property name="toolTip">
         <string>New Filter</string>
