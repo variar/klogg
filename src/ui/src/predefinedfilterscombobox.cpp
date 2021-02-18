@@ -46,7 +46,7 @@ PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     : QComboBox( parent )
     , model_( new QStandardItemModel() )
 {
-    setFocusPolicy( Qt::NoFocus );
+    setFocusPolicy( Qt::ClickFocus );
     populatePredefinedFilters();
 }
 

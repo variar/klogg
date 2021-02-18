@@ -147,6 +147,8 @@ MainWindow::MainWindow( WindowSession session )
                         SLOT( changeFollowMode( bool ) ) );
     signalMux_.connect( SIGNAL( updateLineNumber( LineNumber ) ), this,
                         SLOT( lineNumberHandler( LineNumber ) ) );
+    signalMux_.connect( SIGNAL( saveCurrentSearchAsPredefinedFilter( QString ) ), this,
+                        SLOT( newPredefinedFilterHandler( QString ) ) );
 
     // Register for progress status bar
     signalMux_.connect( SIGNAL( loadingProgressed( int ) ), this,
@@ -893,9 +895,9 @@ void MainWindow::editHighlighters()
 }
 
 // Opens dialog to configure predefined filters
-void MainWindow::editPredefinedFilters()
+void MainWindow::editPredefinedFilters( QString newFilter )
 {
-    PredefinedFiltersDialog dialog( this );
+    PredefinedFiltersDialog dialog( this, newFilter );
 
     signalMux_.connect( &dialog, SIGNAL( optionsChanged() ), SLOT( applyConfiguration() ) );
 
@@ -1038,6 +1040,11 @@ void MainWindow::lineNumberHandler( LineNumber line )
     else {
         lineNbField->clear();
     }
+}
+
+void MainWindow::newPredefinedFilterHandler( QString newFilter )
+{
+    editPredefinedFilters( newFilter );
 }
 
 void MainWindow::updateLoadingProgress( int progress )

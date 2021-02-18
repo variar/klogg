@@ -113,7 +113,7 @@ class MainWindow : public QMainWindow {
     void openClipboard();
     void openUrl();
     void editHighlighters();
-    void editPredefinedFilters();
+    void editPredefinedFilters( QString newFilter = "" );
     void options();
     void about();
     void aboutQt();
@@ -137,6 +137,10 @@ class MainWindow : public QMainWindow {
     // Update the line number displayed in the status bar.
     // Must be passed as the internal (starts at 0) line number.
     void lineNumberHandler( LineNumber line );
+
+    // Save current search in line edit as predefined filter.
+    // Opens dialog with new entry.
+    void newPredefinedFilterHandler( QString newFilter );
 
     // Instructs the widget to update the loading progress gauge
     void updateLoadingProgress( int progress );

@@ -155,6 +155,8 @@ class CrawlerWidget : public QSplitter,
     void followModeChanged( bool follow );
     // Sent up when the current line number is updated
     void updateLineNumber( LineNumber line );
+    // Sent up when user wants to save new predefined filter from current search
+    void saveCurrentSearchAsPredefinedFilter( QString newFilter );
 
     // "auto-refresh" check has been changed
     void searchRefreshChanged( bool isRefreshing );
@@ -211,6 +213,9 @@ class CrawlerWidget : public QSplitter,
 
     // Clear the search items
     void clearSearchItems();
+
+    // Save current search as predefined filter
+    void saveAsPredefinedFilter();
 
     // Search Context Menu
     void showSearchContextMenu();

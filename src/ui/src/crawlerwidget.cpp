@@ -381,6 +381,13 @@ void CrawlerWidget::clearSearchItems()
     searchLineCompleter->setModel( new QStringListModel( empty_history, searchLineCompleter ) );
 }
 
+void CrawlerWidget::saveAsPredefinedFilter()
+{
+    const auto currentText = searchLineEdit->currentText();
+
+    emit saveCurrentSearchAsPredefinedFilter( currentText );
+}
+
 void CrawlerWidget::showSearchContextMenu()
 {
     if ( searchLineContextMenu )
@@ -891,7 +898,10 @@ void CrawlerWidget::setup()
     searchLineEdit->setContentsMargins( 2, 2, 2, 2 );
 
     QAction* clearSearchItemsAction = new QAction( "Clear All Items", this );
+    QAction* saveAsPredefinedFilterAction = new QAction( "Save as Filter", this );
     searchLineContextMenu = searchLineEdit->lineEdit()->createStandardContextMenu();
+    searchLineContextMenu->addSeparator();
+    searchLineContextMenu->addAction( saveAsPredefinedFilterAction );
     searchLineContextMenu->addSeparator();
     searchLineContextMenu->addAction( clearSearchItemsAction );
     searchLineEdit->setContextMenuPolicy( Qt::CustomContextMenu );
@@ -960,6 +970,8 @@ void CrawlerWidget::setup()
 
     connect( searchLineEdit, &QWidget::customContextMenuRequested, this,
              &CrawlerWidget::showSearchContextMenu );
+    connect( saveAsPredefinedFilterAction, &QAction::triggered, this,
+             &CrawlerWidget::saveAsPredefinedFilter );
     connect( clearSearchItemsAction, &QAction::triggered, this, &CrawlerWidget::clearSearchItems );
     connect( searchButton, &QToolButton::clicked, this, &CrawlerWidget::startNewSearch );
     connect( stopButton, &QToolButton::clicked, this, &CrawlerWidget::stopSearch );

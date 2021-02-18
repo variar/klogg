@@ -47,7 +47,7 @@
 #include "log.h"
 #include "predefinedfilters.h"
 
-PredefinedFiltersDialog::PredefinedFiltersDialog( QWidget* parent )
+PredefinedFiltersDialog::PredefinedFiltersDialog( QWidget* parent, QString newFilter )
     : QDialog( parent )
 {
     setupUi( this );
@@ -73,6 +73,10 @@ PredefinedFiltersDialog::PredefinedFiltersDialog( QWidget* parent )
         addFilterButton->setIcon( iconLoader.load( "icons8-plus-16" ) );
         removeFilterButton->setIcon( iconLoader.load( "icons8-minus-16" ) );
     } );
+
+    if ( newFilter != "" ) {
+        addFilterFromSearchLine( newFilter );
+    }
 }
 
 void PredefinedFiltersDialog::populateFiltersTable() const
@@ -127,6 +131,19 @@ void PredefinedFiltersDialog::readFiltersTable()
 void PredefinedFiltersDialog::addFilter() const
 {
     filtersTableWidget->setRowCount( filtersTableWidget->rowCount() + 1 );
+}
+
+void PredefinedFiltersDialog::addFilterFromSearchLine( QString newFilter ) const
+{
+    addFilter();
+
+    const auto row = filtersTableWidget->rowCount() - 1;
+
+    filtersTableWidget->setItem( row, 1, new QTableWidgetItem( newFilter ) );
+    filtersTableWidget->setItem( row, 0, new QTableWidgetItem( "" ) );
+
+    filtersTableWidget->scrollToItem( filtersTableWidget->item( row, 0 ) );
+    filtersTableWidget->editItem( filtersTableWidget->item( row, 0 ) );
 }
 
 void PredefinedFiltersDialog::removeFilter() const
