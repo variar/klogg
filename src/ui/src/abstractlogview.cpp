@@ -350,11 +350,13 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             findNextAction_->setEnabled( true );
             findPreviousAction_->setEnabled( true );
             addToSearchAction_->setEnabled( true );
+            replaceSearchAction_->setEnabled( true );
         }
         else {
             findNextAction_->setEnabled( false );
             findPreviousAction_->setEnabled( false );
             addToSearchAction_->setEnabled( false );
+            replaceSearchAction_->setEnabled( false );
         }
 
         // "Add to search" only makes sense in regexp mode
@@ -1011,7 +1013,7 @@ void AbstractLogView::handlePatternUpdated()
     update();
 }
 
-// OR the current with the current search expression
+// OR the current selection with the current search expression
 void AbstractLogView::addToSearch()
 {
     if ( selection_.isPortion() ) {
@@ -1020,6 +1022,18 @@ void AbstractLogView::addToSearch()
     }
     else {
         LOG_ERROR << "AbstractLogView::addToSearch called for a wrong type of selection";
+    }
+}
+
+// Replace the current search expression with the current selection
+void AbstractLogView::replaceSearch()
+{
+    if ( selection_.isPortion() ) {
+        LOG_DEBUG << "AbstractLogView::replaceSearch()";
+        emit replaceSearch( selection_.getSelectedText( logData ) );
+    }
+    else {
+        LOG_ERROR << "AbstractLogView::replaceSearch called for a wrong type of selection";
     }
 }
 
@@ -1600,6 +1614,10 @@ void AbstractLogView::createMenu()
     addToSearchAction_->setStatusTip( tr( "Add the selection to the current search" ) );
     connect( addToSearchAction_, &QAction::triggered, [this]( auto ) { this->addToSearch(); } );
 
+    replaceSearchAction_ = new QAction( tr( "&Replace search" ), this );
+    replaceSearchAction_->setStatusTip( tr( "Replace the search expression with the selection" ) );
+    connect( replaceSearchAction_, &QAction::triggered, [ this ]( auto ) { this->replaceSearch(); } );
+
     setSearchStartAction_ = new QAction( tr( "Set search start" ), this );
     connect( setSearchStartAction_, &QAction::triggered,
              [this]( auto ) { this->setSearchStart(); } );
@@ -1634,6 +1652,7 @@ void AbstractLogView::createMenu()
     popupMenu_->addAction( findNextAction_ );
     popupMenu_->addAction( findPreviousAction_ );
     popupMenu_->addAction( addToSearchAction_ );
+    popupMenu_->addAction( replaceSearchAction_ );
     popupMenu_->addSeparator();
     popupMenu_->addAction( setSearchStartAction_ );
     popupMenu_->addAction( setSearchEndAction_ );

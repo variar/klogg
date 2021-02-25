@@ -211,6 +211,9 @@ class CrawlerWidget : public QSplitter,
     // Called when the user add the string to the search
     void addToSearch( const QString& string );
 
+    // Called when the user replaces the search with the selection string
+    void replaceSearch( const QString& string );
+
     // Clear the search items
     void clearSearchItems();
 

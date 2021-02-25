@@ -761,6 +761,29 @@ void CrawlerWidget::addToSearch( const QString& string )
     searchLineEdit->lineEdit()->setFocus();
 }
 
+void CrawlerWidget::replaceSearch( const QString& string )
+{
+    QString text = searchLineEdit->currentText();
+
+    if ( text.isEmpty() )
+        text = string;
+    else {
+        const auto& config = Configuration::get();
+
+        if ( config.mainRegexpType() == SearchRegexpType::ExtendedRegexp ) {
+            // Escape the regexp chars from the string before setting
+            text = QRegularExpression::escape( string );
+        } else {
+            text = string;
+        }
+    }
+
+    searchLineEdit->setEditText( text );
+
+    // Set the focus to lineEdit so that the user can press 'Return' immediately
+    searchLineEdit->lineEdit()->setFocus();
+}
+
 void CrawlerWidget::mouseHoveredOverMatch( LineNumber line )
 {
     const auto line_in_mainview = logFilteredData_->getMatchingLineNumber( line );
@@ -1012,6 +1035,11 @@ void CrawlerWidget::setup()
              &CrawlerWidget::addToSearch );
     connect( filteredView, QOverload<const QString&>::of( &FilteredView::addToSearch ), this,
              &CrawlerWidget::addToSearch );
+
+    connect( logMainView, QOverload<const QString&>::of( &LogMainView::replaceSearch ), this,
+             &CrawlerWidget::replaceSearch );
+    connect( filteredView, QOverload<const QString&>::of( &FilteredView::replaceSearch ), this,
+             &CrawlerWidget::replaceSearch );
 
     connect( filteredView, &FilteredView::mouseHoveredOverLine, this,
              &CrawlerWidget::mouseHoveredOverMatch );
