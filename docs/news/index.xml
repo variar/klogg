@@ -8,6 +8,16 @@
     <language>en-us</language>
     <lastBuildDate>Wed, 16 Dec 2020 15:42:17 +0100</lastBuildDate><atom:link href="https://klogg.filimonov.dev/docs/news/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Allocation matters</title>
+      <link>https://klogg.filimonov.dev/docs/news/allocation/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/allocation/</guid>
+      <description>Improving memory allocation #  Performance testing #  Studying final perf tool report from previous post after switching to Hyperscan I&amp;rsquo;ve noticed some strange lines. Here it is once again:
+# Overhead Command Shared Object Symbol 4.84% Thread (pooled) klogg_portable [.] std::vector&amp;lt;`QString`, std::allocator&amp;lt;`QString`&amp;gt; &amp;gt;::~vector 3.83% Thread (pooled) libklogg_tbbmalloc.so [.] rml::internal::internalPoolMalloc 3.15% Thread (pooled) klogg_portable [.] noodExec 2.97% klogg_portable libc-2.32.so [.] 0x000000000015e01f 2.92% Thread (pooled) klogg_portable [.] hs_scan 2.78% Thread (pooled) libQt5Core.</description>
+    </item>
+    
+    <item>
       <title>Switching to Hyperscan</title>
       <link>https://klogg.filimonov.dev/docs/news/hyperscan/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

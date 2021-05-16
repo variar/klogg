@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Improving memory allocation #  Performance testing #  Studying final perf tool report from previous post after switching to Hyperscan I&rsquo;ve noticed some strange lines. Here it is once again:
+# Overhead Command Shared Object Symbol 4.84% Thread (pooled) klogg_portable [.] std::vector&lt;`QString`, std::allocator&lt;`QString`&gt; &gt;::~vector 3.83% Thread (pooled) libklogg_tbbmalloc.so [.] rml::internal::internalPoolMalloc 3.15% Thread (pooled) klogg_portable [.] noodExec 2.97% klogg_portable libc-2.32.so [.] 0x000000000015e01f 2.92% Thread (pooled) klogg_portable [.] hs_scan 2.78% Thread (pooled) libQt5Core.">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="Allocation matters" />
+<meta property="og:description" content="Improving memory allocation #  Performance testing #  Studying final perf tool report from previous post after switching to Hyperscan I&rsquo;ve noticed some strange lines. Here it is once again:
+# Overhead Command Shared Object Symbol 4.84% Thread (pooled) klogg_portable [.] std::vector&lt;`QString`, std::allocator&lt;`QString`&gt; &gt;::~vector 3.83% Thread (pooled) libklogg_tbbmalloc.so [.] rml::internal::internalPoolMalloc 3.15% Thread (pooled) klogg_portable [.] noodExec 2.97% klogg_portable libc-2.32.so [.] 0x000000000015e01f 2.92% Thread (pooled) klogg_portable [.] hs_scan 2.78% Thread (pooled) libQt5Core." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://klogg.filimonov.dev/docs/news/allocation/" />
+
+<title>Allocation matters | KLOGG</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.6cd8553a6854f4812343f0f0c8baca31271e686434f381fbe3c7226f66639176.css" integrity="sha256-bNhVOmhU9IEjQ/DwyLrKMSceaGQ084H748cib2ZjkXY="><!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  <link rel="stylesheet" href="/css/unite-gallery.css">
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><img src="/klogg.png" alt="Logo" /><span>KLOGG</span>
+  </a>
+</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+  
+  
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <span>News</span>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/allocation/" class="active">Allocation matters</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/hyperscan/" class="">Switching to Hyperscan</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/release_20.12/" class="">Version 20.12 released</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/crash_reporting/" class="">Automatic crash reporting</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/release_20.9_preview/" class="">Version 20.9 preview</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/release_20.4/" class="">Version 20.4 released</a>
+  
+
+        </li>
+      
+    
+  </ul>
+  
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <a href="/docs/getting_involved/" class="">Getting Involved</a>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+  </ul>
+  
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <a href="/docs/legal_notice/" class="">Legal Notice</a>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+  </ul>
+  
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <a href="/docs/privacy_policy/" class="">Privacy Policy</a>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+  </ul>
+  
+
+        </li>
+      
+    
+  </ul>
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="/archive/" >
+        Archive
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+<ul>
+    <hr />
+
+    <li>
+        <a href="https://github.com/variar/glogg">
+            <i class="fab fa-github fa-lg"></i> klogg on GitHub
+        </a>
+    </li>
+
+    <li>
+        <a class="github-button" href="https://github.com/variar/klogg" data-show-count="true" data-icon="octicon-star"
+            aria-label="Star variar/klogg on GitHub">Star</a>
+    </li>
+
+    <hr />
+    <li class="book-section-flat">
+        <span>Downloads</span>
+        <ul>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/latest">
+                    <img src="https://img.shields.io/github/v/release/variar/klogg?label=GitHub%20Release&amp;style=for-the-badge"
+                        alt="GitHub Release">
+                </a>
+            </li>
+
+            <li>
+                <a href="https://formulae.brew.sh/cask/klogg">
+                    <img src="https://img.shields.io/homebrew/cask/v/klogg?style=for-the-badge"
+                        alt="Homebrew">
+                </a>
+            </li>
+
+            <li>
+                <a href="https://chocolatey.org/packages/klogg">
+                    <img src="https://img.shields.io/chocolatey/v/klogg?style=for-the-badge" alt="Chocolatey">
+                </a>
+            </li>
+        </ul>
+    </li>
+
+    <li class="book-section-flat">
+        <span>Development builds</span>
+        <ul>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/tag/continuous-win" target="_blank">
+                    <i class="fab fa-windows fa-lg"></i> Windows
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/tag/continuous-linux" target="_blank">
+                    <i class="fab fa-linux fa-lg"></i> Linux
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/tag/continuous-osx" target="_blank">
+                    <i class="fab fa-apple fa-lg"></i> Mac
+                </a>
+            </li>
+        </ul>
+    </li>
+
+    <hr />
+
+    <li>
+        <a href="https://paypal.me/avfilimonov"> <i class="fab fa-paypal"></i> Support development</a>
+    </li>
+</ul>
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>Allocation matters</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#improving-memory-allocation">Improving memory allocation</a>
+      <ul>
+        <li><a href="#performance-testing">Performance testing</a></li>
+        <li><a href="#reducing-memory-allocations">Reducing memory allocations</a></li>
+        <li><a href="#switching-application-wide-memory-allocator">Switching application-wide memory allocator</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h2 id="improving-memory-allocation">
+  Improving memory allocation
+  <a class="anchor" href="#improving-memory-allocation">#</a>
+</h2>
+<h3 id="performance-testing">
+  Performance testing
+  <a class="anchor" href="#performance-testing">#</a>
+</h3>
+<p>Studying final perf tool report from previous post after switching to Hyperscan
+I&rsquo;ve noticed some strange lines. Here it is once again:</p>
+<pre><code># Overhead  Command          Shared Object                  Symbol  
+     4.84%  Thread (pooled)  klogg_portable                 [.] std::vector&lt;`QString`, std::allocator&lt;`QString`&gt; &gt;::~vector
+     3.83%  Thread (pooled)  libklogg_tbbmalloc.so          [.] rml::internal::internalPoolMalloc
+     3.15%  Thread (pooled)  klogg_portable                 [.] noodExec
+     2.97%  klogg_portable   libc-2.32.so                   [.] 0x000000000015e01f
+     2.92%  Thread (pooled)  klogg_portable                 [.] hs_scan
+     2.78%  Thread (pooled)  libQt5Core.so.5.15.2           [.] `QString`::toUtf8_helper
+     2.37%  Thread (pooled)  klogg_portable                 [.] HsMatcher::hasMatch
+     2.07%  Thread (pooled)  libklogg_tbbmalloc.so          [.] __TBB_malloc_safer_free
+     2.05%  Thread (pooled)  klogg_portable                 [.] CompressedLinePositionStorage::at
+     1.91%  Thread (pooled)  klogg_portable                 [.] IndexOperation::parseDataBlock
+     1.71%  Thread (pooled)  libicuuc.so.68.2               [.] 0x00000000000e86b8
+     1.59%  Thread (pooled)  libQt5Core.so.5.15.2           [.] 0x00000000002d8920
+     1.49%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QArrayData::allocate
+     1.48%  Thread (pooled)  libicuuc.so.68.2               [.] ucnv_toUnicode
+     1.26%  Thread (pooled)  klogg_portable                 [.] LogData::decodeLines
+
+</code></pre><p>It is easy to notice that top lines belong to the memory management code.
+Top one is destroying a vector of <code>QString</code> objects and second one is from the
+internal TBB malloc code. There is also some impact from the __TBB_malloc_safer_free.</p>
+<h3 id="reducing-memory-allocations">
+  Reducing memory allocations
+  <a class="anchor" href="#reducing-memory-allocations">#</a>
+</h3>
+<p>Perf report shows that a lot of time is wasted destroying vectors of <code>QString</code>.
+When search is executing there is one thread that reads raw data from the file,
+and several threads that do searching through the blocks of lines. Block size is
+configurable in settings. Typically it is 5000 or 10000 lines. When a thread
+gets new raw data from file, it first transforms raw bytes to a vector of
+<code>QString</code> objects converting each line from file text encoding to UTF16 (internal
+Qt string representation). Finally each line is converted to UTF8 so it can be
+passed to the Hyperscan regex matching engine.</p>
+<p>So during search operation klogg creates and destroys <code>QString</code> and <code>QByteArray</code>
+objects for each line in the file. <code>QString</code> is used to do conversion from
+the file encoding to Qt internal representation and <code>QByteArray</code> holds
+UTF8 data for the Hyperscan engine.</p>
+<p>All these allocations can be avoided by modifying encoding conversion algorithm.
+A thread receives a block of raw bytes. That block is guaranteed to
+contain several full lines and end with <code>\n</code> symbol. That allows to convert
+the whole block to a single <code>QString</code> as it is known that the block starts and
+ends on a multi-byte encoding boundaries. Then <code>QString</code> can be converted
+to the UTF8 <code>QByteArray</code> in one go. Now a searching thread has a single <code>QByteArray</code>
+with multiple UTF8-encoded stings inside. Using very fast <code>std::memchr</code> function a
+vector of <code>std::string_view</code> objects is created. Each <code>string_view</code> corresponds to
+single line of original data block.</p>
+<p>So number of allocations is reduced from two per line to two per single search block.
+Search blocks containing at least 1000 lines leads to several orders of magnitude
+less memory allocations. On my test machine this provides about 20% performance
+improvement.</p>
+<h3 id="switching-application-wide-memory-allocator">
+  Switching application-wide memory allocator
+  <a class="anchor" href="#switching-application-wide-memory-allocator">#</a>
+</h3>
+<p>Klogg has been using the scalable memory allocator provided by the Intel
+TBB library for several years. It is designed to work well for multi-threaded
+applications. Using it instead of the default system memory allocator resulted in
+5-10% performance improvement. It is very easy to use the TBB malloc to override
+all calls to malloc/free/new/delete in an application. A program needs to
+link with the tbbmalloc_proxy dynamic library. And then all memory allocation
+is done by the TBB allocator.</p>
+<p>Although the TBB scalable allocator is well-built and has good performance
+it is quite complex and designed for cases when there are a lot of threads
+running and competing for memory allocation. On the other hand klogg uses
+one thread per CPU core and number of memory allocations is relatively low.</p>
+<p>I&rsquo;ve discovered an alternative general purpose allocator: <a href="https://github.com/microsoft/mimalloc">mimalloc</a>.
+It is described as a general purpose allocator with excellent performance characteristics.
+From <a href="https://github.com/microsoft/mimalloc#performance">performance tests</a> provided
+by authors it looks like mimalloc should be faster than the TBB malloc in many case so
+I&rsquo;ve decided to try it.</p>
+<p>Overriding global malloc/free/new/delete functions with mimalloc is easy on Windows.
+The steps are nearly identical to the TBB malloc: link with mimalloc.dll and copy
+mimalloc-redirect.dll provided in github repository near application executable.</p>
+<p>On Unix-like systems the process is a little more difficult. Dynamic override requires
+use of the LD_PRELOAD environment variable. So I used static override option. To do this
+klogg executable is linked with the mimalloc-override.o file. This file must be provided first so
+the linker chooses symbols from it for all global memory allocation functions.</p>
+<p>After some more performance testing it looks like the mimalloc allocator is indeed faster in typical
+klogg use cases. Both indexing and search are around 5% faster.</p>
+<p>Final perf report now looks like this:</p>
+<pre><code># Overhead  Command          Shared Object                  Symbol
+     9.04%  Thread (pooled)  libQt5Core.so.5.15.2           [.] 0x00000000002d8920
+     4.74%  Thread (pooled)  libhs.so.5.4.0                 [.] hs_scan
+     4.53%  klogg_portable_  libc-2.32.so                   [.] 0x000000000015e01f
+     4.43%  Thread (pooled)  libicuuc.so.68.2               [.] 0x00000000000e86d0
+     3.47%  Thread (pooled)  klogg_portable                 [.] CompressedLinePositionStorage::at
+     1.91%  Thread (pooled)  libc-2.32.so                   [.] 0x0000000000156f21
+     1.88%  Thread (pooled)  libc-2.32.so                   [.] 0x000000000015e42d
+     1.77%  Thread (pooled)  libc-2.32.so                   [.] 0x0000000000156f31
+     1.45%  Thread (pooled)  klogg_portable                 [.] std::__detail::__variant::__gen_vtable_impl&lt;std::__detail::__variant::_Multi_array&lt;std::__detail::__variant::__deduce_visit_result&lt;bool&gt; (*)((anonymous namespace)::filterLines(std::variant&lt;DefaultRegularExpressionMatcher, HsMatcher&gt; const&amp;, LogData::RawLines const&amp;, fluent::NamedTypeImpl&lt;unsigned int, line_number, fluent::ConvertWithRatio&lt;unsigned int, std::ratio&lt;1l, 1l&gt; &gt;, fluent::Incrementable, fluent::Decrementable, fluent::Comparable, fluent::Printable&gt;)::{lambda(auto:1 const&amp;)#1}&amp;&amp;, std::variant&lt;DefaultRegularExpressionMatcher, HsMatcher&gt; const&amp;)&gt;, std::integer_sequence&lt;unsigned long, 1ul&gt; &gt;::__visit_invoke
+     1.40%  Thread (pooled)  klogg_portable                 [.] (anonymous namespace)::block_next_pos&lt;unsigned int&gt;
+     1.38%  klogg_portable_  libQt5Gui.so.5.15.2            [.] 0x000000000049c8ff
+     1.35%  Thread (pooled)  libc-2.32.so                   [.] 0x0000000000156f42
+     1.31%  Thread (pooled)  klogg_portable                 [.] LogData::getLinesRaw
+     1.31%  Thread (pooled)  klogg_portable                 [.] tbb::detail::r1::task_dispatcher::receive_or_steal_task&lt;false, tbb::detail::r1::outermost_worker_waiter&gt;
+     1.17%  Thread (pooled)  klogg_portable                 [.] SearchOperation::doSearch(SearchData&amp;, fluent::NamedTypeImpl&lt;unsigned int, line_number, fluent::ConvertWithRatio&lt;unsigned int, std::ratio&lt;1l, 1l&gt; &gt;, fluent::Incrementable, fluent::Decrementable, fluent::Comparable, fluent::Printable&gt;)::{lambda(std::shared_ptr&lt;(anonymous namespace)::SearchBlockData&gt; const&amp;)#3}::operator()
+     1.10%  Thread (pooled)  libstdc++.so.6.0.28            [.] std::_Hash_bytes
+     1.05%  Thread (pooled)  libicuuc.so.68.2               [.] 0x00000000000e870e
+</code></pre><p>Unfortunately I didn&rsquo;t have any success using either mimalloc or TBB malloc as global
+memory allocator on MacOS. Klogg crashes with segmentation fault right at the start. So
+on MacOS the default system memory allocator is used.</p>
+<p>Tweaking encoding conversion algorithm is a big change, so several next CI releases might be less
+stable than usual. Please report any bugs and crashes either on <a href="https://github.com/variar/klogg/issues">GitHub</a>
+or in <a href="https://discord.gg/DruNyQftzB">Discord</a>.</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/variar/klogg/edit/master/website/content//docs/news/allocation.md" target="_blank" rel="noopener">
+      <img src="/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+</div>
+
+ 
+        <script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+  crossorigin="anonymous"></script>
+
+<script defer src="/js/unitegallery.min.js"></script>
+<script defer src="/js/ug-theme-carousel.js"></script>
+<script defer src="/fa/brands.min.js"></script>
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("#gallery").unitegallery();
+    });
+</script>
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#improving-memory-allocation">Improving memory allocation</a>
+      <ul>
+        <li><a href="#performance-testing">Performance testing</a></li>
+        <li><a href="#reducing-memory-allocations">Reducing memory allocations</a></li>
+        <li><a href="#switching-application-wide-memory-allocator">Switching application-wide memory allocator</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  <meta name="saashub-verification" content="ixjlnvk4an7y" />
+
+
+<script type="text/javascript" src="//www.FreePrivacyPolicy.com/cookie-consent/releases/3.0.0/cookie-consent.js"></script>
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function () {
+    cookieconsent.run({"notice_banner_type":"simple","consent_type":"implied","palette":"light","change_preferences_selector":"#changePreferences","language":"en","website_name":"klogg"});
+});
+</script>
+
+
+
+<script type="text/plain" cookie-consent="tracking" >
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+    m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+ 
+    ym(55695499, "init", {
+         clickmap:true,
+         trackLinks:true,
+         accurateTrackBounce:true
+    });
+ </script>
+ <noscript><div><img src="https://mc.yandex.ru/watch/55695499" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+ 
+
+
+
+<noscript>GDPR Cookie Consent by <a href="https://www.freeprivacypolicy.com/">Free Privacy Policy</a></noscript>
+
+
+<link rel="stylesheet" href="/fa/all.min.css">
+<link rel="stylesheet" href="/fa/brands.min.css">
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
