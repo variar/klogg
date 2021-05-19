@@ -21,7 +21,7 @@ Development status
 [![GitHub commits](https://img.shields.io/github/commits-since/variar/klogg/v20.12.svg?style=flat)](https://github.com/variar/klogg/commits/)
 [![CI Build and Release](https://github.com/variar/klogg/actions/workflows/ci-build.yml/badge.svg)](https://github.com/variar/klogg/actions/workflows/ci-build.yml)
 
-[![Chat on Discord](https://img.shields.io/discord/838452586944266260?label=Discord&style=flat)](https://img.shields.io/discord/838452586944266260?label=Discord&style=flat)
+[![Chat on Discord](https://img.shields.io/discord/838452586944266260?label=Discord&style=flat)](https://img.shields.io/discord/838452586944266260?label=Discord&style=flat) [![Join the chat at https://gitter.im/klogg_log_viewer/community](https://badges.gitter.im/klogg_log_viewer/community.svg)](https://gitter.im/klogg_log_viewer/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Overview
 
