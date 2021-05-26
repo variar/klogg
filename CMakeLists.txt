@@ -24,8 +24,7 @@ else()
 option(KLOGG_OVERRIDE_MALLOC "Use malloc global override" ON)
 endif()
 
-option(KLOGG_USE_MIMALLOC "Use mimalloc for malloc override" OFF)
-
+option(KLOGG_USE_MIMALLOC "Use mimalloc for malloc override" ON)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(KLOGG_ARCH 32)
