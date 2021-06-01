@@ -8,6 +8,28 @@
     <language>en-us</language>
     <lastBuildDate>Sat, 21 Sep 2019 15:42:17 +0100</lastBuildDate><atom:link href="https://klogg.filimonov.dev/archive/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Version 20.9 preview</title>
+      <link>https://klogg.filimonov.dev/archive/release_20.9_preview/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/archive/release_20.9_preview/</guid>
+      <description>Version 20.9 #  As expected I didn&amp;rsquo;t have much time to work on klogg this summer. However, there were several free weekends, and I was able to do some bugfix and new feature development.
+Preview builds can be downloaded from Github:
+ Windows  Linux  Mac  Feedback is very welcome.
+Changelog #  Major new features:
+ Highlighters reworked: Several sets of highlighting rules can be configured and chosen using context menu Highlighters can be configured to colorize only matching part of line Added an option to match using simple strings Highlighters configuration can be exported and imported on other machine An option to choose UI style, including dark theme based on QDarkStyleSheet A menu to switch between opened files Some support for dark OS themes Some support for HiDPI displays  Bugixes and minor improvements</description>
+    </item>
+    
+    <item>
+      <title>Version 20.4 released</title>
+      <link>https://klogg.filimonov.dev/archive/release_20.4/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/archive/release_20.4/</guid>
+      <description>Version 20.4 #  During this months there were almost no new commits to klogg. For several years klogg has been my second most frequently used tool (first one being code editor) and I&amp;rsquo;ve been doing my best to improve it based on my daily experience and user feedback on github. However, since the beginning of 2020 I&amp;rsquo;ve switched to a more manager-like position. This is all very new to me, and doing this job requires tools not related to log file analysis.</description>
+    </item>
+    
+    <item>
       <title>Version 20.1 preview</title>
       <link>https://klogg.filimonov.dev/archive/release_20.1_preview/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>

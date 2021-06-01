@@ -4,20 +4,16 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Github #  Feel free to submit bug reports, feature requests, questions and pull requests on Github project.
-Chats with developers #  There is a Discord server, Telegram group and Gitter community.
-Mailing list #  glogg has a mailing list where bugs, features and future development are discussed. Sometimes these ideas end up in klogg earlier.
-The mailing list address is glogg-devel@googlegroups.com and the archive is found on Google Groups.">
-<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="" />
-<meta property="og:description" content="" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="https://klogg.filimonov.dev/docs/getting_involved/" />
+<meta name="description" content="When regular expression syntax is not enough #  Regular expressions are very powerful. However, sometimes their syntax becomes too complex and cumbersome. This is the case when you want to search for “this, but not that”. Writing single regular expression for such pattern requires some look-ahead magic. Things become a lot easier if search pattern can be combined from several simple regular expressions using boolean logic operators and, or and not.">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="Combining search expressions" />
+<meta property="og:description" content="When regular expression syntax is not enough #  Regular expressions are very powerful. However, sometimes their syntax becomes too complex and cumbersome. This is the case when you want to search for “this, but not that”. Writing single regular expression for such pattern requires some look-ahead magic. Things become a lot easier if search pattern can be combined from several simple regular expressions using boolean logic operators and, or and not." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://klogg.filimonov.dev/docs/news/boolean_combination/" />
 
-<title>Getting Involved | KLOGG</title>
+<title>Combining search expressions | KLOGG</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/favicon.png" type="image/x-icon">
-<link rel="stylesheet" href="/book.min.6cd8553a6854f4812343f0f0c8baca31271e686434f381fbe3c7226f66639176.css" integrity="sha256-bNhVOmhU9IEjQ/DwyLrKMSceaGQ084H748cib2ZjkXY="><link rel="alternate" type="application/rss+xml" href="https://klogg.filimonov.dev/docs/getting_involved/index.xml" title="KLOGG" />
-<!--
+<link rel="stylesheet" href="/book.min.6cd8553a6854f4812343f0f0c8baca31271e686434f381fbe3c7226f66639176.css" integrity="sha256-bNhVOmhU9IEjQ/DwyLrKMSceaGQ084H748cib2ZjkXY="><!--
 Made with Book Theme
 https://github.com/alex-shpak/hugo-book
 -->
@@ -79,7 +75,7 @@ https://github.com/alex-shpak/hugo-book
         <li>
           
   
-    <a href="/docs/news/boolean_combination/" class="">Combining search expressions</a>
+    <a href="/docs/news/boolean_combination/" class="active">Combining search expressions</a>
   
 
         </li>
@@ -135,7 +131,7 @@ https://github.com/alex-shpak/hugo-book
         <li class="book-section-flat" >
           
   
-    <a href="/docs/getting_involved/" class="active">Getting Involved</a>
+    <a href="/docs/getting_involved/" class="">Getting Involved</a>
   
 
           
@@ -308,7 +304,7 @@ https://github.com/alex-shpak/hugo-book
     <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
   </label>
 
-  <strong>Getting Involved</strong>
+  <strong>Combining search expressions</strong>
 
   <label for="toc-control">
     
@@ -323,10 +319,7 @@ https://github.com/alex-shpak/hugo-book
     
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#github">Github</a></li>
-    <li><a href="#chats-with-developers">Chats with developers</a></li>
-    <li><a href="#mailing-list">Mailing list</a></li>
-    <li><a href="#contributors">Contributors</a></li>
+    <li><a href="#when-regular-expression-syntax-is-not-enough">When regular expression syntax is not enough</a></li>
   </ul>
 </nav>
 
@@ -338,50 +331,70 @@ https://github.com/alex-shpak/hugo-book
 
       
       
-  <article class="markdown"><h2 id="github">
-  Github
-  <a class="anchor" href="#github">#</a>
+  <article class="markdown"><h2 id="when-regular-expression-syntax-is-not-enough">
+  When regular expression syntax is not enough
+  <a class="anchor" href="#when-regular-expression-syntax-is-not-enough">#</a>
 </h2>
-<p>Feel free to submit bug reports, feature requests, questions and pull requests on <a href="https://github.com/variar/klogg">Github project</a>.</p>
-<h2 id="chats-with-developers">
-  Chats with developers
-  <a class="anchor" href="#chats-with-developers">#</a>
-</h2>
-<p>There is a <a href="https://discord.gg/DruNyQftzB">Discord server</a>, <a href="https://t.me/joinchat/JeIBxstIfp4xZTk6">Telegram group</a>
-and <a href="https://gitter.im/klogg_log_viewer/community">Gitter community</a>.</p>
-<h2 id="mailing-list">
-  Mailing list
-  <a class="anchor" href="#mailing-list">#</a>
-</h2>
-<p><em>glogg</em> has a mailing list where bugs, features and future development are discussed. Sometimes these ideas end up in <em>klogg</em> earlier.</p>
-<p>The mailing list address is <a href="mailto:glogg-devel@googlegroups.com">glogg-devel@googlegroups.com</a> and the archive is found on <a href="http://groups.google.co.uk/group/glogg-devel">Google Groups</a>.</p>
-<h2 id="contributors">
-  Contributors
-  <a class="anchor" href="#contributors">#</a>
-</h2>
-<p>Thanks to all people who help develop <em>klogg</em></p>
-<ul>
-<li>Alexander Hirsch</li>
-<li>Alexei Colin</li>
-<li>Andre Soares</li>
-<li>Charley Peng</li>
-<li>Dan Berindei</li>
-<li>David Frey</li>
-<li>Dmitry Afanasiev</li>
-<li>Gustav Andersson</li>
-<li>Jeff Jensen</li>
-<li>Jonathan Wakely</li>
-<li>Marcin Twardak</li>
-<li>neurocod</li>
-<li>Paolo Cancedda</li>
-<li>Patrick Tsai</li>
-<li>Robin Luiten</li>
-<li>Seerauber</li>
-<li>Sergei Dyshel</li>
-<li>plonibarploni</li>
-<li>probonopd</li>
-<li>wiz0u</li>
-</ul>
+<p>Regular expressions are very powerful. However, sometimes their syntax
+becomes too complex and cumbersome. This is the case when you want to
+search for “this, but not that”. Writing single regular expression for
+such pattern requires some look-ahead magic. Things become a lot easier
+if search pattern can be combined from several simple regular expressions
+using boolean logic operators <code>and</code>, <code>or</code> and <code>not</code>. Compare</p>
+<pre><code>(?=.*word1)(?=.*word2)(?!.*word3)
+</code></pre><p>with</p>
+<pre><code>word1 and word2 and not(word3)
+</code></pre><p>Matching boolean combination of regular expressions has several steps.
+Firstly, a pattern has to be split into sub-patterns and transformed into
+symbolic expression that can be repeatedly evaluated. Pattern that looks
+like this:</p>
+<pre><code>&quot;pattern 1&quot; and (&quot;pattern 2&quot; or &quot;pattern 3&quot;) and not(&quot;pattern 4&quot;)
+</code></pre><p>is translated into the following symbolic boolean expression</p>
+<pre><code>p1 and (p2 or p3) and not(p4)
+</code></pre><p>where <code>p1</code>, <code>p2</code>, <code>p3</code> and <code>p4</code> are variables that correspond to sub-patterns.</p>
+<p>Then for each line of text all sub-patterns are run through regex
+engine to determine which patterns match the input string.
+This can be expressed as a table:</p>
+<pre><code>p1 = true
+p2 = false
+p3 = true
+p4 = false
+</code></pre><p>After that boolean expression is evaluated to get final verdict for the line.</p>
+<p>First two steps were easy to implement both for Hyperscan and Qt regular expressions
+engines. Hyperscan has a big advantage here as it compiles a set of regular
+expressions into a single database and matches them all at once, so it does not
+take too much time to match all sub-patterns.</p>
+<p>Although that could be a fun experiment, I decided not to write general boolean
+expressions parser and evaluator from scratch. For the first prototype of the whole
+idea I used <a href="https://github.com/xstreck1/LibBoolEE">LibBoolEE</a>. It is very easy
+to integrate and use. Code looks something like this:</p>
+<pre><code>    LibBoolEE::Vals vals = { { &quot;A&quot;, true }, { &quot;B&quot;, false } };
+    return LibBoolEE::resolve(&quot;A|B&amp;B&quot;, vals); // returns 1
+</code></pre><p>This was good enough for the proof of concept. However, <code>LibBoolEE::resolve</code> parses
+expression each time, that causes big performance degradation. Expression is evaluated for each line from the opened file, so it has to be very fast. To achieve best
+results an expression has to be parsed only once and transformed into some form that
+can be repeatedly executed with different arguments.</p>
+<p>Next thing to try was a scripting language that can be embedded into C++
+application. First one was javascript engine provided by Qt library. The results
+were better but still not very impressive. Then I tried LuaJit with the help of
+<a href="https://github.com/ThePhD/sol2">sol2</a> and <a href="https://github.com/JamesBoer/Jinx">Jinx</a>
+that claimed to be suitable for realtime applications like games. Both
+of them performed better than <code>QJsEngine</code> but still not great.</p>
+<p>After some more research I found <a href="https://github.com/ArashPartow/math-parser-benchmark-project">The Great C++ Mathematical Expression Parser Benchmark</a>. This is a benchmark of different implementations of open source math expression parsers and evaluators written in C++. <a href="http://www.partow.net/programming/exprtk/">Exprtk</a> library seemed to be a good
+choice. And indeed for my task it performed much better than general purpose embedded
+scripting engines.</p>
+<p>However, for some reason it felt that search speed could be improved. I enjoy making <em>Klogg</em>
+as fast as possible, so I looked at reports of <code>perf</code> tool. First thing that
+caught my attention was a lot of calls to <code>tolower</code> function. Exprtk is case-insensitive
+by default and uses several maps and sets for its internal state. Switching to
+case-sensitive mode provided visible speedup. After that top functions in perf report
+were <code>std::map</code> insert and lookup functions. I tried switching
+from <code>std::map</code> to <code>std::unordered_map</code>. That did make things better, but still
+considerable amount of time was being spent in <code>std::unordered_map</code> implementation.
+So next natural thing to try was switching to some faster hash table implementation.
+I tried <a href="https://github.com/martinus/robin-hood-hashing">robin_hood unordered map</a>
+and was quite impressed by it. That was the final step of performance tuning.</p>
+<p>So now <em>Klogg</em> has quite fast boolean expression combination mode!</p>
 </article>
  
       
@@ -395,7 +408,7 @@ and <a href="https://gitter.im/klogg_log_viewer/community">Gitter community</a>.
 
 
   <div>
-    <a class="flex align-center" href="https://github.com/variar/klogg/edit/master/website/content//docs/getting_involved/_index.md" target="_blank" rel="noopener">
+    <a class="flex align-center" href="https://github.com/variar/klogg/edit/master/website/content//docs/news/boolean_combination.md" target="_blank" rel="noopener">
       <img src="/svg/edit.svg" class="book-icon" alt="Edit" />
       <span>Edit this page</span>
     </a>
@@ -437,10 +450,7 @@ and <a href="https://gitter.im/klogg_log_viewer/community">Gitter community</a>.
       
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#github">Github</a></li>
-    <li><a href="#chats-with-developers">Chats with developers</a></li>
-    <li><a href="#mailing-list">Mailing list</a></li>
-    <li><a href="#contributors">Contributors</a></li>
+    <li><a href="#when-regular-expression-syntax-is-not-enough">When regular expression syntax is not enough</a></li>
   </ul>
 </nav>
 

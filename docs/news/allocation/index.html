@@ -77,6 +77,16 @@ https://github.com/alex-shpak/hugo-book
         <li>
           
   
+    <a href="/docs/news/boolean_combination/" class="">Combining search expressions</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
     <a href="/docs/news/allocation/" class="active">Allocation matters</a>
   
 
@@ -108,26 +118,6 @@ https://github.com/alex-shpak/hugo-book
           
   
     <a href="/docs/news/crash_reporting/" class="">Automatic crash reporting</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-    <a href="/docs/news/release_20.9_preview/" class="">Version 20.9 preview</a>
-  
-
-        </li>
-      
-    
-      
-        <li>
-          
-  
-    <a href="/docs/news/release_20.4/" class="">Version 20.4 released</a>
   
 
         </li>
@@ -386,12 +376,12 @@ internal TBB malloc code. There is also some impact from the __TBB_malloc_safer_
 <p>Perf report shows that a lot of time is wasted destroying vectors of <code>QString</code>.
 When search is executing there is one thread that reads raw data from the file,
 and several threads that do searching through the blocks of lines. Block size is
-configurable in settings. Typically it is 5000 or 10000 lines. When a thread
+configurable in settings. Typically, it is 5000 or 10000 lines. When a thread
 gets new raw data from file, it first transforms raw bytes to a vector of
 <code>QString</code> objects converting each line from file text encoding to UTF16 (internal
-Qt string representation). Finally each line is converted to UTF8 so it can be
+Qt string representation). Finally, each line is converted to UTF8, so it can be
 passed to the Hyperscan regex matching engine.</p>
-<p>So during search operation klogg creates and destroys <code>QString</code> and <code>QByteArray</code>
+<p>So during search operation <em>Klogg</em> creates and destroys <code>QString</code> and <code>QByteArray</code>
 objects for each line in the file. <code>QString</code> is used to do conversion from
 the file encoding to Qt internal representation and <code>QByteArray</code> holds
 UTF8 data for the Hyperscan engine.</p>
@@ -412,7 +402,7 @@ improvement.</p>
   Switching application-wide memory allocator
   <a class="anchor" href="#switching-application-wide-memory-allocator">#</a>
 </h3>
-<p>Klogg has been using the scalable memory allocator provided by the Intel
+<p><em>Klogg</em> has been using the scalable memory allocator provided by the Intel
 TBB library for several years. It is designed to work well for multi-threaded
 applications. Using it instead of the default system memory allocator resulted in
 5-10% performance improvement. It is very easy to use the TBB malloc to override
@@ -435,8 +425,8 @@ mimalloc-redirect.dll provided in github repository near application executable.
 use of the LD_PRELOAD environment variable. So I used static override option. To do this
 klogg executable is linked with the mimalloc-override.o file. This file must be provided first so
 the linker chooses symbols from it for all global memory allocation functions.</p>
-<p>After some more performance testing it looks like the mimalloc allocator is indeed faster in typical
-klogg use cases. Both indexing and search are around 5% faster.</p>
+<p>After doing some more performance testing it looks like the mimalloc allocator is indeed faster in typical
+klogg use cases. Both indexing and search are around 10% faster.</p>
 <p>Final perf report now looks like this:</p>
 <pre><code># Overhead  Command          Shared Object                  Symbol
      9.04%  Thread (pooled)  libQt5Core.so.5.15.2           [.] 0x00000000002d8920

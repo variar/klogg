@@ -8,6 +8,15 @@
     <language>en-us</language>
     <lastBuildDate>Wed, 16 Dec 2020 15:42:17 +0100</lastBuildDate><atom:link href="https://klogg.filimonov.dev/docs/news/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Combining search expressions</title>
+      <link>https://klogg.filimonov.dev/docs/news/boolean_combination/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/boolean_combination/</guid>
+      <description>When regular expression syntax is not enough #  Regular expressions are very powerful. However, sometimes their syntax becomes too complex and cumbersome. This is the case when you want to search for “this, but not that”. Writing single regular expression for such pattern requires some look-ahead magic. Things become a lot easier if search pattern can be combined from several simple regular expressions using boolean logic operators and, or and not.</description>
+    </item>
+    
+    <item>
       <title>Allocation matters</title>
       <link>https://klogg.filimonov.dev/docs/news/allocation/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
@@ -46,28 +55,6 @@ First of all highlighters have been reworked. Now it is possible to create sever
       <description>Automatic crash reporting #  In response to several github issues about unexpected crashes I&amp;rsquo;ve implemented crash dump collection. Thanks to SDK provided by Sentry it is fairly easy to integrate Breakpad/Crashpad to collect minidumps for application crashes and send them to developers for investigation.
 What is included in crash report #  Crash report provides information about:
  operating system: name, version, architecture Qt version modules that were loaded into klogg process: filename, size and hashes for symbols stacktraces for all running threads in klogg process  These minidumps do not include content of klogg process memory during the crash.</description>
-    </item>
-    
-    <item>
-      <title>Version 20.9 preview</title>
-      <link>https://klogg.filimonov.dev/docs/news/release_20.9_preview/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://klogg.filimonov.dev/docs/news/release_20.9_preview/</guid>
-      <description>Version 20.9 #  As expected I didn&amp;rsquo;t have much time to work on klogg this summer. However, there were several free weekends, and I was able to do some bugfix and new feature development.
-Preview builds can be downloaded from Github:
- Windows  Linux  Mac  Feedback is very welcome.
-Changelog #  Major new features:
- Highlighters reworked: Several sets of highlighting rules can be configured and chosen using context menu Highlighters can be configured to colorize only matching part of line Added an option to match using simple strings Highlighters configuration can be exported and imported on other machine An option to choose UI style, including dark theme based on QDarkStyleSheet A menu to switch between opened files Some support for dark OS themes Some support for HiDPI displays  Bugixes and minor improvements</description>
-    </item>
-    
-    <item>
-      <title>Version 20.4 released</title>
-      <link>https://klogg.filimonov.dev/docs/news/release_20.4/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://klogg.filimonov.dev/docs/news/release_20.4/</guid>
-      <description>Version 20.4 #  During this months there were almost no new commits to klogg. For several years klogg has been my second most frequently used tool (first one being code editor) and I&amp;rsquo;ve been doing my best to improve it based on my daily experience and user feedback on github. However, since the beginning of 2020 I&amp;rsquo;ve switched to a more manager-like position. This is all very new to me, and doing this job requires tools not related to log file analysis.</description>
     </item>
     
   </channel>
