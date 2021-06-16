@@ -35,6 +35,8 @@
 #include <QTimer>
 #include <QUrlQuery>
 #include <QVBoxLayout>
+#include <cstdint>
+#include <cstdlib>
 #include <string_view>
 
 #ifdef KLOGG_USE_MIMALLOC
@@ -44,6 +46,7 @@
 #include "client/crash_report_database.h"
 #include "sentry.h"
 
+#include "cpu_info.h"
 #include "issuereporter.h"
 #include "klogg_version.h"
 #include "log.h"
@@ -251,14 +254,16 @@ CrashHandler::CrashHandler()
 
     addExtra( "memory", physicalMemory() );
 
+    addExtra( "cpuInstructions", static_cast<unsigned>( supportedCpuInstructions() ) );
+
     memoryUsageTimer_ = std::make_unique<QTimer>();
     QObject::connect( memoryUsageTimer_.get(), &QTimer::timeout, [ addExtra ]() {
         const auto vmUsed = usedMemory();
         addExtra( "vm_used", vmUsed );
 
 #ifdef KLOGG_USE_MIMALLOC
-        size_t elapsedMsecs, userMsecs, systemMsecs, currentRss, peakRss, currentCommit,
-            peakCommit, pageFaults;
+        size_t elapsedMsecs, userMsecs, systemMsecs, currentRss, peakRss, currentCommit, peakCommit,
+            pageFaults;
 
         mi_process_info( &elapsedMsecs, &userMsecs, &systemMsecs, &currentRss, &peakRss,
                          &currentCommit, &peakCommit, &pageFaults );

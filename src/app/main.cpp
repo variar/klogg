@@ -37,6 +37,7 @@
  */
 
 #include <QtGlobal>
+#include <QMessageBox>
 
 #ifdef Q_OS_WIN
 #define WIN32_LEAN_AND_MEAN
@@ -53,6 +54,7 @@
 #endif
 
 #include "configuration.h"
+#include "cpu_info.h"
 #include "log.h"
 #include "mainwindow.h"
 #include "styles.h"
@@ -90,7 +92,7 @@ void setApplicationAttributes( bool enableQtHdpi, int scaleFactorRounding )
         QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
             static_cast<Qt::HighDpiScaleFactorRoundingPolicy>( scaleFactorRounding ) );
 #else
-    Q_UNUSED(scaleFactorRounding);
+        Q_UNUSED( scaleFactorRounding );
 #endif
     }
     else {
@@ -106,6 +108,15 @@ void setApplicationAttributes( bool enableQtHdpi, int scaleFactorRounding )
 
 int main( int argc, char* argv[] )
 {
+    auto requiredInstructuins = CpuInstructions::SSE2;
+    requiredInstructuins |= CpuInstructions::SSSE3;
+    requiredInstructuins |= CpuInstructions::POPCNT;
+    if ( !hasRequiredInstructions( supportedCpuInstructions(), requiredInstructuins ) ) {
+        QMessageBox::critical( nullptr, "Klogg", "Current CPU is not supported",
+                               QMessageBox::Close );
+        exit( EXIT_FAILURE );
+    }
+
 #ifdef KLOGG_USE_MIMALLOC
     mi_stats_reset();
 #endif
