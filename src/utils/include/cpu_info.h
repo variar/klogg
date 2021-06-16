@@ -26,7 +26,7 @@ enum class CpuInstructions : unsigned {
     SSE2 = 1 << 1,
     SSE3 = 1 << 2,
     SSSE3 = 1 << 3,
-    SSE4_1 = 1 << 4,
+    SSE41 = 1 << 4,
     POPCNT = 1 << 5,
     AVX = 1 << 6,
     AVX2 = 1 << 7,

@@ -41,43 +41,41 @@ CpuInstructions supportedCpuInstructions()
     const auto nIds = cpui[ 0 ];
     std::vector<std::array<int, 4>> data;
 
-    for ( int i = 0; i <= nIds_; ++i ) {
+    for ( int i = 0; i <= nIds; ++i ) {
         __cpuidex( cpui.data(), i, 0 );
         data.push_back( cpui );
     }
 
     // load bitset with flags for function 0x00000001
     if ( nIds >= 1 ) {
-        std::bitset<32> f_1_ECX = data_[ 1 ][ 2 ];
-        std::bitset<32> f_1_EDX = data_[ 1 ][ 3 ];
+        std::bitset<32> f_1_ECX = data[ 1 ][ 2 ];
+        std::bitset<32> f_1_EDX = data[ 1 ][ 3 ];
 
-        if ( f_1_EDX_[ 26 ] ) {
+        if ( f_1_EDX[ 26 ] ) {
             cpuInstructions |= CpuInstructions::SSE2;
         }
-        if ( f_1_ECX_[ 0 ] ) {
+        if ( f_1_ECX[ 0 ] ) {
             cpuInstructions |= CpuInstructions::SSE3;
         }
-        if ( f_1_ECX_[ 9 ] ) {
+        if ( f_1_ECX[ 9 ] ) {
             cpuInstructions |= CpuInstructions::SSSE3;
         }
-        if ( f_1_ECX_[ 19 ] ) {
+        if ( f_1_ECX[ 19 ] ) {
             cpuInstructions |= CpuInstructions::SSE41;
         }
-        if ( f_1_ECX_[ 20 ] ) {
-            cpuInstructions |= CpuInstructions::SSE42;
-        }
-        if ( f_1_ECX_[ 23 ] ) {
+        
+        if ( f_1_ECX[ 23 ] ) {
             cpuInstructions |= CpuInstructions::POPCNT;
         }
 
-        if ( f_1_ECX_[ 28 ] ) {
+        if ( f_1_ECX[ 28 ] ) {
             cpuInstructions |= CpuInstructions::AVX;
         }
     }
 
     // load bitset with flags for function 0x00000007
     if ( nIds >= 7 ) {
-        std::bitset<32> f_7_EBX = data_[ 7 ][ 1 ];
+        std::bitset<32> f_7_EBX = data[ 7 ][ 1 ];
 
         if ( f_7_EBX[ 5 ] ) {
             cpuInstructions |= CpuInstructions::AVX2;
@@ -95,7 +93,7 @@ CpuInstructions supportedCpuInstructions()
         cpuInstructions |= CpuInstructions::SSE2;
         cpuInstructions |= CpuInstructions::SSE3;
         cpuInstructions |= CpuInstructions::SSSE3;
-        cpuInstructions |= CpuInstructions::SSE4_1;
+        cpuInstructions |= CpuInstructions::SSE41;
         cpuInstructions |= CpuInstructions::AVX;
         cpuInstructions |= CpuInstructions::AVX2;
     }
@@ -103,7 +101,7 @@ CpuInstructions supportedCpuInstructions()
         cpuInstructions |= CpuInstructions::SSE2;
         cpuInstructions |= CpuInstructions::SSE3;
         cpuInstructions |= CpuInstructions::SSSE3;
-        cpuInstructions |= CpuInstructions::SSE4_1;
+        cpuInstructions |= CpuInstructions::SSE41;
         cpuInstructions |= CpuInstructions::AVX;
         cpuInstructions |= CpuInstructions::AVX2;
     }
@@ -111,14 +109,14 @@ CpuInstructions supportedCpuInstructions()
         cpuInstructions |= CpuInstructions::SSE2;
         cpuInstructions |= CpuInstructions::SSE3;
         cpuInstructions |= CpuInstructions::SSSE3;
-        cpuInstructions |= CpuInstructions::SSE4_1;
+        cpuInstructions |= CpuInstructions::SSE41;
         cpuInstructions |= CpuInstructions::AVX;
     }
     else if ( __builtin_cpu_supports( "sse4.1" ) ) {
         cpuInstructions |= CpuInstructions::SSE2;
         cpuInstructions |= CpuInstructions::SSE3;
         cpuInstructions |= CpuInstructions::SSSE3;
-        cpuInstructions |= CpuInstructions::SSE4_1;
+        cpuInstructions |= CpuInstructions::SSE41;
     }
     else if ( __builtin_cpu_supports( "ssse3" ) ) {
         cpuInstructions |= CpuInstructions::SSE2;
