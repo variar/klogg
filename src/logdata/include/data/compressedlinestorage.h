@@ -36,6 +36,7 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -106,7 +107,7 @@ class CompressedLinePositionStorage {
     CompressedLinePositionStorage()
         : block_index_{ 0 }
         , long_block_index_{ 0 }
-        , first_long_line_{ std::numeric_limits<LineNumber::UnderlyingType>::max() }
+        , first_long_line_{ std::numeric_limits<uint32_t>::max() }
     {
     }
 
@@ -135,7 +136,7 @@ class CompressedLinePositionStorage {
     size_t allocatedSize() const;
 
     // Element at index
-    LineOffset at( uint32_t i ) const
+    LineOffset at( size_t i ) const
     {
         return at( LineNumber( i ) );
     }

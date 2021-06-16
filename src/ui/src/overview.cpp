@@ -90,8 +90,8 @@ std::pair<int, int> Overview::getViewLines() const
 
 LineNumber Overview::fileLineFromY( int position ) const
 {
-    const auto line = static_cast<LineNumber::UnderlyingType>( (qint64)position * linesInFile_.get()
-                                                               / height_ );
+    const auto line = static_cast<LineNumber::UnderlyingType>( static_cast<uint32_t>(position) * linesInFile_.get()
+                                                               / static_cast<uint32_t>(height_) );
 
     return LineNumber( line );
 }
@@ -101,7 +101,7 @@ int Overview::yFromFileLine( int file_line ) const
     int position = 0;
 
     if ( linesInFile_.get() > 0 )
-        position = (int)( (qint64)file_line * height_ / linesInFile_.get() );
+        position = (int)( static_cast<uint64_t>(file_line) * static_cast<uint32_t>(height_) / linesInFile_.get() );
 
     return position;
 }
@@ -119,7 +119,7 @@ void Overview::recalculatesLines()
             logFilteredData_->iterateOverLines( [ this ]( LineNumber line ) {
                 const auto lineType = logFilteredData_->lineTypeByLine( line );
                 const auto position
-                    = static_cast<int>( (qint64)( line.get() ) * height_ / linesInFile_.get() );
+                    = static_cast<int>( line.get() * static_cast<uint32_t>(height_) / linesInFile_.get() );
                 if ( lineType.testFlag( LogFilteredData::LineTypeFlags::Match ) ) {
                     if ( ( !matchLines_.empty() ) && matchLines_.back().position() == position ) {
                         // If the line is already there, we increase its weight

@@ -60,6 +60,7 @@
 #include <QShortcut>
 #include <QStandardItemModel>
 #include <QStringListModel>
+#include <qglobal.h>
 
 #include "data/regularexpression.h"
 
@@ -1529,7 +1530,7 @@ QString CrawlerWidgetContext::toString() const
     const auto toVariantList = []( const auto& list ) -> QVariantList {
         QVariantList variantList;
         for ( const auto& item : list ) {
-            variantList.append( item );
+            variantList.append( static_cast<qulonglong>(item) );
         }
         return variantList;
     };

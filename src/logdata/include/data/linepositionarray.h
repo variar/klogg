@@ -39,6 +39,7 @@
 #ifndef LINEPOSITIONARRAY_H
 #define LINEPOSITIONARRAY_H
 
+#include <cstddef>
 #include <vector>
 
 #include "compressedlinestorage.h"
@@ -77,7 +78,7 @@ class SimpleLinePositionStorage {
     }
 
     // Element at index
-    LineOffset at( uint32_t i ) const
+    LineOffset at( size_t i ) const
     {
         return storage_.at( i );
     }

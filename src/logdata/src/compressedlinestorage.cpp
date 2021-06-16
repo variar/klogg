@@ -39,6 +39,7 @@
 #include <QtEndian>
 #include <cassert>
 #include <cstdlib>
+#include <limits>
 
 #include "compressedlinestorage.h"
 #include "configuration.h"
@@ -207,9 +208,9 @@ void CompressedLinePositionStorage::append( LineOffset pos )
     previous_block_offset_ = block_offset_;
 
     bool store_in_big = false;
-    if ( pos.get() > maxValue<LineNumber>().get() ) {
+    if ( pos.get() > std::numeric_limits<uint32_t>::max() ) {
         store_in_big = true;
-        if ( first_long_line_ == maxValue<LineNumber>() ) {
+        if ( first_long_line_ == LineNumber( std::numeric_limits<uint32_t>::max() ) ) {
             // First "big" end of line, we will start a new (64) block
             first_long_line_ = LineNumber( nb_lines_.get() );
             block_offset_ = {};

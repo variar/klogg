@@ -48,6 +48,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 #include <limits>
 #include <tuple>
 #include <utility>
@@ -211,7 +212,7 @@ void LogFilteredData::iterateOverLines( const std::function<void( LineNumber )>&
     using CallbackFn = std::function<void( LineNumber )>;
     const auto& currentResults = currentResultArray();
     currentResults.iterate(
-        []( uint32_t line, void* context ) -> bool {
+        []( uint64_t line, void* context ) -> bool {
             auto* callbackFn = static_cast<CallbackFn*>( context );
             callbackFn->operator()( LineNumber( line ) );
             return true;
@@ -304,7 +305,7 @@ void LogFilteredData::updateMaxLengthMarks( OptionalLineNumber added_line,
         LOG_DEBUG << "deleteMark recalculating longest mark";
         maxLengthMarks_ = 0_length;
         marks_.iterate(
-            []( uint32_t line, void* context ) -> bool {
+            []( uint64_t line, void* context ) -> bool {
                 auto* self = static_cast<LogFilteredData*>( context );
                 self->maxLengthMarks_
                     = qMax( self->maxLengthMarks_,
@@ -325,7 +326,7 @@ QList<LineNumber> LogFilteredData::getMarks() const
 {
     QList<LineNumber> markedLines;
     marks_.iterate(
-        []( uint32_t line, void* context ) -> bool {
+        []( uint64_t line, void* context ) -> bool {
             static_cast<QList<LineNumber>*>( context )->append( LineNumber( line ) );
             return true;
         },
@@ -437,7 +438,7 @@ LineNumber LogFilteredData::findLogDataLine( LineNumber index ) const
 {
     const auto& currentResults = currentResultArray();
 
-    uint32_t line = {};
+    LineNumber::UnderlyingType line = {};
     if ( currentResults.select( index.get(), &line ) ) {
         return LineNumber( line );
     }

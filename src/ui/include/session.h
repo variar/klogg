@@ -80,7 +80,7 @@ class Session : public std::enable_shared_from_this<Session> {
 
     // Get the size (in bytes) and number of lines in the current file.
     // The file is identified by the view attached to it.
-    void getFileInfo( const ViewInterface* view, uint64_t* fileSize, uint32_t* fileNbLine,
+    void getFileInfo( const ViewInterface* view, uint64_t* fileSize, uint64_t* fileNbLine,
                       QDateTime* lastModified ) const;
 
     // Get a (non-const) reference to the QuickFind pattern.
@@ -173,7 +173,7 @@ class WindowSession {
         return appSession_->getFilename( view );
     }
 
-    void getFileInfo( const ViewInterface* view, uint64_t* fileSize, uint32_t* fileNbLine,
+    void getFileInfo( const ViewInterface* view, uint64_t* fileSize, uint64_t* fileNbLine,
                       QDateTime* lastModified ) const
     {
         return appSession_->getFileInfo( view, fileSize, fileNbLine, lastModified );

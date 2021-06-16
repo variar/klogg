@@ -101,7 +101,7 @@ inline Record& operator<<( Record& r, const QStringRef& data )
     return r << qstr.append( data );
 }
 
-inline Record& operator<<( Record& r, const std::chrono::milliseconds& duration )
+inline Record& operator<<( Record& r, const std::chrono::microseconds& duration )
 {
     return r << static_cast<float>( duration.count() ) / 1000.f << " ms";
 }

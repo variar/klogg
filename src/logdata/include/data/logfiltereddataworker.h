@@ -78,7 +78,7 @@ class MatchingLine {
 // This is an array of matching lines.
 // It shall be implemented for random lookup speed, so
 // a fixed "in-place" array (vector) is probably fine.
-using SearchResultArray = Roaring;
+using SearchResultArray = roaring::Roaring64Map;
 
 struct SearchResults {
     SearchResultArray newMatches;

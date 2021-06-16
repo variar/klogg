@@ -46,10 +46,10 @@
 #include <QtConcurrent>
 
 #include "data/abstractlogdata.h"
+#include "dispatch_to.h"
 #include "log.h"
 #include "quickfindpattern.h"
 #include "selection.h"
-#include "dispatch_to.h"
 
 #include "quickfind.h"
 
@@ -59,12 +59,13 @@ void SearchingNotifier::reset()
     startTime_ = QTime::currentTime();
 }
 
-void SearchingNotifier::sendNotification( qint64 current_line, qint64 nb_lines )
+void SearchingNotifier::sendNotification( LineNumber current_line, LinesCount nb_lines,
+                                          bool backward )
 {
     LOG_DEBUG << "Emitting Searching....";
-    const auto progress
-        = static_cast<int>( current_line < 0 ? ( nb_lines + current_line ) * 100 / nb_lines
-                                             : ( current_line * 100 / nb_lines ) );
+    const auto progress = static_cast<int>(
+        backward ? ( ( nb_lines.get() - current_line.get() ) / nb_lines.get() * 100 )
+                 : ( current_line.get() / nb_lines.get() ) * 100 );
 
     emit notify( QFNotificationProgress( progress ) );
     startTime_ = QTime::currentTime().addMSecs( -800 );
@@ -301,7 +302,7 @@ Portion QuickFind::doSearchForward( const FilePosition& start_position, const Se
             ++line;
 
             // See if we need to notify of the ongoing search
-            searchingNotifier_.ping( line.get(), nb_lines.get() );
+            searchingNotifier_.ping( line, nb_lines, false );
 
             if ( interruptRequested_ ) {
                 break;
@@ -390,7 +391,7 @@ Portion QuickFind::doSearchBackward( const FilePosition& start_position, const S
                 --line;
 
                 // See if we need to notify of the ongoing search
-                searchingNotifier_.ping( -static_cast<qint64>( line.get() ), nb_lines.get() );
+                searchingNotifier_.ping( line, nb_lines, true );
 
                 if ( interruptRequested_ ) {
                     break;

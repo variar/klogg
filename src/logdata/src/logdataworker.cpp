@@ -401,7 +401,7 @@ void IndexOperation::doIndex( LineOffset initialPosition )
 
     using namespace std::chrono;
     using clock = high_resolution_clock;
-    milliseconds ioDuration{};
+    microseconds ioDuration{};
 
     const auto indexingStartTime = clock::now();
 
@@ -439,7 +439,7 @@ void IndexOperation::doIndex( LineOffset initialPosition )
 
                     clock::time_point ioT2 = clock::now();
 
-                    ioDuration += duration_cast<milliseconds>( ioT2 - ioT1 );
+                    ioDuration += duration_cast<microseconds>( ioT2 - ioT1 );
 
                     LOG_DEBUG << "Sending block " << blockData.first << " size "
                               << blockData.second.size();
@@ -550,7 +550,7 @@ void IndexOperation::doIndex( LineOffset initialPosition )
     }
 
     const auto indexingEndTime = high_resolution_clock::now();
-    const auto duration = duration_cast<milliseconds>( indexingEndTime - indexingStartTime );
+    const auto duration = duration_cast<microseconds>( indexingEndTime - indexingStartTime );
 
     LOG_INFO << "Indexing done, took " << duration << ", io " << ioDuration;
     LOG_INFO << "Index size "
@@ -558,7 +558,7 @@ void IndexOperation::doIndex( LineOffset initialPosition )
     LOG_INFO << "Indexed lines " << scopedAccessor.getNbLines();
     LOG_INFO << "Max line " << scopedAccessor.getMaxLength();
     LOG_INFO << "Indexing perf "
-             << ( 1000.f * static_cast<float>( state.file_size )
+             << ( 1000.f * 1000.f * static_cast<float>( state.file_size )
                   / static_cast<float>( duration.count() ) )
                     / ( 1024 * 1024 )
              << " MiB/s";

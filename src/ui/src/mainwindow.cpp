@@ -1078,7 +1078,7 @@ void MainWindow::lineNumberHandler( LineNumber line )
 {
     // The line number received is the internal (starts at 0)
     uint64_t fileSize{};
-    uint32_t fileNbLine{};
+    uint64_t fileNbLine{};
     QDateTime lastModified;
 
     session_.getFileInfo( currentCrawlerWidget(), &fileSize, &fileNbLine, &lastModified );
@@ -1619,7 +1619,7 @@ void MainWindow::updateInfoLine()
         = QDir::toNativeSeparators( session_.getFilename( currentCrawlerWidget() ) );
 
     uint64_t fileSize;
-    uint32_t fileNbLine;
+    uint64_t fileNbLine;
     QDateTime lastModified;
 
     session_.getFileInfo( currentCrawlerWidget(), &fileSize, &fileNbLine, &lastModified );

@@ -43,10 +43,14 @@
 // functions when view specific behaviour is desired, using the template
 // pattern.
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <complex>
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <plog/Log.h>
 #include <qcoreevent.h>
 #include <qevent.h>
@@ -107,9 +111,9 @@ inline int countLeadingZeroes( uint32_t value )
     }
 }
 #else
-inline int countLeadingZeroes( uint32_t value )
+inline int countLeadingZeroes( uint64_t value )
 {
-    return __builtin_clz( value );
+    return __builtin_clzll( value );
 }
 #endif
 
@@ -117,18 +121,36 @@ namespace {
 
 int mapPullToFollowLength( int length );
 
-int intLog2( uint32_t x )
+int intLog2( uint64_t x )
 {
-    return 31 - countLeadingZeroes( x | 1 );
+    return 63 - countLeadingZeroes( x | 1 );
 }
 
 // see https://lemire.me/blog/2021/05/28/computing-the-number-of-digits-of-an-integer-quickly/
-int countDigits( uint32_t x )
+int countDigits( uint64_t x )
 {
     int l2 = intLog2( x );
     int ans = ( ( 77 * l2 ) >> 8 );
-    static uint32_t table[]
-        = { 9, 99, 999, 9999, 99999, 999999, 9999999, 99999999, 999999999, 0xFFFFFFFF };
+    static uint64_t table[] = { 9,
+                                99,
+                                999,
+                                9999,
+                                99999,
+                                999999,
+                                9999999,
+                                99999999,
+                                999999999,
+                                9999999999,
+                                99999999999,
+                                999999999999,
+                                9999999999999,
+                                99999999999999,
+                                999999999999999,
+                                9999999999999999,
+                                99999999999999999,
+                                999999999999999999,
+                                9999999999999999999u,
+                                0xFFFFFFFFFFFFFF };
     if ( x > table[ ans ] ) {
         ans += 1;
     }
@@ -335,7 +357,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
         const auto filePos = convertCoordToFilePos( mouseEvent->pos() );
 
         if ( line.has_value()
-             && !selection_.isPortionSelected( *line, filePos.x(), filePos.x() ) ) {
+             && !selection_.isPortionSelected( *line, filePos.column, filePos.column ) ) {
             selection_.selectLine( *line );
             emit updateLineNumber( *line );
             textAreaCache_.invalid_ = true;
@@ -399,25 +421,22 @@ void AbstractLogView::mouseMoveEvent( QMouseEvent* mouseEvent )
         // Invalidate our cache
         textAreaCache_.invalid_ = true;
 
-        QPoint thisEndPos = convertCoordToFilePos( mouseEvent->pos() );
-        if ( thisEndPos != selectionCurrentEndPos_ ) {
-            const auto lineNumber
-                = LineNumber( static_cast<LineNumber::UnderlyingType>( thisEndPos.y() ) );
+        const auto thisEndPos = convertCoordToFilePos( mouseEvent->pos() );
+        if ( thisEndPos.line != selectionCurrentEndPos_.line || thisEndPos.column != selectionCurrentEndPos_.column ) {
+            const auto lineNumber = thisEndPos.line;
             // Are we on a different line?
-            if ( selectionStartPos_.y() != thisEndPos.y() ) {
-                if ( thisEndPos.y() != selectionCurrentEndPos_.y() ) {
+            if ( selectionStartPos_.line != thisEndPos.line ) {
+                if ( thisEndPos.line != selectionCurrentEndPos_.line ) {
                     // This is a 'range' selection
-                    selection_.selectRange( LineNumber( static_cast<LineNumber::UnderlyingType>(
-                                                selectionStartPos_.y() ) ),
-                                            lineNumber );
+                    selection_.selectRange( selectionStartPos_.line, lineNumber );
                     emit updateLineNumber( lineNumber );
                     update();
                 }
             }
             // So we are on the same line. Are we moving horizontaly?
-            else if ( thisEndPos.x() != selectionCurrentEndPos_.x() ) {
+            else if ( thisEndPos.column != selectionCurrentEndPos_.column ) {
                 // This is a 'portion' selection
-                selection_.selectPortion( lineNumber, selectionStartPos_.x(), thisEndPos.x() );
+                selection_.selectPortion( lineNumber, selectionStartPos_.column, thisEndPos.column );
                 update();
             }
             // On the same line, and moving vertically then
@@ -468,7 +487,7 @@ void AbstractLogView::mouseDoubleClickEvent( QMouseEvent* mouseEvent )
         // Invalidate our cache
         textAreaCache_.invalid_ = true;
 
-        const QPoint pos = convertCoordToFilePos( mouseEvent->pos() );
+        const auto pos = convertCoordToFilePos( mouseEvent->pos() );
         selectWordAtPosition( pos );
     }
 
@@ -709,13 +728,25 @@ bool AbstractLogView::event( QEvent* e )
     return QAbstractScrollArea::event( e );
 }
 
+LinesCount::UnderlyingType AbstractLogView::verticalScrollMultiplicator() const
+{
+    return verticalScrollBar()->maximum() < std::numeric_limits<int>::max()
+               ? static_cast<LinesCount::UnderlyingType>( 1 )
+               : static_cast<LinesCount::UnderlyingType>(
+                   std::ceil( static_cast<double>( logData_->getNbLine().get() )
+                              / static_cast<double>( verticalScrollBar()->maximum() ) ) );
+}
+
 void AbstractLogView::scrollContentsBy( int dx, int dy )
 {
     LOG_DEBUG << "scrollContentsBy received " << dy << "position " << verticalScrollBar()->value();
 
     const auto lastTopLine = ( logData_->getNbLine() - getNbVisibleLines() );
+
     const auto scrollPosition
-        = static_cast<LinesCount::UnderlyingType>( verticalScrollBar()->value() );
+        = static_cast<LinesCount::UnderlyingType>( verticalScrollBar()->value() )
+          * verticalScrollMultiplicator();
+
     if ( ( lastTopLine.get() > 0 ) && scrollPosition > lastTopLine.get() ) {
         // The user is going further than the last line, we need to lock the last line at the bottom
         LOG_DEBUG << "scrollContentsBy beyond!";
@@ -1331,7 +1362,8 @@ void AbstractLogView::jumpToLine( LineNumber line )
     // Put the selected line in the middle if possible
     const auto newTopLine = line - LinesCount( getNbVisibleLines().get() / 2 );
     // This will also trigger a scrollContents event
-    verticalScrollBar()->setValue( static_cast<int>( newTopLine.get() ) );
+    verticalScrollBar()->setValue(
+        static_cast<int>( newTopLine.get() / verticalScrollMultiplicator() ) );
 }
 
 void AbstractLogView::setLineNumbersVisible( bool lineNumbersVisible )
@@ -1374,16 +1406,21 @@ int AbstractLogView::getNbVisibleCols() const
 // Converts the mouse x, y coordinates to the line number in the file
 OptionalLineNumber AbstractLogView::convertCoordToLine( int yPos ) const
 {
-    const int line
-        = static_cast<int>( firstLine_.get() ) + ( yPos - drawingTopOffset_ ) / charHeight_;
-    return line >= 0
-               ? OptionalLineNumber( LineNumber{ static_cast<LineNumber::UnderlyingType>( line ) } )
-               : OptionalLineNumber{};
+    const auto offset = ( yPos - drawingTopOffset_ ) / charHeight_;
+    if ( offset >= 0 ) {
+        return firstLine_ + LinesCount( static_cast<LinesCount::UnderlyingType>( offset ) );
+    }
+
+    if ( firstLine_.get() < static_cast<LineNumber::UnderlyingType>( -offset ) ) {
+        return {};
+    }
+
+    return firstLine_ - LinesCount( static_cast<LinesCount::UnderlyingType>( offset ) );
 }
 
 // Converts the mouse x, y coordinates to the char coordinates (in the file)
 // This function ensure the pos exists in the file.
-QPoint AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
+AbstractLogView::FilePos AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
 {
     auto line = convertCoordToLine( pos.y() ).value_or( LineNumber{} );
     if ( line >= logData_->getNbLine() )
@@ -1408,9 +1445,7 @@ QPoint AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
         column = 0;
 
     LOG_DEBUG << "AbstractLogView::convertCoordToFilePos col=" << column << " line=" << line;
-    QPoint point( column, static_cast<int>( line.get() ) );
-
-    return point;
+    return FilePos{ line, column };
 }
 
 // Makes the widget adjust itself to display the passed line.
@@ -1513,22 +1548,22 @@ void AbstractLogView::jumpToTop()
 // Jump to the last line
 void AbstractLogView::jumpToBottom()
 {
-    const auto newTopLine = qMax( logData_->getNbLine().get() - getNbVisibleLines().get() + 1, 0U );
+    const auto newTopLine
+        = qMax( logData_->getNbLine().get() - getNbVisibleLines().get() + 1, 0UL );
 
     // This will also trigger a scrollContents event
-    verticalScrollBar()->setValue( static_cast<int>( newTopLine ) );
+    verticalScrollBar()->setValue( static_cast<int>( newTopLine / verticalScrollMultiplicator() ) );
 
     textAreaCache_.invalid_ = true;
     update();
 }
 
 // Select the word under the given position
-void AbstractLogView::selectWordAtPosition( const QPoint& pos )
+void AbstractLogView::selectWordAtPosition( const FilePos& pos )
 {
-    const auto lineNumber = LineNumber( static_cast<LineNumber::UnderlyingType>( pos.y() ) );
-    const QString line = logData_->getExpandedLineString( lineNumber );
+    const QString line = logData_->getExpandedLineString( pos.line );
 
-    const int clickPos = pos.x();
+    const int clickPos = pos.column;
 
     const auto isWordSeparator = []( QChar c ) {
         return !c.isLetterOrNumber() && c.category() != QChar::Punctuation_Connector;
@@ -1545,7 +1580,7 @@ void AbstractLogView::selectWordAtPosition( const QPoint& pos )
     const auto wordEnd = std::find_if( line.begin() + clickPos, line.end(), isWordSeparator );
     const auto selectionEnd = static_cast<int>( std::distance( line.begin(), wordEnd ) - 1 );
 
-    selection_.selectPortion( lineNumber, selectionStart, selectionEnd );
+    selection_.selectPortion( pos.line, selectionStart, selectionEnd );
     updateGlobalSelection();
     update();
 }
@@ -1675,9 +1710,14 @@ void AbstractLogView::considerMouseHovering( int xPos, int yPos )
 
 void AbstractLogView::updateScrollBars()
 {
-    verticalScrollBar()->setRange( 0,
-                                   qMax( 0, static_cast<int>( logData_->getNbLine().get()
-                                                              - getNbVisibleLines().get() + 1 ) ) );
+    auto verticalScrollRange = logData_->getNbLine() > getNbVisibleLines()
+                                   ? logData_->getNbLine().get() - getNbVisibleLines().get() + 1
+                                   : 0;
+    verticalScrollRange = std::clamp(
+        verticalScrollRange, 0ul,
+        static_cast<decltype( verticalScrollRange )>( std::numeric_limits<int>::max() ) );
+
+    verticalScrollBar()->setRange( 0, static_cast<int>( verticalScrollRange ) );
 
     const int hScrollMaxValue
         = qMax( 0, static_cast<int>( logData_->getMaxLength().get() ) - getNbVisibleCols() + 1 );

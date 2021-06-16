@@ -24,6 +24,7 @@
 #include <QFileInfo>
 #include <algorithm>
 #include <cassert>
+#include <cstdint>
 
 #include "data/logdata.h"
 #include "data/logfiltereddata.h"
@@ -79,7 +80,7 @@ QString Session::getFilename( const ViewInterface* view ) const
     return file->fileName;
 }
 
-void Session::getFileInfo( const ViewInterface* view, uint64_t* fileSize, uint32_t* fileNbLine,
+void Session::getFileInfo( const ViewInterface* view, uint64_t* fileSize, uint64_t* fileNbLine,
                            QDateTime* lastModified ) const
 {
     const OpenFile* file = findOpenFileFromView( view );

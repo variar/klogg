@@ -380,11 +380,16 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     // reasons).
     OverviewWidget* overviewWidget_ = nullptr;
 
+    struct FilePos {
+      LineNumber line;
+      int column;
+    };
+
     bool selectionStarted_ = false;
     // Start of the selection (characters)
-    QPoint selectionStartPos_;
+    FilePos selectionStartPos_;
     // Current end of the selection (characters)
-    QPoint selectionCurrentEndPos_;
+    FilePos selectionCurrentEndPos_;
     QBasicTimer autoScrollTimer_;
 
     // Hovering state
@@ -465,9 +470,11 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
 
     LinesCount getNbVisibleLines() const;
     int getNbVisibleCols() const;
-    QPoint convertCoordToFilePos( const QPoint& pos ) const;
+
+    FilePos convertCoordToFilePos( const QPoint& pos ) const;
     OptionalLineNumber convertCoordToLine( int yPos ) const;
     int convertCoordToColumn( int xPos ) const;
+
     void displayLine( LineNumber line );
     void moveSelection( int delta );
     void moveSelectionUp();
@@ -477,7 +484,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void jumpToRightOfScreen();
     void jumpToTop();
     void jumpToBottom();
-    void selectWordAtPosition( const QPoint& pos );
+    void selectWordAtPosition( const FilePos& pos );
 
     void updateSearchLimits();
 
@@ -498,6 +505,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
 
     // Utils functions
     void updateGlobalSelection();
+    LinesCount::UnderlyingType verticalScrollMultiplicator() const;
 };
 
 #endif
