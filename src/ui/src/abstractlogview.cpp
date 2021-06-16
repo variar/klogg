@@ -422,7 +422,8 @@ void AbstractLogView::mouseMoveEvent( QMouseEvent* mouseEvent )
         textAreaCache_.invalid_ = true;
 
         const auto thisEndPos = convertCoordToFilePos( mouseEvent->pos() );
-        if ( thisEndPos.line != selectionCurrentEndPos_.line || thisEndPos.column != selectionCurrentEndPos_.column ) {
+        if ( thisEndPos.line != selectionCurrentEndPos_.line
+             || thisEndPos.column != selectionCurrentEndPos_.column ) {
             const auto lineNumber = thisEndPos.line;
             // Are we on a different line?
             if ( selectionStartPos_.line != thisEndPos.line ) {
@@ -436,7 +437,8 @@ void AbstractLogView::mouseMoveEvent( QMouseEvent* mouseEvent )
             // So we are on the same line. Are we moving horizontaly?
             else if ( thisEndPos.column != selectionCurrentEndPos_.column ) {
                 // This is a 'portion' selection
-                selection_.selectPortion( lineNumber, selectionStartPos_.column, thisEndPos.column );
+                selection_.selectPortion( lineNumber, selectionStartPos_.column,
+                                          thisEndPos.column );
                 update();
             }
             // On the same line, and moving vertically then
@@ -1548,8 +1550,9 @@ void AbstractLogView::jumpToTop()
 // Jump to the last line
 void AbstractLogView::jumpToBottom()
 {
-    const auto newTopLine
-        = qMax( logData_->getNbLine().get() - getNbVisibleLines().get() + 1, 0UL );
+    const auto newTopLine = ( logData_->getNbLine().get() < getNbVisibleLines().get() )
+                                ? 0
+                                : logData_->getNbLine().get() - getNbVisibleLines().get() + 1;
 
     // This will also trigger a scrollContents event
     verticalScrollBar()->setValue( static_cast<int>( newTopLine / verticalScrollMultiplicator() ) );
@@ -1712,9 +1715,9 @@ void AbstractLogView::updateScrollBars()
 {
     auto verticalScrollRange = logData_->getNbLine() > getNbVisibleLines()
                                    ? logData_->getNbLine().get() - getNbVisibleLines().get() + 1
-                                   : 0;
+                                   : 0ull;
     verticalScrollRange = std::clamp(
-        verticalScrollRange, 0ul,
+        verticalScrollRange, 0ull,
         static_cast<decltype( verticalScrollRange )>( std::numeric_limits<int>::max() ) );
 
     verticalScrollBar()->setRange( 0, static_cast<int>( verticalScrollRange ) );
