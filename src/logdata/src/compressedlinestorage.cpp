@@ -210,7 +210,7 @@ void CompressedLinePositionStorage::append( LineOffset pos )
     bool store_in_big = false;
     if ( pos.get() > std::numeric_limits<uint32_t>::max() ) {
         store_in_big = true;
-        if ( first_long_line_ == LineNumber( std::numeric_limits<uint32_t>::max() ) ) {
+        if ( !first_long_line_ ) {
             // First "big" end of line, we will start a new (64) block
             first_long_line_ = LineNumber( nb_lines_.get() );
             block_offset_ = {};
@@ -277,7 +277,7 @@ void CompressedLinePositionStorage::append( LineOffset pos )
         }
     }
     else {
-        if ( ( nb_lines_.get() - first_long_line_.get() ) % IndexBlockSize == 0 ) {
+        if ( ( nb_lines_.get() - first_long_line_->get() ) % IndexBlockSize == 0 ) {
             // We have finished the block
 
             // Let's reduce its size to what is actually used
@@ -294,7 +294,7 @@ LineOffset CompressedLinePositionStorage::at( LineNumber index ) const
     BlockOffset offset;
     LineOffset position;
 
-    if ( index < first_long_line_ ) {
+    if ( !first_long_line_ || index < *first_long_line_ ) {
         block = pool32_[ index.get() / IndexBlockSize ];
 
         if ( ( index.get() == last_read.index.get() + 1 )
@@ -314,7 +314,7 @@ LineOffset CompressedLinePositionStorage::at( LineNumber index ) const
         }
     }
     else {
-        const auto index_in_64 = index - first_long_line_;
+        const auto index_in_64 = index - *first_long_line_;
         block = pool64_[ index_in_64.get() / IndexBlockSize ];
 
         if ( ( index.get() == last_read.index.get() + 1 )
@@ -363,16 +363,12 @@ void CompressedLinePositionStorage::pop_back()
         // A new block has been created for the last entry, we need
         // to de-alloc it.
 
-        if ( first_long_line_ == maxValue<LineNumber>() ) {
-            // If we try to pop_back() twice, we're dead!
+        if ( !first_long_line_ ) {
             assert( ( nb_lines_.get() - 1 ) % IndexBlockSize == 0 );
-
             block_index_ = pool32_.free_last_block();
         }
         else {
-            // If we try to pop_back() twice, we're dead!
-            assert( ( nb_lines_.get() - first_long_line_.get() - 1 ) % IndexBlockSize == 0 );
-
+            assert( ( nb_lines_.get() - first_long_line_->get() - 1 ) % IndexBlockSize == 0 );
             long_block_index_ = pool64_.free_last_block();
         }
 

@@ -107,7 +107,6 @@ class CompressedLinePositionStorage {
     CompressedLinePositionStorage()
         : block_index_{ 0 }
         , long_block_index_{ 0 }
-        , first_long_line_{ std::numeric_limits<uint32_t>::max() }
     {
     }
 
@@ -169,9 +168,8 @@ class CompressedLinePositionStorage {
     uint32_t long_block_index_;
 
     // The index of the first line whose end is stored in a block64
-    // Initialised at UINT32_MAX, meaning "unset"
     // this is the origin point for all calculations in block64
-    LineNumber first_long_line_;
+    OptionalLineNumber first_long_line_;
 
     // Offset of the next position (not yet written) within the current
     // block. null means there is no current block (previous block
