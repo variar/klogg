@@ -20,6 +20,7 @@
 #pragma once
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <optional>
 
@@ -35,10 +36,10 @@ using LineOffset
     = fluent::NamedType<int64_t, struct line_offset, fluent::Addable, fluent::Incrementable,
                         fluent::Subtractable, fluent::Comparable, fluent::Printable>;
 
-using LineNumber = fluent::NamedType<size_t, struct line_number, fluent::Incrementable,
+using LineNumber = fluent::NamedType<uint64_t, struct line_number, fluent::Incrementable,
                                      fluent::Decrementable, fluent::Comparable, fluent::Printable>;
 
-using LinesCount = fluent::NamedType<size_t, struct lines_count, fluent::Addable,
+using LinesCount = fluent::NamedType<uint64_t, struct lines_count, fluent::Addable,
                                      fluent::Incrementable, fluent::Subtractable,
                                      fluent::Decrementable, fluent::Comparable, fluent::Printable>;
 
