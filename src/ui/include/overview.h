@@ -99,7 +99,7 @@ class Overview {
     }
     // Signal the overview the height of the display has changed, triggering
     // an update of its cache.
-    void updateView( int height );
+    void updateView( unsigned height );
     // Returns a list of lines (between 0 and 'height') representing matches.
     // (pointer returned is valid until next call to update*()
     const std::vector<WeightedLine>* getMatchLines() const;
@@ -112,7 +112,7 @@ class Overview {
     // Return the line number corresponding to the passed overview y coordinate.
     LineNumber fileLineFromY( int y ) const;
     // Return the y coordinate corresponding to the passed line number.
-    int yFromFileLine( int file_line ) const;
+    int yFromFileLine( LineNumber fileLine ) const;
 
   private:
     // List of matches associated with this Overview.
@@ -125,7 +125,7 @@ class Overview {
     LineNumber topLine_;
     LinesCount nbLines_;
     // Current height of view window.
-    int height_;
+    unsigned height_;
     // Does the cache (matchesLines, markLines) need to be recalculated.
     bool dirty_;
 

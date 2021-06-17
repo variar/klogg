@@ -179,11 +179,11 @@ class Configuration final : public Persistable<Configuration> {
     {
         useSearchResultsCache_ = enabled;
     }
-    int searchResultsCacheLines() const
+    unsigned searchResultsCacheLines() const
     {
         return searchResultsCacheLines_;
     }
-    void setSearchResultsCacheLines( int lines )
+    void setSearchResultsCacheLines( unsigned lines )
     {
         searchResultsCacheLines_ = lines;
     }
@@ -465,7 +465,7 @@ class Configuration final : public Persistable<Configuration> {
 
     // Performance settings
     bool useSearchResultsCache_ = true;
-    int searchResultsCacheLines_ = 1000000;
+    unsigned searchResultsCacheLines_ = 1000000;
     bool useParallelSearch_ = true;
     int indexReadBufferSizeMb_ = 16;
     int searchReadBufferSizeLines_ = 5000;

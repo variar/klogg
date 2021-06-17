@@ -43,6 +43,7 @@
 
 #include "log.h"
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 
@@ -285,10 +286,14 @@ void CrawlerWidget::focusSearchEdit()
 void CrawlerWidget::goToLine()
 {
     bool isLineSelected = true;
-    const auto newLine = QInputDialog::getInt( this, "Jump to line", "Line", 1, 1,
-                                               static_cast<int>( logData_->getNbLine().get() ), 1,
-                                               &isLineSelected );
+    auto newLine = QInputDialog::getText( this, "Jump to line", "Line number" )
+                       .toULongLong( &isLineSelected );
+
     if ( isLineSelected ) {
+        if ( newLine == 0 ) {
+            newLine = 1;
+        }
+
         const auto selectedLine
             = LineNumber( static_cast<LineNumber::UnderlyingType>( newLine - 1 ) );
         filteredView_->trySelectLine( logFilteredData_->getLineIndexNumber( selectedLine ) );
@@ -1530,7 +1535,7 @@ QString CrawlerWidgetContext::toString() const
     const auto toVariantList = []( const auto& list ) -> QVariantList {
         QVariantList variantList;
         for ( const auto& item : list ) {
-            variantList.append( static_cast<qulonglong>(item) );
+            variantList.append( static_cast<qulonglong>( item ) );
         }
         return variantList;
     };

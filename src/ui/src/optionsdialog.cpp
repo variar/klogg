@@ -302,7 +302,7 @@ void OptionsDialog::updateDialogFromConfig()
     // Perf
     parallelSearchCheckBox->setChecked( config.useParallelSearch() );
     searchResultsCacheCheckBox->setChecked( config.useSearchResultsCache() );
-    searchCacheSpinBox->setValue( config.searchResultsCacheLines() );
+    searchCacheSpinBox->setValue( static_cast<int>( config.searchResultsCacheLines() ) );
     indexReadBufferSpinBox->setValue( config.indexReadBufferSizeMb() );
     searchReadBufferSpinBox->setValue( config.searchReadBufferSizeLines() );
     keepFileClosedCheckBox->setChecked( config.keepFileClosed() );
@@ -423,7 +423,7 @@ void OptionsDialog::updateConfigFromDialog()
 
     config.setUseParallelSearch( parallelSearchCheckBox->isChecked() );
     config.setUseSearchResultsCache( searchResultsCacheCheckBox->isChecked() );
-    config.setSearchResultsCacheLines( searchCacheSpinBox->value() );
+    config.setSearchResultsCacheLines( static_cast<unsigned>( searchCacheSpinBox->value() ) );
     config.setIndexReadBufferSizeMb( indexReadBufferSpinBox->value() );
     config.setSearchReadBufferSizeLines( searchReadBufferSpinBox->value() );
     config.setKeepFileClosed( keepFileClosedCheckBox->isChecked() );
@@ -518,7 +518,7 @@ void KeySequencePresenter::showEditor()
     layout->addWidget( dialogButtons );
     keyEditDialog.setLayout( layout );
 
-    connect( clearButton, &QToolButton::clicked, editor, &QKeySequenceEdit::clear);
+    connect( clearButton, &QToolButton::clicked, editor, &QKeySequenceEdit::clear );
     connect( dialogButtons, &QDialogButtonBox::accepted, &keyEditDialog, &QDialog::accept );
     connect( dialogButtons, &QDialogButtonBox::rejected, &keyEditDialog, &QDialog::reject );
 
@@ -565,5 +565,5 @@ void OptionsDialog::buildShortcutsTable()
     shortcutsTable->setHorizontalHeaderItem( 1, new QTableWidgetItem( "Primary shortcut" ) );
     shortcutsTable->setHorizontalHeaderItem( 2, new QTableWidgetItem( "Secondary shortcut" ) );
 
-    shortcutsTable->sortItems(0);
+    shortcutsTable->sortItems( 0 );
 }

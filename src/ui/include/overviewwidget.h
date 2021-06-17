@@ -60,13 +60,13 @@ class OverviewWidget : public QWidget {
     static constexpr int STEP_DURATION_MS = 30;
     static constexpr int INITIAL_TTL_VALUE = 5;
 
-    Overview* overview_;
+    Overview* overview_ = nullptr;
 
     // Highlight:
-    // Which line is higlighted, or -1 if none
-    int highlightedLine_;
+    // Which line is higlighted
+    OptionalLineNumber highlightedLine_;
     // Number of step until the highlight become static
-    int highlightedTTL_;
+    int highlightedTTL_ = 0;
 
     QBasicTimer highlightTimer_;
 

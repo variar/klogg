@@ -132,7 +132,7 @@ void SearchData::addAll( LineLength length, const SearchResultArray& matches, Li
 
     maxLength_ = qMax( maxLength_, length );
     nbLinesProcessed_ = qMax( nbLinesProcessed_, lines );
-    nbMatches_ += LinesCount( static_cast<LinesCount::UnderlyingType>( matches.cardinality() ) );
+    nbMatches_ += LinesCount( matches.cardinality() );
 
     newMatches_ |= matches;
 }
@@ -274,10 +274,9 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
         if ( !config.useParallelSearch() ) {
             return 1;
         }
-
-        return qMax( 1, config.searchThreadPoolSize() == 0
-                            ? tbb::info::default_concurrency()
-                            : static_cast<int>( config.searchThreadPoolSize() ) );
+        const auto configuredThreadPoolSize = config.searchThreadPoolSize();
+        return qMax( 1, configuredThreadPoolSize == 0 ? tbb::info::default_concurrency()
+                                                      : configuredThreadPoolSize );
     }() );
 
     LOG_INFO << "Using " << matchingThreadsCount << " matching threads";
@@ -399,8 +398,7 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
             if ( matchResults->processedLines.get() ) {
 
                 maxLength = qMax( maxLength, matchResults->maxLength );
-                nbMatches += LinesCount( static_cast<LinesCount::UnderlyingType>(
-                    matchResults->matchingLines.cardinality() ) );
+                nbMatches += LinesCount( matchResults->matchingLines.cardinality() );
 
                 const auto processedLines = LinesCount{ matchResults->chunkStart.get()
                                                         + matchResults->processedLines.get() };
@@ -461,12 +459,13 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
     const auto totalFileSize = sourceLogData_.getFileSize();
 
     LOG_INFO << "Searching perf "
-             << static_cast<uint32_t>(
+             << static_cast<uint64_t>(
                     std::floor( 1000.f * static_cast<float>( ( endLine - initialLine ).get() )
                                 / static_cast<float>( durationMs.count() ) ) )
              << " lines/s";
     LOG_INFO << "Searching io perf "
-             << ( 1000.f * static_cast<float>( totalFileSize ) / static_cast<float>( durationMs.count() ) )
+             << ( 1000.f * static_cast<float>( totalFileSize )
+                  / static_cast<float>( durationMs.count() ) )
                     / ( 1024 * 1024 )
              << " MiB/s";
 

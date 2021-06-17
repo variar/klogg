@@ -51,7 +51,7 @@ void Overview::updateData( LinesCount totalNbLine )
     dirty_ = true;
 }
 
-void Overview::updateView( int height )
+void Overview::updateView( unsigned height )
 {
     // We don't touch the cache if the height hasn't changed
     if ( ( height != height_ ) || ( dirty_ == true ) ) {
@@ -74,34 +74,32 @@ const std::vector<Overview::WeightedLine>* Overview::getMarkLines() const
 std::pair<int, int> Overview::getViewLines() const
 {
     int top = 0;
-    int bottom = height_ - 1;
+    int bottom = static_cast<int>( height_ ) - 1;
 
     if ( linesInFile_.get() > 0 ) {
-        top = static_cast<int>( static_cast<qint64>( topLine_.get() ) * height_
-                                / static_cast<qint64>( linesInFile_.get() ) );
+        top = static_cast<int>( ( topLine_.get() ) * height_ / ( linesInFile_.get() ) );
 
-        bottom = static_cast<int>(
-            ( static_cast<qint64>( top ) + static_cast<qint64>( nbLines_.get() ) * height_ )
-            / static_cast<qint64>( linesInFile_.get() ) );
+        bottom = static_cast<int>( ( static_cast<unsigned>( top ) + nbLines_.get() ) * height_
+                                   / ( linesInFile_.get() ) );
     }
 
-    return std::pair<int, int>( top, bottom );
+    return std::make_pair( top, bottom );
 }
 
 LineNumber Overview::fileLineFromY( int position ) const
 {
-    const auto line = static_cast<LineNumber::UnderlyingType>( static_cast<uint32_t>(position) * linesInFile_.get()
-                                                               / static_cast<uint32_t>(height_) );
+    const auto line = static_cast<LineNumber::UnderlyingType>(
+        static_cast<uint32_t>( position ) * linesInFile_.get() / static_cast<uint32_t>( height_ ) );
 
     return LineNumber( line );
 }
 
-int Overview::yFromFileLine( int file_line ) const
+int Overview::yFromFileLine( LineNumber fileLine ) const
 {
     int position = 0;
 
     if ( linesInFile_.get() > 0 )
-        position = (int)( static_cast<uint64_t>(file_line) * static_cast<uint32_t>(height_) / linesInFile_.get() );
+        position = static_cast<int>( fileLine.get() * height_ / linesInFile_.get() );
 
     return position;
 }
@@ -118,8 +116,7 @@ void Overview::recalculatesLines()
         if ( linesInFile_.get() > 0 ) {
             logFilteredData_->iterateOverLines( [ this ]( LineNumber line ) {
                 const auto lineType = logFilteredData_->lineTypeByLine( line );
-                const auto position
-                    = static_cast<int>( line.get() * static_cast<uint32_t>(height_) / linesInFile_.get() );
+                const auto position = yFromFileLine( line );
                 if ( lineType.testFlag( LogFilteredData::LineTypeFlags::Match ) ) {
                     if ( ( !matchLines_.empty() ) && matchLines_.back().position() == position ) {
                         // If the line is already there, we increase its weight

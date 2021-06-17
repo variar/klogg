@@ -240,9 +240,9 @@ void DigitsBuffer::add( char character )
     timer_.start( DigitsTimeout, this );
 }
 
-int DigitsBuffer::content()
+LineNumber::UnderlyingType DigitsBuffer::content()
 {
-    int result = digits_.toInt();
+    const auto result = digits_.toULongLong();
     reset();
 
     return result;
@@ -531,16 +531,16 @@ void AbstractLogView::timerEvent( QTimerEvent* timerEvent )
 
 void AbstractLogView::moveSelectionUp()
 {
-    int delta = qMin( -1, -digitsBuffer_.content() );
+    const auto delta = qMax( LineNumber::UnderlyingType{ 1 }, digitsBuffer_.content() );
     disableFollow();
-    moveSelection( delta );
+    moveSelection( LinesCount( delta ), true );
 }
 
 void AbstractLogView::moveSelectionDown()
 {
-    int delta = qMax( 1, digitsBuffer_.content() );
+    const auto delta = qMax( LineNumber::UnderlyingType{ 1 }, digitsBuffer_.content() );
     disableFollow();
-    moveSelection( delta );
+    moveSelection( LinesCount( delta ), false );
 }
 
 void AbstractLogView::registerShortcut( const std::string& action, std::function<void()> func )
@@ -609,8 +609,8 @@ void AbstractLogView::doRegisterShortcuts()
     registerShortcut( ShortcutAction::LogViewMark, [ this ]() { markSelected(); } );
 
     registerShortcut( ShortcutAction::LogViewJumpToLineNumber, [ this ]() {
-        const auto newLine = qMax( 0, digitsBuffer_.content() - 1 );
-        trySelectLine( LineNumber( static_cast<LineNumber::UnderlyingType>( newLine ) ) );
+        const auto newLine = qMax( 0ull, digitsBuffer_.content() - 1ull );
+        trySelectLine( LineNumber( newLine ) );
     } );
 
     registerShortcut( ShortcutAction::LogViewExitView, [ this ]() { emit exitView(); } );
@@ -730,13 +730,24 @@ bool AbstractLogView::event( QEvent* e )
     return QAbstractScrollArea::event( e );
 }
 
-LinesCount::UnderlyingType AbstractLogView::verticalScrollMultiplicator() const
+int AbstractLogView::lineNumberToVerticalScroll( LineNumber line ) const
+{
+    return static_cast<int>(
+        std::round( static_cast<double>( line.get() ) * verticalScrollMultiplicator() ) );
+}
+
+LineNumber AbstractLogView::verticalScrollToLineNumber( int scrollPosition ) const
+{
+    return LineNumber( static_cast<LineNumber::UnderlyingType>(
+        std::round( static_cast<double>( scrollPosition ) / verticalScrollMultiplicator() ) ) );
+}
+
+double AbstractLogView::verticalScrollMultiplicator() const
 {
     return verticalScrollBar()->maximum() < std::numeric_limits<int>::max()
-               ? static_cast<LinesCount::UnderlyingType>( 1 )
-               : static_cast<LinesCount::UnderlyingType>(
-                   std::ceil( static_cast<double>( logData_->getNbLine().get() )
-                              / static_cast<double>( verticalScrollBar()->maximum() ) ) );
+               ? 1.0
+               : static_cast<double>( std::numeric_limits<int>::max() )
+                     / static_cast<double>( logData_->getNbLine().get() );
 }
 
 void AbstractLogView::scrollContentsBy( int dx, int dy )
@@ -745,18 +756,16 @@ void AbstractLogView::scrollContentsBy( int dx, int dy )
 
     const auto lastTopLine = ( logData_->getNbLine() - getNbVisibleLines() );
 
-    const auto scrollPosition
-        = static_cast<LinesCount::UnderlyingType>( verticalScrollBar()->value() )
-          * verticalScrollMultiplicator();
+    const auto scrollPosition = verticalScrollToLineNumber( verticalScrollBar()->value() );
 
-    if ( ( lastTopLine.get() > 0 ) && scrollPosition > lastTopLine.get() ) {
+    if ( ( lastTopLine.get() > 0 ) && scrollPosition.get() > lastTopLine.get() ) {
         // The user is going further than the last line, we need to lock the last line at the bottom
         LOG_DEBUG << "scrollContentsBy beyond!";
-        firstLine_ = LineNumber( scrollPosition );
+        firstLine_ = scrollPosition;
         lastLineAligned_ = true;
     }
     else {
-        firstLine_ = LineNumber( scrollPosition );
+        firstLine_ = scrollPosition;
         lastLineAligned_ = false;
     }
 
@@ -1130,7 +1139,7 @@ void AbstractLogView::saveToFile()
 
     AtomicFlag interruptRequest;
 
-    progressDialog.setRange( 0, static_cast<int>( offsets.size() + 1 ) );
+    progressDialog.setRange( 0, 1000 );
     connect( &progressDialog, &QProgressDialog::canceled,
              [ &interruptRequest ]() { interruptRequest.set(); } );
 
@@ -1151,7 +1160,9 @@ void AbstractLogView::saveToFile()
                 }
 
                 offsetIndex++;
-                progressDialog.setValue( static_cast<int>( offsetIndex ) );
+                progressDialog.setValue( static_cast<int>(
+                    std::floor( static_cast<float>( offsetIndex )
+                                / static_cast<float>( offsets.size() + 1 ) * 1000.f ) ) );
                 return lines;
             }
             else if ( !finalLine ) {
@@ -1174,7 +1185,7 @@ void AbstractLogView::saveToFile()
                     linesCount++;
                 }
 
-                progressDialog.finished( static_cast<int>( linesCount ) );
+                progressDialog.finished( 0 );
                 return tbb::flow::continue_msg{};
             }
 
@@ -1364,8 +1375,7 @@ void AbstractLogView::jumpToLine( LineNumber line )
     // Put the selected line in the middle if possible
     const auto newTopLine = line - LinesCount( getNbVisibleLines().get() / 2 );
     // This will also trigger a scrollContents event
-    verticalScrollBar()->setValue(
-        static_cast<int>( newTopLine.get() / verticalScrollMultiplicator() ) );
+    verticalScrollBar()->setValue( lineNumberToVerticalScroll( newTopLine ) );
 }
 
 void AbstractLogView::setLineNumbersVisible( bool lineNumbersVisible )
@@ -1413,7 +1423,7 @@ OptionalLineNumber AbstractLogView::convertCoordToLine( int yPos ) const
         return firstLine_ + LinesCount( static_cast<LinesCount::UnderlyingType>( offset ) );
     }
 
-    if ( firstLine_.get() < static_cast<LineNumber::UnderlyingType>( -offset ) ) {
+    if ( firstLine_.get() < static_cast<LineNumber::UnderlyingType>( qAbs( offset ) ) ) {
         return {};
     }
 
@@ -1473,7 +1483,7 @@ void AbstractLogView::displayLine( LineNumber line )
 }
 
 // Move the selection up and down by the passed number of lines
-void AbstractLogView::moveSelection( int delta )
+void AbstractLogView::moveSelection( LinesCount delta, bool isDeltaNegative )
 {
     LOG_DEBUG << "AbstractLogView::moveSelection delta=" << delta;
 
@@ -1481,12 +1491,10 @@ void AbstractLogView::moveSelection( int delta )
     LineNumber newLine;
 
     if ( !selection.empty() ) {
-        if ( delta < 0 )
-            newLine = selection.front()
-                      - LinesCount( static_cast<LinesCount::UnderlyingType>( qAbs( delta ) ) );
+        if ( isDeltaNegative )
+            newLine = selection.front() - delta;
         else
-            newLine
-                = selection.back() + LinesCount( static_cast<LinesCount::UnderlyingType>( delta ) );
+            newLine = selection.back() + delta;
     }
 
     if ( newLine >= logData_->getNbLine() ) {
@@ -1555,7 +1563,7 @@ void AbstractLogView::jumpToBottom()
                                 : logData_->getNbLine().get() - getNbVisibleLines().get() + 1;
 
     // This will also trigger a scrollContents event
-    verticalScrollBar()->setValue( static_cast<int>( newTopLine / verticalScrollMultiplicator() ) );
+    verticalScrollBar()->setValue( lineNumberToVerticalScroll( LineNumber( newTopLine ) ) );
 
     textAreaCache_.invalid_ = true;
     update();
@@ -1713,14 +1721,16 @@ void AbstractLogView::considerMouseHovering( int xPos, int yPos )
 
 void AbstractLogView::updateScrollBars()
 {
-    auto verticalScrollRange = logData_->getNbLine() > getNbVisibleLines()
-                                   ? logData_->getNbLine().get() - getNbVisibleLines().get() + 1
-                                   : 0ull;
-    verticalScrollRange = std::clamp(
-        verticalScrollRange, 0ull,
-        static_cast<decltype( verticalScrollRange )>( std::numeric_limits<int>::max() ) );
-
-    verticalScrollBar()->setRange( 0, static_cast<int>( verticalScrollRange ) );
+    if ( logData_->getNbLine() < getNbVisibleLines() ) {
+        verticalScrollBar()->setRange( 0, 0 );
+    }
+    else {
+        verticalScrollBar()->setRange(
+            0, static_cast<int>( qMin(
+                   logData_->getNbLine().get() - getNbVisibleLines().get()
+                       + LinesCount::UnderlyingType{ 1 },
+                   static_cast<LinesCount::UnderlyingType>( std::numeric_limits<int>::max() ) ) ) );
+    }
 
     const int hScrollMaxValue
         = qMax( 0, static_cast<int>( logData_->getMaxLength().get() ) - getNbVisibleCols() + 1 );

@@ -202,7 +202,7 @@ void Configuration::retrieveFromStorage( QSettings& settings )
     searchResultsCacheLines_ = settings
                                    .value( "perf.searchResultsCacheLines",
                                            DefaultConfiguration.searchResultsCacheLines_ )
-                                   .toInt();
+                                   .toUInt();
     indexReadBufferSizeMb_
         = settings
               .value( "perf.indexReadBufferSizeMb", DefaultConfiguration.indexReadBufferSizeMb_ )

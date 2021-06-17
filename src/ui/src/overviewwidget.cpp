@@ -133,13 +133,7 @@ OverviewWidget::OverviewWidget( QWidget* parent )
     : QWidget( parent )
     , highlightTimer_()
 {
-    overview_ = nullptr;
-
     setBackgroundRole( QPalette::Window );
-
-    // Highlight
-    highlightedLine_ = -1;
-    highlightedTTL_ = 0;
 
     // We should be hidden by default (e.g. for the FilteredView)
     hide();
@@ -158,7 +152,7 @@ void OverviewWidget::paintEvent( QPaintEvent* /* paintEvent */ )
     // We must be hidden until we have an Overview
     assert( overview_ != nullptr );
 
-    overview_->updateView( height() );
+    overview_->updateView( static_cast<unsigned>( height() ) );
 
     {
         QPainter painter( this );
@@ -194,12 +188,12 @@ void OverviewWidget::paintEvent( QPaintEvent* /* paintEvent */ )
         // The 'view' lines
         painter.setOpacity( 1 );
         painter.setPen( palette().color( QPalette::Text ) );
-        std::pair<int, int> view_lines = overview_->getViewLines();
-        painter.drawLine( 1, view_lines.first, width(), view_lines.first );
-        painter.drawLine( 1, view_lines.second, width(), view_lines.second );
+        std::pair<int, int> viewLines = overview_->getViewLines();
+        painter.drawLine( 1, viewLines.first, width(), viewLines.first );
+        painter.drawLine( 1, viewLines.second, width(), viewLines.second );
 
         // The highlight
-        if ( highlightedLine_ >= 0 ) {
+        if ( highlightedLine_ ) {
             /*
             QPen highlight_pen( palette().color(QPalette::Text) );
             highlight_pen.setWidth( 4 - highlightedTTL_ );
@@ -207,7 +201,7 @@ void OverviewWidget::paintEvent( QPaintEvent* /* paintEvent */ )
             painter.setPen( highlight_pen );
             painter.drawRect( 2, position - 2, width() - 2 - 2, 4 );
             */
-            int position = overview_->yFromFileLine( highlightedLine_ );
+            int position = overview_->yFromFileLine( *highlightedLine_ );
             painter.drawPixmap( ( width() - HIGHLIGHT_XPM_WIDTH ) / 2,
                                 position - ( HIGHLIGHT_XPM_HEIGHT / 2 ),
                                 highlight_pixmap[ INITIAL_TTL_VALUE - highlightedTTL_ ] );
@@ -238,7 +232,7 @@ void OverviewWidget::highlightLine( LineNumber line )
 {
     highlightTimer_.stop();
 
-    highlightedLine_ = static_cast<int>( line.get() );
+    highlightedLine_ = line;
     highlightedTTL_ = INITIAL_TTL_VALUE;
 
     update();
@@ -249,7 +243,7 @@ void OverviewWidget::removeHighlight()
 {
     highlightTimer_.stop();
 
-    highlightedLine_ = -1;
+    highlightedLine_.reset();
     update();
 }
 

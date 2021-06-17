@@ -150,7 +150,7 @@ class DigitsBuffer : public QObject {
     // the timeout timer is reset.
     void add( char character );
     // Get the content of the buffer (0 if empty) and reset it.
-    int content();
+    LineNumber::UnderlyingType content();
 
     bool isEmpty() const;
 
@@ -476,7 +476,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     int convertCoordToColumn( int xPos ) const;
 
     void displayLine( LineNumber line );
-    void moveSelection( int delta );
+    void moveSelection( LinesCount delta, bool isDeltaNegative  );
     void moveSelectionUp();
     void moveSelectionDown();
     void jumpToStartOfLine();
@@ -497,6 +497,10 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void searchUsingFunction( QuickFindSearchFn searchFunction );
 
     void updateScrollBars();
+        
+    LineNumber verticalScrollToLineNumber( int scrollPosition ) const;
+    int lineNumberToVerticalScroll( LineNumber line ) const;
+    double verticalScrollMultiplicator() const;
 
     void drawTextArea( QPaintDevice* paintDevice );
     QPixmap drawPullToFollowBar( int width, qreal pixelRatio );
@@ -505,7 +509,6 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
 
     // Utils functions
     void updateGlobalSelection();
-    LinesCount::UnderlyingType verticalScrollMultiplicator() const;
 };
 
 #endif
