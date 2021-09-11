@@ -157,7 +157,7 @@ sudo yum update
 sudo yum install klogg
 ```
 
-### Tesing builds
+### Testing builds
 
 ![CI Build and Release](https://github.com/variar/klogg/workflows/CI%20Build%20and%20Release/badge.svg)
 
