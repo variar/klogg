@@ -13,5 +13,5 @@ target_link_libraries(klogg_versioncheck PUBLIC
         klogg_settings 
         klogg_utils
 
-        Qt5::Network
+        Qt${QT_VERSION_MAJOR}::Network
 )

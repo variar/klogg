@@ -16,8 +16,8 @@ target_link_libraries(klogg_crash_handler PUBLIC
     project_warnings
     klogg_version
     klogg_utils
-    Qt5::Gui
-    Qt5::Widgets
+    Qt${QT_VERSION_MAJOR}::Gui
+    Qt${QT_VERSION_MAJOR}::Widgets
 )
 
 if(KLOGG_USE_SENTRY)

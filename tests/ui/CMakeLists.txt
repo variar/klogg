@@ -11,7 +11,7 @@ endif()
 
 add_executable(klogg_itests ${UI_TEST_SOURCES} ${BACKWARD_ENABLE})
 
-target_link_libraries(klogg_itests klogg_ui klogg_utils catch2_wrapper Qt5::Test test_utils)
+target_link_libraries(klogg_itests klogg_ui klogg_utils catch2_wrapper Qt${QT_VERSION_MAJOR}::Test test_utils)
 set_target_properties(klogg_itests PROPERTIES AUTOMOC ON)
 
 add_backward(klogg_itests)

@@ -148,9 +148,10 @@ include(StaticAnalyzers)
 
 ucm_print_flags()
 
-find_package(Qt5 COMPONENTS Core Widgets Concurrent Network Xml REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Widgets Concurrent Network Xml REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Widgets Concurrent Network Xml REQUIRED)
 
-message("Qt version ${Qt5Core_VERSION}")
+message("Qt version ${Qt${QT_VERSION_MAJOR}Core_VERSION}")
 message("LTO ${KLOGG_USE_LTO}")
 
 set(CMAKE_AUTOMOC OFF)

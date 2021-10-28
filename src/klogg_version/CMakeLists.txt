@@ -7,7 +7,7 @@ target_include_directories(klogg_version PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc
 target_link_libraries(klogg_version PUBLIC 
     project_options
     project_warnings
-    Qt5::Core
+    Qt${QT_VERSION_MAJOR}::Core
 )
 
 add_dependencies(klogg_version generate_version)

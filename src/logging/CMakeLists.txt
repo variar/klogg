@@ -9,7 +9,7 @@ target_compile_definitions(klogg_logging PUBLIC "-DQT_MESSAGELOGCONTEXT")
 target_link_libraries(klogg_logging PUBLIC 
     project_options
     project_warnings
-    Qt5::Core
+    Qt${QT_VERSION_MAJOR}::Core
 )
 
 if (KLOGG_USE_LTO)

@@ -44,7 +44,7 @@ target_link_libraries(klogg_logdata PUBLIC
         klogg_regex
         klogg_filewatch
 
-        Qt5::Core
+        Qt${QT_VERSION_MAJOR}::Core
 
         roaring
         tbb_wrapper

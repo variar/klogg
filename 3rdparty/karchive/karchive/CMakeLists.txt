@@ -27,7 +27,7 @@ set_target_properties(klogg_karchive PROPERTIES AUTOMOC ON)
 
 target_include_directories(klogg_karchive PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_include_directories(klogg_karchive PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(klogg_karchive Qt5::Core cmzlib cmbzip2 cmliblzma)
+target_link_libraries(klogg_karchive Qt${QT_VERSION_MAJOR}::Core cmzlib cmbzip2 cmliblzma)
 
 target_compile_definitions(klogg_karchive PRIVATE -DQT_NO_CAST_FROM_ASCII)
 target_compile_definitions(klogg_karchive PUBLIC -DLZMA_API_STATIC)

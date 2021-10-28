@@ -16,8 +16,8 @@ target_link_libraries(klogg_settings PUBLIC
     project_warnings
     klogg_utils
     
-    Qt5::Core
-    Qt5::Gui
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Gui
 )
 
 if (KLOGG_USE_LTO)

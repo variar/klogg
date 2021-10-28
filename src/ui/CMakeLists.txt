@@ -110,8 +110,8 @@ target_link_libraries(klogg_ui PUBLIC
     klogg_versioncheck 
     klogg_karchive
 
-    Qt5::Widgets 
-    Qt5::Xml 
+    Qt${QT_VERSION_MAJOR}::Widgets 
+    Qt${QT_VERSION_MAJOR}::Xml 
 )
 
 if (WIN32)

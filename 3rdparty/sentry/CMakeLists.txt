@@ -460,8 +460,7 @@ endif()
 
 option(SENTRY_INTEGRATION_QT "Build Qt integration")
 if(SENTRY_INTEGRATION_QT)
-	find_package(Qt5 COMPONENTS Core REQUIRED)
-	target_link_libraries(sentry PRIVATE Qt5::Core)
+	target_link_libraries(sentry PRIVATE Qt${QT_VERSION_MAJOR}::Core)
 endif()
 
 include(CMakePackageConfigHelpers)

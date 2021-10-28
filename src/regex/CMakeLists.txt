@@ -15,7 +15,7 @@ target_link_libraries(klogg_regex PUBLIC
     klogg_logging
     klogg_settings
 
-    Qt5::Core
+    Qt${QT_VERSION_MAJOR}::Core
     
     exprtk
 )

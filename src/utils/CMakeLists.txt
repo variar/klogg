@@ -20,10 +20,10 @@ target_link_libraries(klogg_utils INTERFACE
         klogg_version
         klogg_logging
 
-        Qt5::Gui
-        Qt5::Widgets
-        Qt5::Network
-        Qt5::Concurrent
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Network
+        Qt${QT_VERSION_MAJOR}::Concurrent
 
         whereami
 )

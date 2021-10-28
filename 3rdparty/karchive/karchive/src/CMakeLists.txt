@@ -59,7 +59,7 @@ target_include_directories(KF5Archive
 
 target_link_libraries(KF5Archive
     PUBLIC
-        Qt5::Core
+        Qt${QT_VERSION_MAJOR}::Core
     PRIVATE
         ${karchive_OPTIONAL_LIBS}
         ${ZLIB_LIBRARY}

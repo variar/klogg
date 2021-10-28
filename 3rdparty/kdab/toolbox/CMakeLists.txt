@@ -5,4 +5,4 @@ add_library(kdtoolbox STATIC
 set_target_properties(kdtoolbox PROPERTIES AUTOMOC ON)
 
 target_include_directories(kdtoolbox SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(kdtoolbox Qt5::Core)
+target_link_libraries(kdtoolbox Qt${QT_VERSION_MAJOR}::Core)
