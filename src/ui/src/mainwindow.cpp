@@ -57,7 +57,6 @@
 #include <QAction>
 #include <QClipboard>
 #include <QCloseEvent>
-#include <QDesktopWidget>
 #include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -130,7 +129,7 @@ MainWindow::MainWindow( WindowSession session )
     setAcceptDrops( true );
 
     // Default geometry
-    const QRect geometry = QApplication::desktop()->availableGeometry( this );
+    const QRect geometry = QApplication::primaryScreen()->availableGeometry( );
     setGeometry( geometry.x() + 20, geometry.y() + 40, geometry.width() - 140,
                  geometry.height() - 140 );
 
@@ -843,7 +842,7 @@ void MainWindow::closeAll( ActionInitiator initiator )
 void MainWindow::selectAll()
 {
     if ( infoLine->hasFocus() ) {
-        infoLine->setSelection( 0, infoLine->text().length() );
+        infoLine->setSelection( 0, (int)infoLine->text().length() );
     }
     else if ( auto current = currentCrawlerWidget(); current != nullptr ) {
         current->selectAll();

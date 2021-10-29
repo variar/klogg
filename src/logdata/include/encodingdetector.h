@@ -35,8 +35,8 @@ struct EncodingParameters {
     bool isUtf8Compatible{ false };
     bool isUtf16LE{ false };
 
-    int lineFeedWidth{ 1 };
-    int lineFeedIndex{ 0 };
+    qsizetype lineFeedWidth{ 1 };
+    qsizetype lineFeedIndex{ 0 };
 
     bool operator==( const EncodingParameters& other ) const
     {
@@ -48,12 +48,12 @@ struct EncodingParameters {
         return !operator==( other );
     }
 
-    int getBeforeCrOffset() const
+    qsizetype getBeforeCrOffset() const
     {
         return lineFeedIndex;
     }
 
-    int getAfterCrOffset() const
+    qsizetype getAfterCrOffset() const
     {
         return lineFeedWidth - lineFeedIndex - 1;
     }

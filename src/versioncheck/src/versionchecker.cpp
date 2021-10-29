@@ -61,7 +61,7 @@ bool isVersionNewer( const QString& current_version, const QString& new_version 
     const auto parseVersion = []( const QString& version_string ) {
         int tweak_index = 0;
         auto version = QVersionNumber::fromString( version_string, &tweak_index );
-        return std::make_pair( version, version_string.rightRef( tweak_index + 1 ).toUInt() );
+        return std::make_pair( version, QStringView(version_string).right( tweak_index + 1 ).toUInt() );
     };
 
     const auto old = parseVersion( current_version );

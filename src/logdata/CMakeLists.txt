@@ -56,6 +56,11 @@ target_link_libraries(klogg_logdata PUBLIC
 
 target_link_libraries(klogg_logdata PRIVATE xxhash_wrapper)
 
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+find_package(Qt6 COMPONENTS Core5Compat REQUIRED)
+target_link_libraries(klogg_logdata PUBLIC Qt${QT_VERSION_MAJOR}::Core5Compat)
+endif()
+
 
 if (KLOGG_USE_LTO)
 set_property(TARGET klogg_logdata PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)

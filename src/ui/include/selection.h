@@ -37,7 +37,7 @@ class Portion {
     {
     }
 
-    Portion( LineNumber line, int start_column, int end_column )
+    Portion( LineNumber line, qsizetype start_column, qsizetype end_column )
         : line_{ line }
         , startColumn_{ start_column }
         , endColumn_{ end_column }
@@ -48,11 +48,11 @@ class Portion {
     {
         return *line_;
     }
-    int startColumn() const
+    qsizetype startColumn() const
     {
         return startColumn_;
     }
-    int endColumn() const
+    qsizetype endColumn() const
     {
         return endColumn_;
     }
@@ -62,15 +62,15 @@ class Portion {
         return !!line_;
     }
 
-    int length() const
+    qsizetype length() const
     {
         return endColumn_ - startColumn_ + 1;
     }
 
   private:
     OptionalLineNumber line_;
-    int startColumn_;
-    int endColumn_;
+    qsizetype startColumn_;
+    qsizetype endColumn_;
 };
 
 // Represents a selection in an AbstractLogView
@@ -94,7 +94,7 @@ class Selection {
         selectedLine_ = line;
     }
     // Select a portion of line (both start and end included)
-    void selectPortion( LineNumber line, int start_column, int end_column );
+    void selectPortion( LineNumber line, qsizetype start_column, qsizetype end_column );
     void selectPortion( const Portion& selection )
     {
         selectPortion( selection.line(), selection.startColumn(), selection.endColumn() );
@@ -143,7 +143,7 @@ class Selection {
     bool isLineSelected( LineNumber line ) const;
 
     // Returns wether the line passed is selected in certain range.
-    bool isPortionSelected( LineNumber line, int startColumn, int endColumn ) const;
+    bool isPortionSelected( LineNumber line, qsizetype startColumn, qsizetype endColumn ) const;
 
     // Returns the line selected or -1 if not a single line selection
     OptionalLineNumber selectedLine() const;
@@ -165,8 +165,8 @@ class Selection {
 
     struct SelectedPartial {
         OptionalLineNumber line;
-        int startColumn;
-        int endColumn;
+        qsizetype startColumn;
+        qsizetype endColumn;
     };
     struct SelectedRange {
         // The limits of the range, sorted

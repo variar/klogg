@@ -42,6 +42,7 @@
 #include <QObject>
 #include <QString>
 #include <QStringList>
+#include <QTextCodec>
 
 #include "linetypes.h"
 

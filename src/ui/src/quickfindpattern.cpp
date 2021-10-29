@@ -93,7 +93,7 @@ bool QuickFindMatcher::isLineMatchingBackward( const QString& line, int column )
     }
 }
 
-void QuickFindMatcher::getLastMatch( int* start_col, int* end_col ) const
+void QuickFindMatcher::getLastMatch( qsizetype* start_col, qsizetype* end_col ) const
 {
     *start_col = lastMatchStart_;
     *end_col = lastMatchEnd_;

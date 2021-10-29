@@ -265,8 +265,8 @@ Portion QuickFind::doSearchForward( const FilePosition& start_position, const Se
     interruptRequested_.clear();
 
     bool found = false;
-    int found_start_col{};
-    int found_end_col{};
+    qsizetype found_start_col{};
+    qsizetype found_end_col{};
 
     if ( !matcher.isActive() )
         return {};
@@ -348,8 +348,8 @@ Portion QuickFind::doSearchBackward( const FilePosition& start_position, const S
     interruptRequested_.clear();
 
     bool found = false;
-    int start_col{};
-    int end_col{};
+    qsizetype start_col{};
+    qsizetype end_col{};
 
     if ( !matcher.isActive() )
         return {};

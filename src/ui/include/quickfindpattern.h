@@ -73,14 +73,14 @@ class QuickFindMatcher {
 
     // Must be called when isLineMatching returns 'true', returns
     // the position of the first match found.
-    void getLastMatch( int* start_col, int* end_col ) const;
+    void getLastMatch( qsizetype* start_col, qsizetype* end_col ) const;
 
   private:
     bool isActive_ = false;
     QRegularExpression regexp_;
 
-    mutable int lastMatchStart_ = 0;
-    mutable int lastMatchEnd_ = 0;
+    mutable qsizetype lastMatchStart_ = 0;
+    mutable qsizetype lastMatchEnd_ = 0;
 };
 
 // Represents a search pattern for QuickFind (without its results)

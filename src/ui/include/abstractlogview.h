@@ -71,7 +71,7 @@ class QShortcut;
 
 class LineChunk {
   public:
-    LineChunk( int firstCol, int endCol, QColor foreColor, QColor backColor )
+    LineChunk( qsizetype firstCol, qsizetype endCol, QColor foreColor, QColor backColor )
         : start_{ firstCol }
         , end_{ endCol }
         , foreColor_{ foreColor }
@@ -79,16 +79,16 @@ class LineChunk {
     {
     }
 
-    int start() const
+    qsizetype start() const
     {
         return start_;
     }
-    int end() const
+    qsizetype end() const
     {
         return end_;
     }
 
-    int length() const
+    qsizetype length() const
     {
         return end_ - start_ + 1;
     }
@@ -104,8 +104,8 @@ class LineChunk {
     }
 
   private:
-    int start_ = {};
-    int end_ = {};
+    qsizetype start_ = {};
+    qsizetype end_ = {};
 
     QColor foreColor_;
     QColor backColor_;
@@ -126,7 +126,7 @@ class LineDrawer {
     // An empty chunk will be ignored.
     // the first column will be set to 0 if negative
     // The column are relative to the screen
-    void addChunk( int firstCol, int lastCol, const QColor& fore, const QColor& back );
+    void addChunk( qsizetype firstCol, qsizetype lastCol, const QColor& fore, const QColor& back );
     void addChunk( const LineChunk& chunk );
 
     // Draw the current line of text using the given painter,
@@ -399,7 +399,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
 
     struct FilePos {
         LineNumber line;
-        int column;
+        qsizetype column;
     };
 
     bool selectionStarted_ = false;
@@ -483,14 +483,14 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     };
     struct PullToFollowCache {
         QPixmap pixmap_;
-        int nb_columns_;
+        qsizetype nb_columns_;
     };
     TextAreaCache textAreaCache_ = { {}, true, 0_lnum, 0_lnum, 0 };
     PullToFollowCache pullToFollowCache_ = { {}, 0 };
     QFontMetrics pixmapFontMetrics_;
 
     LinesCount getNbVisibleLines() const;
-    int getNbVisibleCols() const;
+    qsizetype getNbVisibleCols() const;
 
     FilePos convertCoordToFilePos( const QPoint& pos ) const;
     OptionalLineNumber convertCoordToLine( int yPos ) const;

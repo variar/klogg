@@ -59,7 +59,7 @@ void PathLine::contextMenuEvent( QContextMenuEvent* event )
              [ this ]( auto ) { QApplication::clipboard()->setText( this->selectedText() ); } );
 
     connect( selectAll, &QAction::triggered, this,
-             [ this ]( auto ) { setSelection( 0, this->text().length() ); } );
+             [ this ]( auto ) { setSelection( 0, static_cast<int>(this->text().length() )); } );
 
     menu.exec( event->globalPos() );
 }

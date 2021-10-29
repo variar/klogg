@@ -212,13 +212,13 @@ void OverviewWidget::paintEvent( QPaintEvent* /* paintEvent */ )
 void OverviewWidget::mousePressEvent( QMouseEvent* mouseEvent )
 {
     if ( mouseEvent->button() == Qt::LeftButton )
-        handleMousePress( mouseEvent->y() );
+        handleMousePress( mouseEvent->pos().y() );
 }
 
 void OverviewWidget::mouseMoveEvent( QMouseEvent* mouseEvent )
 {
     if ( mouseEvent->buttons().testFlag( Qt::LeftButton ) )
-        handleMousePress( mouseEvent->y() );
+        handleMousePress( mouseEvent->pos().y() );
 }
 
 void OverviewWidget::handleMousePress( int position )

@@ -44,7 +44,7 @@ using LinesCount = fluent::NamedType<uint64_t, struct lines_count, fluent::Addab
                                      fluent::Decrementable, fluent::Comparable, fluent::Printable>;
 
 using LineLength
-    = fluent::NamedType<int, struct line_length, fluent::Comparable, fluent::Printable>;
+    = fluent::NamedType<qsizetype, struct line_length, fluent::Comparable, fluent::Printable>;
 
 inline constexpr LineOffset operator"" _offset( unsigned long long int value )
 {
@@ -155,17 +155,17 @@ Q_DECLARE_METATYPE( LineNumber )
 Q_DECLARE_METATYPE( LinesCount )
 
 // Length of a tab stop
-constexpr int TabStop = 8;
+constexpr qsizetype TabStop = 8;
 
-inline QString untabify( QString&& line, int initialPosition = 0 )
+inline QString untabify( QString&& line, qsizetype initialPosition = 0 )
 {
-    int totalSpaces = 0;
+    qsizetype totalSpaces = 0;
     line.replace( QChar::Null, QChar::Space );
 
-    int position = 0;
+    qsizetype position = 0;
     position = line.indexOf( QChar::Tabulation, position );
     while ( position >= 0 ) {
-        const int spaces = TabStop - ( ( initialPosition + position + totalSpaces ) % TabStop );
+        const auto spaces = TabStop - ( ( initialPosition + position + totalSpaces ) % TabStop );
         line.replace( position, 1, QString( spaces, QChar::Space ) );
         totalSpaces += spaces - 1;
         position = line.indexOf( QChar::Tabulation, position );

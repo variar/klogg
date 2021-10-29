@@ -41,9 +41,9 @@ parseBooleanExpressions( QString& pattern, bool isCaseSensitive, bool isPlainTex
 
     std::vector<RegularExpressionPattern> subPatterns;
 
-    auto currentIndex = 0;
-    auto leftQuote = -1;
-    auto rightQuote = -1;
+    qsizetype currentIndex = 0;
+    qsizetype leftQuote = -1;
+    qsizetype rightQuote = -1;
 
     while ( currentIndex < pattern.size() ) {
         leftQuote = pattern.indexOf( QChar( '"' ), currentIndex );

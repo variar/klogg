@@ -319,10 +319,10 @@ std::string_view::size_type findNextSingleByteDelimeter( EncodingParameters, std
     return data.find( delimeter );
 }
 
-int charOffsetWithinBlock( const char* blockStart, const char* pointer,
+qsizetype charOffsetWithinBlock( const char* blockStart, const char* pointer,
                            const EncodingParameters& encodingParams )
 {
-    return static_cast<int>( std::distance( blockStart, pointer ) )
+    return static_cast<qsizetype>( std::distance( blockStart, pointer ) )
            - encodingParams.getBeforeCrOffset();
 }
 
@@ -330,7 +330,7 @@ using FindDelimeter = std::string_view::size_type ( * )( EncodingParameters enco
                                                          std::string_view, char );
 
 LineLength::UnderlyingType
-expandTabsInLine( const QByteArray& block, std::string_view blockToExpand, int posWithinBlock,
+expandTabsInLine( const QByteArray& block, std::string_view blockToExpand, qsizetype posWithinBlock,
                   EncodingParameters encodingParams, FindDelimeter findNextDelimeter,
                   LineLength::UnderlyingType initialAdditionalSpaces = 0 )
 {
@@ -360,7 +360,7 @@ expandTabsInLine( const QByteArray& block, std::string_view blockToExpand, int p
 }
 
 std::tuple<bool, int, LineLength::UnderlyingType>
-findNextLineFeed( const QByteArray& block, int posWithinBlock, const IndexingState& state,
+findNextLineFeed( const QByteArray& block, qsizetype posWithinBlock, const IndexingState& state,
                   FindDelimeter findNextDelimeter )
 {
     const auto searchStart = block.data() + posWithinBlock;

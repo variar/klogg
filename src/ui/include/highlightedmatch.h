@@ -26,7 +26,7 @@
 class HighlightedMatch {
   public:
     // Construct a match (must be initialised)
-    HighlightedMatch( int start_column, int length, QColor foreColor, QColor backColor )
+    HighlightedMatch( qsizetype start_column, qsizetype length, QColor foreColor, QColor backColor )
         : startColumn_{ start_column }
         , length_{ length }
         , foreColor_{ foreColor }
@@ -35,12 +35,12 @@ class HighlightedMatch {
     }
 
     // Accessor functions
-    int startColumn() const
+    qsizetype startColumn() const
     {
         return startColumn_;
     }
 
-    int length() const
+    qsizetype length() const
     {
         return length_;
     }
@@ -56,8 +56,8 @@ class HighlightedMatch {
     }
 
   private:
-    int startColumn_;
-    int length_;
+    qsizetype startColumn_;
+    qsizetype length_;
 
     QColor foreColor_;
     QColor backColor_;
