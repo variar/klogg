@@ -201,7 +201,7 @@ void QuickFind::incrementallySearchForward( Selection selection, QuickFindMatche
     }
 
     operationFuture_ = QtConcurrent::run(
-        [ &]() { return doSearchForward( start_position, selection, matcher ); } );
+        [ = ]() { return doSearchForward( start_position, selection, matcher ); } );
     operationWatcher_.setFuture( operationFuture_ );
 }
 
@@ -227,7 +227,7 @@ void QuickFind::incrementallySearchBackward( Selection selection, QuickFindMatch
     }
 
     operationFuture_ = QtConcurrent::run(
-        [ &]() { return doSearchBackward( start_position, selection, matcher ); } );
+        [ = ]() { return doSearchBackward( start_position, selection, matcher ); } );
     operationWatcher_.setFuture( operationFuture_ );
 }
 
@@ -238,7 +238,7 @@ void QuickFind::searchForward( Selection selection, QuickFindMatcher matcher )
     operationWatcher_.waitForFinished();
 
     operationFuture_
-        = QtConcurrent::run( [ & ]() { return doSearchForward( selection, matcher ); } );
+        = QtConcurrent::run( [ = ]() { return doSearchForward( selection, matcher ); } );
     operationWatcher_.setFuture( operationFuture_ );
 }
 
@@ -249,7 +249,7 @@ void QuickFind::searchBackward( Selection selection, QuickFindMatcher matcher )
     operationWatcher_.waitForFinished();
 
     operationFuture_
-        = QtConcurrent::run( [ & ]() { return doSearchBackward( selection, matcher ); } );
+        = QtConcurrent::run( [ = ]() { return doSearchBackward( selection, matcher ); } );
     operationWatcher_.setFuture( operationFuture_ );
 }
 
