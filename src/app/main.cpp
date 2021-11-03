@@ -83,6 +83,8 @@ void setApplicationAttributes( bool enableQtHdpi, int scaleFactorRounding )
     // - https://bugreports.qt.io/browse/QTBUG-46015
     qputenv( "QT_BEARER_POLL_TIMEOUT", QByteArray::number( std::numeric_limits<int>::max() ) );
 
+#if QT_VERSION < QT_VERSION_CHECK( 6, 0, 0 )
+
     if ( enableQtHdpi ) {
         // This attribute must be set before QGuiApplication is constructed:
         QCoreApplication::setAttribute( Qt::AA_EnableHighDpiScaling );
@@ -99,6 +101,10 @@ void setApplicationAttributes( bool enableQtHdpi, int scaleFactorRounding )
     else {
         QCoreApplication::setAttribute( Qt::AA_DisableHighDpiScaling );
     }
+#else
+    Q_UNUSED( enableQtHdpi );
+    Q_UNUSED( scaleFactorRounding );
+#endif
 
     QCoreApplication::setAttribute( Qt::AA_DontShowIconsInMenus );
 

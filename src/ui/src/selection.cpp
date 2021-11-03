@@ -188,7 +188,7 @@ QString Selection::getSelectedText( const AbstractLogData* logData ) const
 FilePosition Selection::getNextPosition() const
 {
     LineNumber line;
-    int column = 0;
+    qsizetype column = 0;
 
     if ( selectedLine_.has_value() ) {
         line = *selectedLine_ + 1_lcount;
@@ -207,7 +207,7 @@ FilePosition Selection::getNextPosition() const
 FilePosition Selection::getPreviousPosition() const
 {
     LineNumber line;
-    int column = 0;
+    qsizetype column = 0;
 
     if ( selectedLine_.has_value() ) {
         line = *selectedLine_;

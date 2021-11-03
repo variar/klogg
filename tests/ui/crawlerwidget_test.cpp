@@ -48,7 +48,7 @@ bool generateDataFiles( QTemporaryFile& file )
                       "LOGDATA \t is a part of glogg, we are going to test it thoroughly, this is "
                       "line %06d",
                       i );
-            file.write( newLine, qstrlen( newLine ) );
+            file.write( newLine, (qint64) qstrlen( newLine ) );
 #ifdef Q_OS_WIN
             file.write( "\r\n", 2 );
 #else

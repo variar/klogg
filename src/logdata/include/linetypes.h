@@ -87,7 +87,7 @@ class FilePosition {
         : column_{ -1 }
     {
     }
-    FilePosition( LineNumber line, int column )
+    FilePosition( LineNumber line, qsizetype column )
         : line_{ line }
         , column_{ column }
     {
@@ -97,14 +97,14 @@ class FilePosition {
     {
         return line_;
     }
-    int column() const
+    qsizetype column() const
     {
         return column_;
     }
 
   private:
     LineNumber line_;
-    int column_;
+    qsizetype column_;
 };
 
 inline LineNumber operator+( const LineNumber& number, const LinesCount& count )
