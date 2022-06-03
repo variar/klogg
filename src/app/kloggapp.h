@@ -274,8 +274,8 @@ class KloggApp : public SingleApplication {
         session_->setExitRequested( true );
         auto mainWindows = mainWindows_;
         mainWindows.reverse();
-        for ( auto window : mainWindows ) {
-            window.second->close();
+        for ( const auto& [session, window] : mainWindows ) {
+            window->close();
         }
 
         QTimer::singleShot( 100, this, &QCoreApplication::quit );

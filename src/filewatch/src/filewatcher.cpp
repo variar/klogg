@@ -161,7 +161,6 @@ class EfswFileWatcher final : public efsw::FileWatchListener {
 
         const QFileInfo fileInfo = QFileInfo( fullFileName );
 
-        const auto filename = fileInfo.fileName().toStdString();
         const auto directory = fileInfo.absolutePath().toStdString();
 
         auto watchedDirectory
@@ -169,15 +168,17 @@ class EfswFileWatcher final : public efsw::FileWatchListener {
                             [ &directory ]( const auto& wd ) { return wd.name == directory; } );
 
         if ( watchedDirectory != watchedPaths_.end() ) {
+            const auto filename = fileInfo.fileName().toStdString();
 
-            auto watchedFile = std::find( watchedDirectory->files.begin(),
-                                          watchedDirectory->files.end(), filename );
+            auto& files = watchedDirectory->files;
 
-            if ( watchedFile != watchedDirectory->files.end() ) {
-                watchedDirectory->files.erase( watchedFile );
+            auto watchedFile = std::find( files.begin(), files.end(), filename );
+
+            if ( watchedFile != files.end() ) {
+                files.erase( watchedFile );
             }
 
-            if ( watchedDirectory->files.empty() ) {
+            if ( files.empty() ) {
 
                 if ( !isOnlyForPolling( *watchedDirectory ) ) {
                     watcher_.removeWatch( watchedDirectory->watchId );

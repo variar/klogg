@@ -314,13 +314,13 @@ void CrawlerWidget::goToLine()
 void CrawlerWidget::doSetData( std::shared_ptr<LogData> logData,
                                std::shared_ptr<LogFilteredData> filteredData )
 {
-    logData_ = logData;
-    logFilteredData_ = filteredData;
+    logData_ = std::move(logData);
+    logFilteredData_ = std::move(filteredData);
 }
 
 void CrawlerWidget::doSetQuickFindPattern( std::shared_ptr<QuickFindPattern> qfp )
 {
-    quickFindPattern_ = qfp;
+    quickFindPattern_ = std::move(qfp);
 }
 
 void CrawlerWidget::doSetSavedSearches( SavedSearches* saved_searches )
@@ -1390,7 +1390,6 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
 
         RegularExpression hsExpression{ regexpPattern };
         auto isValidExpression = hsExpression.isValid();
-        auto errorString = hsExpression.errorString();
 
         if ( isValidExpression ) {
             // Activate the stop button
@@ -1412,6 +1411,7 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
             searchState_.resetState();
 
             // Inform the user
+            QString errorString = hsExpression.errorString();
             QString errorMessage = tr( "Error in expression" );
             // const int offset = regexp.patternErrorOffset();
             // if ( offset != -1 ) {

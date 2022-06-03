@@ -110,11 +110,17 @@ class Logger {
 
             logFile_ = std::make_unique<QFile>( QDir::temp().filePath( logFileName ) );
             if ( !logFile_->open( QIODevice::WriteOnly | QIODevice::Append ) ) {
-                logFile_.release();
+                QFile* fp = logFile_.release();
+                if ( logFile_.get() == nullptr && logFile_ == nullptr ) {
+                    delete fp;
+                }
             }
         }
         else if ( !isEnabled && logFile_ ) {
-            logFile_.release();
+            QFile* fp = logFile_.release();
+            if ( logFile_.get() == nullptr && logFile_ == nullptr ) {
+                delete fp;
+            }
         }
 
         setMessageHandler();
@@ -134,7 +140,7 @@ class Logger {
     }
 
   private:
-    Logger() {}
+    Logger() = default;
 
     void setMessageHandler()
     {

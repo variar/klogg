@@ -79,10 +79,6 @@ struct CliParameters {
                                                              << "follow",
                                                "follow initial opened files" );
 
-        const QCommandLineOption windowWidthOption( "window-width", "new window width", "1024" );
-
-        const QCommandLineOption windowHeightOption( "window-height", "new window height", "768" );
-
         const QCommandLineOption patternOption( QStringList() << "e"
                                                               << "pattern",
                                                 "pattern to search for", "pattern" );
@@ -95,6 +91,10 @@ struct CliParameters {
         parser.addOption( debugOption );
 
         if ( !console ) {
+            const QCommandLineOption windowWidthOption( "window-width", "new window width",
+                                                        "1024" );
+            const QCommandLineOption windowHeightOption( "window-height", "new window height",
+                                                         "768" );
             parser.addOption( multiInstanceOption );
             parser.addOption( loadSessionOption );
             parser.addOption( newSessionOption );

@@ -55,8 +55,6 @@ TabbedCrawlerWidget::TabbedCrawlerWidget()
               subcontrol-origin: padding;\
               subcontrol-position: right;\
               %1}";
-    QString tabCloseButtonHoverStyle = " QTabBar::close-button:hover { %1 }";
-    const QString backgroundImageTemplate = " image: url(%1);";
 
     QString backgroundImage;
     QString backgroundHoverImage;
@@ -85,6 +83,8 @@ TabbedCrawlerWidget::TabbedCrawlerWidget()
 #endif
 
     if ( !backgroundImage.isEmpty() ) {
+        const QString backgroundImageTemplate = " image: url(%1);";
+        QString tabCloseButtonHoverStyle = " QTabBar::close-button:hover { %1 }";
         backgroundImage = backgroundImageTemplate.arg( backgroundImage );
         backgroundHoverImage = backgroundImageTemplate.arg( backgroundHoverImage );
         tabCloseButtonHoverStyle = tabCloseButtonHoverStyle.arg( backgroundHoverImage );

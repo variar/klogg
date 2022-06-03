@@ -893,11 +893,12 @@ void AbstractLogView::scrollContentsBy( int dx, int dy )
     }
 
     firstCol_ = ( firstCol_ - dx ) > 0 ? firstCol_ - dx : 0;
-    const auto lastLine = firstLine_ + getNbVisibleLines();
 
     // Update the overview if we have one
-    if ( overview_ != nullptr )
+    if ( overview_ != nullptr ) {
+        const auto lastLine = firstLine_ + getNbVisibleLines();
         overview_->updateCurrentPosition( firstLine_, lastLine );
+    }
 
     // Are we hovering over a new line?
     const auto mousePos = mapFromGlobal( QCursor::pos() );
@@ -1408,9 +1409,6 @@ void AbstractLogView::updateData()
     // Adapt the scroll bars to the new content
     updateScrollBars();
 
-    // Calculate the index of the last line shown
-    const LineNumber lastLine = qMin( lastLineNumber, firstLine_ + getNbVisibleLines() );
-
     // Reset the QuickFind in case we have new stuff to search into
     quickFind_->resetLimits();
 
@@ -1418,8 +1416,11 @@ void AbstractLogView::updateData()
         jumpToBottom();
 
     // Update the overview if we have one
-    if ( overview_ != nullptr )
+    if ( overview_ != nullptr ) {
+        // Calculate the index of the last line shown
+        const LineNumber lastLine = qMin( lastLineNumber, firstLine_ + getNbVisibleLines() );
         overview_->updateCurrentPosition( firstLine_, lastLine );
+    }
 
     forceRefresh();
 }
@@ -1996,13 +1997,13 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
     // Lines to write
     const auto expandedLines = logData_->getExpandedLines( firstLine_, nbLines );
 
-    const auto mainSearchBackColor = Configuration::get().mainSearchBackColor();
     const auto highlightPatternMatches = Configuration::get().mainSearchHighlight();
     const auto variateHighlightPatternMatches = Configuration::get().variateMainSearchHighlight();
 
     std::optional<Highlighter> patternHighlight;
     if ( highlightPatternMatches && !searchPattern_.isBoolean && !searchPattern_.isExclude
          && !searchPattern_.pattern.isEmpty() ) {
+        const auto mainSearchBackColor = Configuration::get().mainSearchBackColor();
         patternHighlight = Highlighter{};
         patternHighlight->setHighlightOnlyMatch( true );
         patternHighlight->setVariateColors( variateHighlightPatternMatches );

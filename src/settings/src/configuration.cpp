@@ -305,8 +305,8 @@ void Configuration::retrieveFromStorage( QSettings& settings )
     for ( auto shortcutIndex = 0; shortcutIndex < shortcutsCount; ++shortcutIndex ) {
         settings.setArrayIndex( static_cast<int>( shortcutIndex ) );
         const auto action = settings.value( "action", "" ).toString();
-        const auto keys = settings.value( "keys", QStringList() ).toStringList();
         if ( !action.isEmpty() ) {
+            const auto keys = settings.value( "keys", QStringList() ).toStringList();
             shortcuts_.emplace( action.toStdString(), keys );
         }
     }
