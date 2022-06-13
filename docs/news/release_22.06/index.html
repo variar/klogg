@@ -4,17 +4,18 @@
 <head>
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Automatic crash reporting #  In response to several github issues about unexpected crashes I&rsquo;ve implemented crash dump collection. Thanks to SDK provided by Sentry it is fairly easy to integrate Breakpad/Crashpad to collect minidumps for application crashes and send them to developers for investigation.
-What is included in crash report #  Crash report provides information about:
- operating system: name, version, architecture Qt version modules that were loaded into klogg process: filename, size and hashes for symbols stacktraces for all running threads in klogg process  These minidumps do not include content of klogg process memory during the crash.">
-<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="Automatic crash reporting" />
-<meta property="og:description" content="Automatic crash reporting #  In response to several github issues about unexpected crashes I&rsquo;ve implemented crash dump collection. Thanks to SDK provided by Sentry it is fairly easy to integrate Breakpad/Crashpad to collect minidumps for application crashes and send them to developers for investigation.
-What is included in crash report #  Crash report provides information about:
- operating system: name, version, architecture Qt version modules that were loaded into klogg process: filename, size and hashes for symbols stacktraces for all running threads in klogg process  These minidumps do not include content of klogg process memory during the crash." />
+<meta name="description" content="Version 22.06 #  Finally new stable version is ready! This release has several major new features.
+This release brings many new features, performance and usability improvements.
+New features #   Regular expression engine is switched to Hyperscan. This is several times faster than Qt regular expressions. Hyperscan pattern syntax is less expressive, and klogg will automatically switch to Qt engine if needed. Moreover, klogg now allows combining regular expressions with boolean operators (AND, OR, NOT).">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="Version 22.06 released" />
+<meta property="og:description" content="Version 22.06 #  Finally new stable version is ready! This release has several major new features.
+This release brings many new features, performance and usability improvements.
+New features #   Regular expression engine is switched to Hyperscan. This is several times faster than Qt regular expressions. Hyperscan pattern syntax is less expressive, and klogg will automatically switch to Qt engine if needed. Moreover, klogg now allows combining regular expressions with boolean operators (AND, OR, NOT)." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://klogg.filimonov.dev/docs/news/crash_reporting/" />
-
-<title>Automatic crash reporting | KLOGG</title>
+<meta property="og:url" content="https://klogg.filimonov.dev/docs/news/release_22.06/" />
+<meta property="article:published_time" content="2022-06-13T15:42:17+01:00" />
+<meta property="article:modified_time" content="2022-06-13T15:42:17+01:00" />
+<title>Version 22.06 released | KLOGG</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" href="/favicon.png" type="image/x-icon">
 <link rel="stylesheet" href="/book.min.6cd8553a6854f4812343f0f0c8baca31271e686434f381fbe3c7226f66639176.css" integrity="sha256-bNhVOmhU9IEjQ/DwyLrKMSceaGQ084H748cib2ZjkXY="><!--
@@ -79,7 +80,7 @@ https://github.com/alex-shpak/hugo-book
         <li>
           
   
-    <a href="/docs/news/release_22.06/" class="">Version 22.06 released</a>
+    <a href="/docs/news/release_22.06/" class="active">Version 22.06 released</a>
   
 
         </li>
@@ -129,7 +130,7 @@ https://github.com/alex-shpak/hugo-book
         <li>
           
   
-    <a href="/docs/news/crash_reporting/" class="active">Automatic crash reporting</a>
+    <a href="/docs/news/crash_reporting/" class="">Automatic crash reporting</a>
   
 
         </li>
@@ -331,7 +332,7 @@ https://github.com/alex-shpak/hugo-book
     <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
   </label>
 
-  <strong>Automatic crash reporting</strong>
+  <strong>Version 22.06 released</strong>
 
   <label for="toc-control">
     
@@ -346,10 +347,13 @@ https://github.com/alex-shpak/hugo-book
     
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#automatic-crash-reporting">Automatic crash reporting</a>
+    <li><a href="#version-2206">Version 22.06</a>
       <ul>
-        <li><a href="#what-is-included-in-crash-report">What is included in crash report</a></li>
-        <li><a href="#a-word-abour-privacy">A word abour privacy</a></li>
+        <li><a href="#new-features">New features</a></li>
+        <li><a href="#bug-fixes">Bug fixes</a></li>
+        <li><a href="#system-requirements">System requirements</a></li>
+        <li><a href="#precompiled-binaries">Precompiled binaries</a></li>
+        <li><a href="#known-issues">Known issues</a></li>
       </ul>
     </li>
   </ul>
@@ -363,36 +367,71 @@ https://github.com/alex-shpak/hugo-book
 
       
       
-  <article class="markdown"><h2 id="automatic-crash-reporting">
-  Automatic crash reporting
-  <a class="anchor" href="#automatic-crash-reporting">#</a>
+  <article class="markdown"><h2 id="version-2206">
+  Version 22.06
+  <a class="anchor" href="#version-2206">#</a>
 </h2>
-<p>In response to several github issues about unexpected crashes I&rsquo;ve implemented crash dump collection.
-Thanks to <a href="https://github.com/getsentry/sentry-native">SDK</a> provided by <a href="https://sentry.io">Sentry</a> it
-is fairly easy to integrate Breakpad/Crashpad to collect minidumps for application crashes and send them
-to developers for investigation.</p>
-<h3 id="what-is-included-in-crash-report">
-  What is included in crash report
-  <a class="anchor" href="#what-is-included-in-crash-report">#</a>
+<p>Finally new stable version is ready! This release has several major new features.</p>
+<p>This release brings many new features, performance and usability improvements.</p>
+<h3 id="new-features">
+  New features
+  <a class="anchor" href="#new-features">#</a>
 </h3>
-<p>Crash report provides information about:</p>
 <ul>
-<li>operating system: name, version, architecture</li>
-<li>Qt version</li>
-<li>modules that were loaded into klogg process: filename, size and hashes for symbols</li>
-<li>stacktraces for all running threads in klogg process</li>
+<li>Regular expression engine is switched to Hyperscan. This is several times faster than Qt regular expressions. Hyperscan pattern syntax is less expressive, and klogg will automatically switch to Qt engine if needed. Moreover, klogg now allows combining regular expressions with boolean operators (AND, OR, NOT). Hyperscan requires CPU with SSSE3 support. If CPU doesn&rsquo;t have these instructions, then Klogg will switch to Qt regular expression engine.</li>
+<li>Highlighters configuration has been reworked. Now it is possible to:
+<ul>
+<li>create several sets of highlighters and apply any number of them to current file</li>
+<li>assign some text a color label (up to 9 different colors)</li>
+<li>add variation to slightly change highlight color for a pattern based on actual matching text</li>
+<li>use alpha-channel for highlight colors</li>
 </ul>
-<p>These minidumps do not include content of klogg process memory during the crash.</p>
-<h3 id="a-word-abour-privacy">
-  A word abour privacy
-  <a class="anchor" href="#a-word-abour-privacy">#</a>
+</li>
+<li>Keyboard shortcuts are now configurable via a special configuration dialog</li>
+<li>There is a predefined filters dialog. It allows creating sets of filters and quickly add them to search expression</li>
+<li>The limit of number of lines in the log file has been removed. It is now limited by available RAM and CPU resources. The single line length is still limited to around 2^30, this is limitation of QString in Qt5.</li>
+<li>Context menu for selected text now has more useful actions (replace search, add to scratchpad, etc.)</li>
+<li>Search history is now editable and includes more items</li>
+</ul>
+<h3 id="bug-fixes">
+  Bug fixes
+  <a class="anchor" href="#bug-fixes">#</a>
 </h3>
-<p>Although crash dumps can make fixing bugs easier, privacy of klogg users is far more important.
-So crash reporting is not automated. If during startup klogg finds minidumps from previous runs,
-it will show a dialog asking user to look through generated crash report and confirm sending it
-to Sentry servers. Unsent reports are deleted. Crash reports are anonymous and do not include
-any information to identify users or their computers (like hardware ids, hostames, usernames etc.).</p>
-<p>Please check new <a href="/docs/privacy_policy">privacy policy</a> for more details.</p>
+<ul>
+<li>Crash reports from many users helped to fix issues with putting too much data to clipboard, data races with multiple instances of klogg and multiple windows.</li>
+<li>A fast file modification detection mode helps to improve performance in case when a large file is opened in follow file mode</li>
+<li>Dark mode is simplified and looks more solid</li>
+<li>Klogg no longer hangs in cases when large amount of data is rapidly added to a file</li>
+<li>Files with utf16 little and big endian are now displayed properly</li>
+<li>Klogg no longer leaks memory if file in follow mode is left open for days</li>
+</ul>
+<p>Internal code structure has been improved to improve memory allocation and multithreading performance. Klogg uses less external dependencies. Build system now allows using more external dependencies from host build system.</p>
+<h3 id="system-requirements">
+  System requirements
+  <a class="anchor" href="#system-requirements">#</a>
+</h3>
+<p>Klogg requires CPU with at least SSE2 instruction set. For best performance CPU should have SSSE3 and POPCNT instructions.
+Supported operating systems: Window 7+, Mac OS 10.14+, Ubuntu LTS 18.04+, Oracle Linux 8+</p>
+<h3 id="precompiled-binaries">
+  Precompiled binaries
+  <a class="anchor" href="#precompiled-binaries">#</a>
+</h3>
+<ul>
+<li>Windows x86 and x64, based on Qt 5.15.2, both installer and portable versions, now signed with valid codesign certificate</li>
+<li>Linux x64 DEB packages for Ubuntu 18.04, 20.04 and 22.04 as well as RPM package built on Oracle Linux 8</li>
+<li>Linux x64 AppImage package</li>
+<li>Mac x64 dmg image and pkg installer, based on Qt 5.15.2, for Intel CPUs</li>
+<li><strong>Experimental</strong> packages for Windows built with Qt 6.2.4, requires Windows 10+.</li>
+<li><strong>Experimental</strong> packages for Mac built with Qt 6.2.4, requires Mac OS 10.15+, for Intel CPUs</li>
+</ul>
+<p>An archive with snapshot of klogg dependencies is provided, so the build can be reproduced.</p>
+<h3 id="known-issues">
+  Known issues
+  <a class="anchor" href="#known-issues">#</a>
+</h3>
+<p>On some Windows 11 systems klogg crashes when trying to show an open file dialog (#484). This is due to an incompatibility between Intel TBB memory allocator and some Windows libraries. In this case setting environmental variable TBB_MALLOC_DISABLE_REPLACEMENT to 1 disables TBB memory allocator, and klogg works as expected.</p>
+<p>Big thanks for everyone who provided feedback and feature requests!</p>
+<p>Download on Github: <a href="https://github.com/variar/klogg/releases/tag/v22.06">klogg 22.06</a></p>
 </article>
  
       
@@ -406,7 +445,7 @@ any information to identify users or their computers (like hardware ids, hostame
 
 
   <div>
-    <a class="flex align-center" href="https://github.com/variar/klogg/edit/master/website/content//docs/news/crash_reporting.md" target="_blank" rel="noopener">
+    <a class="flex align-center" href="https://github.com/variar/klogg/edit/master/website/content//docs/news/release_22.06.md" target="_blank" rel="noopener">
       <img src="/svg/edit.svg" class="book-icon" alt="Edit" />
       <span>Edit this page</span>
     </a>
@@ -448,10 +487,13 @@ any information to identify users or their computers (like hardware ids, hostame
       
   <nav id="TableOfContents">
   <ul>
-    <li><a href="#automatic-crash-reporting">Automatic crash reporting</a>
+    <li><a href="#version-2206">Version 22.06</a>
       <ul>
-        <li><a href="#what-is-included-in-crash-report">What is included in crash report</a></li>
-        <li><a href="#a-word-abour-privacy">A word abour privacy</a></li>
+        <li><a href="#new-features">New features</a></li>
+        <li><a href="#bug-fixes">Bug fixes</a></li>
+        <li><a href="#system-requirements">System requirements</a></li>
+        <li><a href="#precompiled-binaries">Precompiled binaries</a></li>
+        <li><a href="#known-issues">Known issues</a></li>
       </ul>
     </li>
   </ul>

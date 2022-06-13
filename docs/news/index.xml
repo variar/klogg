@@ -6,7 +6,18 @@
     <description>Recent content on KLOGG</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 16 Dec 2020 15:42:17 +0100</lastBuildDate><atom:link href="https://klogg.filimonov.dev/docs/news/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 13 Jun 2022 15:42:17 +0100</lastBuildDate><atom:link href="https://klogg.filimonov.dev/docs/news/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Version 22.06 released</title>
+      <link>https://klogg.filimonov.dev/docs/news/release_22.06/</link>
+      <pubDate>Mon, 13 Jun 2022 15:42:17 +0100</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/release_22.06/</guid>
+      <description>Version 22.06 #  Finally new stable version is ready! This release has several major new features.
+This release brings many new features, performance and usability improvements.
+New features #   Regular expression engine is switched to Hyperscan. This is several times faster than Qt regular expressions. Hyperscan pattern syntax is less expressive, and klogg will automatically switch to Qt engine if needed. Moreover, klogg now allows combining regular expressions with boolean operators (AND, OR, NOT).</description>
+    </item>
+    
     <item>
       <title>Combining search expressions</title>
       <link>https://klogg.filimonov.dev/docs/news/boolean_combination/</link>
