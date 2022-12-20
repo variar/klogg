@@ -284,7 +284,7 @@ void PredefinedFiltersDialog::swapFilters( int currentRow, int newRow, int selec
 void PredefinedFiltersDialog::importFilters()
 {
     const auto file = QFileDialog::getOpenFileName( this, "Select file to import", "",
-                                                    "Predefined filters (*.conf)" );
+                                                    tr("Predefined filters (*.conf);;All files (*)"));
 
     if ( file.isEmpty() ) {
         return;
@@ -300,11 +300,15 @@ void PredefinedFiltersDialog::importFilters()
 
 void PredefinedFiltersDialog::exportFilters()
 {
-    const auto file = QFileDialog::getSaveFileName( this, "Export predefined filters", "",
+    auto file = QFileDialog::getSaveFileName( this, "Export predefined filters", "",
                                                     tr( "Predefined filters (*.conf)" ) );
 
     if ( file.isEmpty() ) {
         return;
+    }
+
+    if( not file.endsWith(".conf") ) {
+        file += ".conf";
     }
 
     QSettings settings{ file, QSettings::IniFormat };
