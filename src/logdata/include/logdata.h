@@ -147,6 +147,7 @@ class LogData : public AbstractLogData {
     QString doGetExpandedLineString( LineNumber line ) const override;
     std::vector<QString> doGetLines( LineNumber first, LinesCount number ) const override;
     std::vector<QString> doGetExpandedLines( LineNumber first, LinesCount number ) const override;
+    LineNumber doGetLineNumber( LineNumber index ) const override;
     LinesCount doGetNbLine() const override;
     LineLength doGetMaxLength() const override;
     LineLength doGetLineLength( LineNumber line ) const override;

@@ -345,6 +345,11 @@ std::vector<QString> LogData::doGetExpandedLines( LineNumber first_line, LinesCo
     } );
 }
 
+LineNumber LogData::doGetLineNumber(LineNumber index) const
+{
+    return index;
+}
+
 LogData::RawLines LogData::getLinesRaw( LineNumber firstLine, LinesCount number ) const
 {
     RawLines rawLines;

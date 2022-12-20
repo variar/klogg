@@ -412,6 +412,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
 
         if ( selection_.isSingleLine() ) {
             copyAction_->setText( "&Copy this line" );
+            copyWithLineNumbersAction_->setText( "&Copy this line with line number" );
 
             setSearchStartAction_->setEnabled( true );
             setSearchEndAction_->setEnabled( true );
@@ -421,6 +422,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
         }
         else {
             copyAction_->setText( "&Copy" );
+            copyWithLineNumbersAction_->setText( "&Copy with line numbers" );
             copyAction_->setStatusTip( tr( "Copy the selection" ) );
 
             setSearchStartAction_->setEnabled( false );
@@ -1228,6 +1230,19 @@ void AbstractLogView::copy()
     }
 }
 
+// Copy the selection with line numbers to the clipboard
+void AbstractLogView::copyWithLineNumbers()
+{
+    try {
+        auto clipboard = QApplication::clipboard();
+        auto text = selection_.getSelectedTextWithLineNumbers( logData_ );
+        text.replace( QChar::Null, QChar::Space );
+        clipboard->setText( text );
+    } catch ( std::exception& err ) {
+        LOG_ERROR << "failed to copy data to clipboard " << err.what();
+    }
+}
+
 void AbstractLogView::markSelected()
 {
     auto lines = selection_.getLines();
@@ -1752,6 +1767,10 @@ void AbstractLogView::createMenu()
     // No text as this action title depends on the type of selection
     connect( copyAction_, &QAction::triggered, this, [ this ]( auto ) { this->copy(); } );
 
+    copyWithLineNumbersAction_ = new QAction( tr( "Copy with line numbers" ), this );
+    // No text as this action title depends on the type of selection
+    connect( copyWithLineNumbersAction_, &QAction::triggered, this, [ this ]( auto ) { this->copyWithLineNumbers(); } );
+
     markAction_ = new QAction( tr( "&Mark" ), this );
     connect( markAction_, &QAction::triggered, this, [ this ]( auto ) { this->markSelected(); } );
 
@@ -1829,6 +1848,7 @@ void AbstractLogView::createMenu()
     popupMenu_->addAction( markAction_ );
     popupMenu_->addSeparator();
     popupMenu_->addAction( copyAction_ );
+    popupMenu_->addAction( copyWithLineNumbersAction_ );
     popupMenu_->addAction( sendToScratchpadAction_ );
     popupMenu_->addAction( replaceInScratchpadAction_ );
     popupMenu_->addSeparator();

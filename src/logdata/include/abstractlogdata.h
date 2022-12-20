@@ -60,6 +60,8 @@ class AbstractLogData : public QObject {
     std::vector<QString> getLines( LineNumber first_line, LinesCount number ) const;
     // Returns a set of lines with tabs expanded
     std::vector<QString> getExpandedLines( LineNumber first_line, LinesCount number ) const;
+    // Returns the line numer
+    LineNumber getLineNumber(LineNumber index) const;
     // Returns the total number of lines
     LinesCount getNbLine() const;
     // Returns the visible length of the longest line
@@ -99,6 +101,9 @@ class AbstractLogData : public QObject {
     // Internal function called to get a set of expanded lines
     virtual std::vector<QString> doGetExpandedLines( LineNumber first_line,
                                                      LinesCount number ) const = 0;
+
+    // Internal function called to get the index of given line
+    virtual LineNumber doGetLineNumber( LineNumber index ) const = 0;
     // Internal function called to get the number of lines
     virtual LinesCount doGetNbLine() const = 0;
     // Internal function called to get the maximum length

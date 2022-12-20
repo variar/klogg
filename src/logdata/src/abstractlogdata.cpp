@@ -68,6 +68,14 @@ std::vector<QString> AbstractLogData::getExpandedLines( LineNumber first_line, L
     return doGetExpandedLines( first_line, number );
 }
 
+LineNumber AbstractLogData::getLineNumber(LineNumber index) const
+{
+    LineNumber ln = doGetLineNumber(index);
+    // line number in file in editor starts from 1, convert it from 0 based index
+    ln += LineNumber(1);
+    return ln;
+}
+
 // Simple wrapper in order to use a clean Template Method
 LinesCount AbstractLogData::getNbLine() const
 {

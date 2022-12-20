@@ -354,6 +354,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void findNextSelected();
     void findPreviousSelected();
     void copy();
+    void copyWithLineNumbers();
     void markSelected();
     void saveToFile();
     void setSearchStart();
@@ -444,6 +445,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     // Popup menu
     QMenu* popupMenu_;
     QAction* copyAction_;
+    QAction* copyWithLineNumbersAction_;
     QAction* markAction_;
     QAction* sendToScratchpadAction_;
     QAction* replaceInScratchpadAction_;
