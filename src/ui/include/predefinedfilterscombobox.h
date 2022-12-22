@@ -64,7 +64,7 @@ class PredefinedFiltersComboBox final : public QComboBox {
 
   private:
     void setTitle( const QString& title );
-    void insertFilters( const PredefinedFiltersCollection::Collection& filters );
+    void insertFilters( const PredefinedFiltersCollection::GroupCollection& filters );
     void collectFilters();
 
   private:

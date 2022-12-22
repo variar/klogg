@@ -465,7 +465,7 @@ void HighlighterSetCollection::saveToStorage( QSettings& settings ) const
     settings.endGroup();
 }
 
-void HighlighterSetCollection::retrieveFromStorage( QSettings& settings )
+void HighlighterSetCollection::retrieveFromStorage(QSettings& settings )
 {
     LOG_DEBUG << "HighlighterSetCollection::retrieveFromStorage";
 

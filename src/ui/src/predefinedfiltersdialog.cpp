@@ -55,6 +55,8 @@
 #include "log.h"
 #include "predefinedfilters.h"
 
+#include <iostream>
+
 class CenteredCheckbox : public QWidget
 {
     public: 
@@ -88,7 +90,7 @@ PredefinedFiltersDialog::PredefinedFiltersDialog( QWidget* parent )
 {
     setupUi( this );
 
-    populateFiltersTable( PredefinedFiltersCollection::getSynced().getFilters() );
+    populateFiltersTable( PredefinedFiltersCollection::getSynced().getFilters());
 
     connect( addFilterButton, &QToolButton::clicked, this, &PredefinedFiltersDialog::addFilter );
     connect( removeFilterButton, &QToolButton::clicked, this,
@@ -102,9 +104,6 @@ PredefinedFiltersDialog::PredefinedFiltersDialog( QWidget* parent )
 
     connect( buttonBox, &QDialogButtonBox::clicked, this,
              &PredefinedFiltersDialog::resolveStandardButton );
-
-    connect( filtersTableWidget, &QTableWidget::currentCellChanged, this,
-             &PredefinedFiltersDialog::onCurrentCellChanged );
 
     dispatchToMainThread( [ this ] {
         IconLoader iconLoader( this );
@@ -124,56 +123,47 @@ PredefinedFiltersDialog::PredefinedFiltersDialog( const QString& newFilter, QWid
     }
 }
 
-void PredefinedFiltersDialog::updateButtons()
+QString PredefinedFiltersDialog::getUniqueGroupName(QString name)
 {
-    const auto filtersCount = filtersTableWidget->rowCount();
-    removeFilterButton->setEnabled( filtersCount > 0 );
+    if ( not filtersTreeWidget->findItems(name, Qt::MatchFlag::MatchExactly).empty() ) {
+        name += QString("_new");
+        name = getUniqueGroupName(name);
+    }
 
-    updateUpDownButtons( filtersTableWidget->currentRow() );
-}
-
-void PredefinedFiltersDialog::onCurrentCellChanged( int currentRow, int currentColumn,
-                                                    int previousRow, int previousColumn )
-{
-    Q_UNUSED( currentColumn )
-    Q_UNUSED( previousRow )
-    Q_UNUSED( previousColumn )
-
-    updateUpDownButtons( currentRow );
-}
-
-void PredefinedFiltersDialog::updateUpDownButtons( int currentRow )
-{
-    upButton->setEnabled( currentRow > 0 );
-    downButton->setEnabled( currentRow < filtersTableWidget->rowCount() - 1 );
+    return name;
 }
 
 void PredefinedFiltersDialog::populateFiltersTable(
-    const PredefinedFiltersCollection::Collection& filters )
+    const PredefinedFiltersCollection::GroupCollection& filters)
 {
-    filtersTableWidget->clear();
 
-    filtersTableWidget->setRowCount( static_cast<int>( filters.size() ) );
-    filtersTableWidget->setColumnCount( 3 );
+    filtersTreeWidget->setColumnCount(4);
+    filtersTreeWidget->setHeaderLabels( QStringList() << "Group"
+                                                      << "Name"
+                                                      << "Pattern"
+                                                      << "Regex" );
 
-    filtersTableWidget->setHorizontalHeaderLabels( QStringList() << "Name"
-                                                                 << "Pattern"
-                                                                 << "Regex" );
+    for ( const auto& group : filters ) {
+        QString groupName = getUniqueGroupName(group.name);
 
-    int filterIndex = 0;
-    for ( const auto& filter : filters ) {
-        filtersTableWidget->setItem( filterIndex, 0, new QTableWidgetItem( filter.name ) );
-        filtersTableWidget->setItem( filterIndex, 1, new QTableWidgetItem( filter.pattern ) );
-        auto* regexCheckbox = new CenteredCheckbox;
-        regexCheckbox->setChecked( filter.useRegex );
-        filtersTableWidget->setCellWidget( filterIndex, 2, regexCheckbox );
+        QTreeWidgetItem *item = new QTreeWidgetItem(static_cast<QTreeWidget *>(nullptr), QStringList( QString(groupName)));
+        item->setFlags( item->flags() | Qt::ItemIsEditable );
+        filtersTreeWidget->addTopLevelItem(item);
 
-        filterIndex++;
+
+        for ( const auto& filter : group.filters ) {
+            QTreeWidgetItem *row = new QTreeWidgetItem(static_cast<QTreeWidget *>(nullptr),
+                                                                   QStringList( {
+                                                                                    QString(""),
+                                                                                    filter.name,
+                                                                                    filter.pattern
+                                                                                }
+                                                                                ));
+            row->setFlags( row->flags() | Qt::ItemIsEditable );
+            item->addChild( row );
+            row->setCheckState( 3, filter.useRegex ? Qt::Checked : Qt::Unchecked );
+        }
     }
-
-    filtersTableWidget->horizontalHeader()->setSectionResizeMode( 1, QHeaderView::Stretch );
-
-    updateButtons();
 }
 
 void PredefinedFiltersDialog::saveSettings() const
@@ -181,27 +171,28 @@ void PredefinedFiltersDialog::saveSettings() const
     PredefinedFiltersCollection::getSynced().saveToStorage( readFiltersTable() );
 }
 
-PredefinedFiltersCollection::Collection PredefinedFiltersDialog::readFiltersTable() const
+PredefinedFiltersCollection::GroupCollection PredefinedFiltersDialog::readFiltersTable(std::optional<QSet<QString>> selection) const
 {
-    const auto rows = filtersTableWidget->rowCount();
+    PredefinedFiltersCollection::GroupCollection currentFilters;
 
-    PredefinedFiltersCollection::Collection currentFilters;
-
-    for ( auto i = 0; i < rows; ++i ) {
-        if ( nullptr == filtersTableWidget->item( i, 0 )
-             || nullptr == filtersTableWidget->item( i, 1 ) ) {
+    for (int i = 0; i < filtersTreeWidget->topLevelItemCount(); ++i ) {
+        QTreeWidgetItem* item = filtersTreeWidget->topLevelItem(i);
+        QString group = item->text(0);
+        if (selection && not selection->contains(group)) {
             continue;
-        }
+        } else {
+            currentFilters.push_back( { group, {} });
 
-        const auto name = filtersTableWidget->item( i, 0 )->text();
-        const auto value = filtersTableWidget->item( i, 1 )->text();
+            for(int j = 0; j < item->childCount(); ++j) {
+                QTreeWidgetItem* child = item->child(j);
+                QString name = child->text(1);
+                QString value = child->text(2);
+                bool useRegex = child->checkState(3) == Qt::Checked ? true : false;
 
-        const auto useRegexCheckbox
-            = static_cast<CenteredCheckbox*>( filtersTableWidget->cellWidget( i, 2 ) );
-        const auto useRegex = useRegexCheckbox ? useRegexCheckbox->isChecked() : false;
-
-        if ( !name.isEmpty() && !value.isEmpty() ) {
-            currentFilters.push_back( { name, value, useRegex } );
+                if ( !name.isEmpty() && !value.isEmpty() ) {
+                    currentFilters.back().filters.push_back( { name, value, useRegex } );
+                }
+            }
         }
     }
 
@@ -215,87 +206,123 @@ void PredefinedFiltersDialog::addFilter()
 
 void PredefinedFiltersDialog::addFilterRow( const QString& newFilter )
 {
-    const auto newRow = filtersTableWidget->rowCount();
-    filtersTableWidget->setRowCount( newRow + 1 );
-    filtersTableWidget->setItem( newRow, 1, new QTableWidgetItem( newFilter ) );
-    filtersTableWidget->setItem( newRow, 0, new QTableWidgetItem( "" ) );
-    auto regexCheckBox = new CenteredCheckbox;
-    filtersTableWidget->setCellWidget( newRow, 2, regexCheckBox );
+    QList<QTreeWidgetItem*> selection = filtersTreeWidget->selectedItems();
+    QTreeWidgetItem* sel = nullptr;
 
-    filtersTableWidget->scrollToItem( filtersTableWidget->item( newRow, 0 ) );
-    filtersTableWidget->setCurrentCell( newRow, 0 );
-    filtersTableWidget->editItem( filtersTableWidget->item( newRow, 0 ) );
+    if ( not selection.empty() ) {
+        for ( auto item: selection ) {
+            sel = item;
+            if (item->parent() ) {
+                sel = item->parent();
+            }
+            break;
+        }
+    } else {
+        QString filter = newFilter;
+        if (not filter.size() ) {
+            filter = QString("filter group");
+        }
+        QString groupName = getUniqueGroupName(filter);
+        QTreeWidgetItem *item = new QTreeWidgetItem(static_cast<QTreeWidget *>(nullptr), QStringList( QString(groupName)));
+        item->setFlags( item->flags() | Qt::ItemIsEditable );
+        filtersTreeWidget->addTopLevelItem(item);
+        sel = item;
+    }
+        QTreeWidgetItem *row = new QTreeWidgetItem(static_cast<QTreeWidget *>(nullptr),
+                                                               QStringList( {
+                                                                                QString(""),
+                                                                                QString("filter name"),
+                                                                                QString("filter")
+                                                                            }
+                                                                            ));
+        row->setFlags( row->flags() | Qt::ItemIsEditable );
+        sel->addChild( row );
+        row->setCheckState( 3, Qt::Unchecked );
 }
 
 void PredefinedFiltersDialog::removeFilter()
 {
-    filtersTableWidget->removeRow( filtersTableWidget->currentRow() );
-
-    updateButtons();
+    for ( const auto item : filtersTreeWidget->selectedItems() ) {
+        delete item;
+    }
 }
 
 void PredefinedFiltersDialog::moveFilterUp()
 {
-    const auto currentRow = filtersTableWidget->currentRow();
-    const auto selectedColumn = filtersTableWidget->currentColumn();
+        QTreeWidgetItem *item = filtersTreeWidget->currentItem();
 
-    if ( currentRow >= 0 ) {
-        swapFilters( currentRow, currentRow - 1, selectedColumn );
-    }
+        if (not item ) {
+            return;
+        }
+
+        if ( not item ->isSelected() ) {
+            return;
+        }
+
+        int index = filtersTreeWidget->currentIndex().row();
+        QTreeWidgetItem *s = nullptr;
+
+        if( item->childCount() ) {
+            s = filtersTreeWidget->takeTopLevelItem(index);
+            filtersTreeWidget->insertTopLevelItem(index - 1 >=0 ? index - 1 : 0, s);
+        } else {
+            item = item->parent();
+            s = item->takeChild(index);
+            item->insertChild(index - 1 >=0 ? index - 1 : 0, s);
+        }
+
+        s->setSelected(true);
+        filtersTreeWidget->setCurrentItem(s);
 }
 
 void PredefinedFiltersDialog::moveFilterDown()
 {
-    const auto currentRow = filtersTableWidget->currentRow();
-    const auto selectedColumn = filtersTableWidget->currentColumn();
+    QTreeWidgetItem *item = filtersTreeWidget->currentItem();
 
-    if ( currentRow >= 0 ) {
-        swapFilters( currentRow, currentRow + 1, selectedColumn );
+    if (not item ) {
+        return;
     }
-}
 
-void PredefinedFiltersDialog::swapFilters( int currentRow, int newRow, int selectedColumn )
-{
-    dispatchToMainThread( [ this, currentRow, newRow, selectedColumn ] {
-        for ( int column = 0; column < filtersTableWidget->columnCount(); ++column ) {
-            auto currentUseRegex
-                = static_cast<CenteredCheckbox*>( filtersTableWidget->cellWidget( currentRow, column ) );
-            auto newUseRegex
-                = static_cast<CenteredCheckbox*>( filtersTableWidget->cellWidget( newRow, column ) );
+    if ( not item ->isSelected() ) {
+        return;
+    }
 
-            if ( currentUseRegex && newUseRegex ) {
-                const auto currentCheckState = currentUseRegex->isChecked();
-                const auto newCheckState = newUseRegex->isChecked();
-                currentUseRegex->setChecked( newCheckState );
-                newUseRegex->setChecked( currentCheckState );
-            }
-            else {
-                auto currentItem = filtersTableWidget->takeItem( currentRow, column );
-                auto newItem = filtersTableWidget->takeItem( newRow, column );
 
-                filtersTableWidget->setItem( newRow, column, currentItem );
-                filtersTableWidget->setItem( currentRow, column, newItem );
-            }
-        }
-        filtersTableWidget->setCurrentCell( newRow, selectedColumn );
-    } );
+    int index = filtersTreeWidget->currentIndex().row();
+    QTreeWidgetItem *s = nullptr;
+
+    if( item->childCount() ) {
+        s = filtersTreeWidget->takeTopLevelItem(index);
+        filtersTreeWidget->insertTopLevelItem(index + 1 <= filtersTreeWidget->topLevelItemCount() ? index + 1 : index, s);
+    } else {
+        item = item->parent();
+        s = item->takeChild(index);
+        item->insertChild(index + 1 <= item->childCount() ? index + 1 : index, s);
+    }
+
+    s->setSelected(true);
+    filtersTreeWidget->setCurrentItem(s);
 }
 
 void PredefinedFiltersDialog::importFilters()
 {
-    const auto file = QFileDialog::getOpenFileName( this, "Select file to import", "",
+    const auto files = QFileDialog::getOpenFileNames( this, "Select file to import", "",
                                                     "Predefined filters (*.conf)" );
 
-    if ( file.isEmpty() ) {
+    if ( not files.size() ) {
         return;
     }
 
-    LOG_DEBUG << "Loading predefined filters from " << file;
-    QSettings settings{ file, QSettings::IniFormat };
-
     PredefinedFiltersCollection collection;
-    collection.retrieveFromStorage( settings );
-    populateFiltersTable( collection.getFilters() );
+
+    for (QString file: files) {
+        LOG_DEBUG << "Loading predefined filters from " << file;
+        QSettings settings{ file, QSettings::IniFormat };
+
+        collection.retrieveFromStorage( settings, QFileInfo(file).baseName(), false);
+    }
+
+    populateFiltersTable( collection.getFilters());
 }
 
 void PredefinedFiltersDialog::exportFilters()
@@ -310,7 +337,24 @@ void PredefinedFiltersDialog::exportFilters()
     QSettings settings{ file, QSettings::IniFormat };
 
     PredefinedFiltersCollection collection;
-    collection.setFilters( readFiltersTable() );
+    QList<QTreeWidgetItem*> selection = filtersTreeWidget->selectedItems();
+    std::optional<QSet<QString>> selectedGroups = {};
+
+    if ( not selection.empty() ) {
+        selectedGroups = QSet<QString>();
+        for ( auto item: selection ) {
+            auto sel = item;
+            if (item->parent() ) {
+                sel = item->parent();
+            }
+            std::cout << sel->text(0).toStdString() << "\n";
+            selectedGroups->insert(sel->text(0));
+        }
+    }
+
+    PredefinedFiltersCollection::GroupCollection filters = readFiltersTable(selectedGroups);
+
+    collection.setFilters( filters );
     collection.saveToStorage( settings );
 }
 

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
-    <height>480</height>
+    <width>938</width>
+    <height>645</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,6 +88,9 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Expanding</enum>
+       </property>
        <property name="sizeHint" stdset="0">
         <size>
          <width>40</width>
@@ -121,7 +124,22 @@
     </layout>
    </item>
    <item>
-    <widget class="QTableWidget" name="filtersTableWidget"/>
+    <widget class="QTreeWidget" name="filtersTreeWidget">
+     <property name="editTriggers">
+      <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+     </property>
+     <property name="tabKeyNavigation">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::ExtendedSelection</enum>
+     </property>
+     <column>
+      <property name="text">
+       <string notr="true">1</string>
+      </property>
+     </column>
+    </widget>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
@@ -136,6 +154,7 @@
   </layout>
  </widget>
  <resources>
+  <include location="../../app/klogg.qrc"/>
   <include location="../../app/klogg.qrc"/>
   <include location="../../app/klogg.qrc"/>
  </resources>

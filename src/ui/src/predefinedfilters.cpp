@@ -40,25 +40,64 @@
 
 #include "log.h"
 
-void PredefinedFiltersCollection::retrieveFromStorage( QSettings& settings )
+void PredefinedFiltersCollection::retrieveFromStorage( QSettings& settings, QString fileName, bool clear)
 {
     LOG_DEBUG << "PredefinedFiltersCollection::retrieveFromStorage";
 
     if ( settings.contains( "PredefinedFiltersCollection/version" ) ) {
         settings.beginGroup( "PredefinedFiltersCollection" );
-        if ( settings.value( "version" ).toInt() <= PredefinedFiltersCollection_VERSION ) {
-            filters_.clear();
+        int fileVersion = settings.value( "version" ).toInt();
+
+        if ( fileVersion <= PredefinedFiltersCollection_VERSION ) {
+
+            if (clear) {
+                filterGroups_.clear();
+            }
 
             int size = settings.beginReadArray( "filters" );
+            filterGroups_.push_back( { fileName, {} });
 
             for ( int i = 0; i < size; ++i ) {
                 settings.setArrayIndex( i );
 
-                filters_.push_back( { settings.value( "name" ).toString(),
-                                      settings.value( "filter" ).toString(),
-                                      settings.value( "regex", true ).toBool() } );
+                filterGroups_.back().filters.push_back({
+                                                           settings.value( "name" ).toString(),
+                                                           settings.value( "filter" ).toString(),
+                                                           settings.value( "regex", true ).toBool()
+                                                        });
             }
             settings.endArray();
+        }
+        if ( fileVersion == MultiPredefinedFiltersCollection_VERSION ) {
+            if (clear) {
+                filterGroups_.clear();
+            }
+
+            int size = settings.beginReadArray( "filter_groups" );
+            QList<QString> filterGroups;
+
+            for ( int i = 0; i < size; ++i ) {
+                settings.setArrayIndex( i );
+                filterGroups.push_back( settings.value( "name" ).toString() );
+            }
+            settings.endArray();
+
+            for (const auto group: filterGroups) {
+                size = settings.beginReadArray( group );
+
+                filterGroups_.push_back( { group, {} });
+
+                for ( int i = 0; i < size; ++i ) {
+                    settings.setArrayIndex( i );
+                    filterGroups_.back().filters.push_back({
+                                                               settings.value( "name" ).toString(),
+                                                               settings.value( "filter" ).toString(),
+                                                               settings.value( "regex", true ).toBool()
+                                                            });
+                }
+
+                settings.endArray();
+            }
         }
         else {
             LOG_ERROR << "Unknown version of PredefinedFiltersCollection, ignoring it...";
@@ -72,43 +111,55 @@ void PredefinedFiltersCollection::saveToStorage( QSettings& settings ) const
     LOG_DEBUG << "PredefinedFiltersCollection::saveToStorage";
 
     settings.beginGroup( "PredefinedFiltersCollection" );
-    settings.setValue( "version", PredefinedFiltersCollection_VERSION );
+    settings.setValue( "version", MultiPredefinedFiltersCollection_VERSION );
 
-    settings.remove( "filters" );
+    settings.remove( "filter_groups" );
 
-    settings.beginWriteArray( "filters" );
+    settings.beginWriteArray( "filter_groups" );
+
     int arrayIndex = 0;
-    for ( const auto& filter : qAsConst( filters_ ) ) {
+    for ( const auto& group : filterGroups_ ) {
         settings.setArrayIndex( arrayIndex );
-        settings.setValue( "name", filter.name );
-        settings.setValue( "filter", filter.pattern );
-        settings.setValue( "regex", filter.useRegex );
-
+        settings.setValue( "name", group.name );
         arrayIndex++;
     }
     settings.endArray();
+
+    for ( const auto& group : filterGroups_ ) {
+        settings.remove( group.name );
+        settings.beginWriteArray( group.name );
+        arrayIndex = 0;
+        for ( const auto& filter : group.filters ) {
+            settings.setArrayIndex( arrayIndex );
+            settings.setValue( "name", filter.name );
+            settings.setValue( "filter", filter.pattern );
+            settings.setValue( "regex", filter.useRegex );
+
+            arrayIndex++;
+        }
+        settings.endArray();
+    }
     settings.endGroup();
 }
 
-void PredefinedFiltersCollection::saveToStorage(
-    const PredefinedFiltersCollection::Collection& filters )
+void PredefinedFiltersCollection::saveToStorage(const GroupCollection &filters )
 {
-    filters_ = filters;
+    filterGroups_ = filters;
     this->save();
 }
 
-PredefinedFiltersCollection::Collection PredefinedFiltersCollection::getFilters() const
+PredefinedFiltersCollection::GroupCollection PredefinedFiltersCollection::getFilters() const
 {
-    return filters_;
+    return filterGroups_;
 }
 
-PredefinedFiltersCollection::Collection PredefinedFiltersCollection::getSyncedFilters()
+PredefinedFiltersCollection::GroupCollection PredefinedFiltersCollection::getSyncedFilters()
 {
-    filters_ = this->getSynced().getFilters();
-    return filters_;
+    filterGroups_ = this->getSynced().getFilters();
+    return filterGroups_;
 }
 
-void PredefinedFiltersCollection::setFilters( const Collection& filters )
+void PredefinedFiltersCollection::setFilters( const GroupCollection& filters )
 {
-    filters_ = filters;
+    filterGroups_ = filters;
 }

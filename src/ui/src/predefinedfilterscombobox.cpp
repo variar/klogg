@@ -117,19 +117,20 @@ void PredefinedFiltersComboBox::setTitle( const QString& title )
     model_->insertRow( 0, titleItem );
 }
 
-void PredefinedFiltersComboBox::insertFilters(
-    const PredefinedFiltersCollection::Collection& filters )
+void PredefinedFiltersComboBox::insertFilters(const PredefinedFiltersCollection::GroupCollection &filters )
 {
-    for ( const auto& filter : filters ) {
-        auto* item = new QStandardItem( filter.name );
+    for ( const auto& group : filters ) {
+        for(const auto& filter: group.filters) {
+            auto* item = new QStandardItem( filter.name );
 
-        item->setFlags( Qt::ItemIsUserCheckable | Qt::ItemIsEnabled );
-        item->setData( Qt::Unchecked, Qt::CheckStateRole );
+            item->setFlags( Qt::ItemIsUserCheckable | Qt::ItemIsEnabled );
+            item->setData( Qt::Unchecked, Qt::CheckStateRole );
 
-        item->setData( filter.pattern, PatternRole );
-        item->setData( filter.useRegex, RegexRole );
+            item->setData( filter.pattern, PatternRole );
+            item->setData( filter.useRegex, RegexRole );
 
-        model_->insertRow( model_->rowCount(), item );
+            model_->insertRow( model_->rowCount(), item );
+        }
     }
 }
 

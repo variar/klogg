@@ -51,28 +51,34 @@ struct PredefinedFilter {
     bool useRegex;
 };
 
+struct PredefinedFilterGroup {
+    QString name;
+    QList<PredefinedFilter> filters;
+};
+
 // Represents collection of filters read from settings file.
 class PredefinedFiltersCollection final : public Persistable<PredefinedFiltersCollection> {
   public:
-    using Collection = QList<PredefinedFilter>;
+    using GroupCollection = QList< PredefinedFilterGroup >;
 
     static const char* persistableName()
     {
         return "PredefinedFiltersCollection";
     }
 
-    Collection getSyncedFilters();
-    Collection getFilters() const;
-    void setFilters( const Collection& filters );
+    GroupCollection getSyncedFilters();
+    GroupCollection getFilters() const;
+    void setFilters(const GroupCollection &filters );
 
-    void retrieveFromStorage( QSettings& settings );
+    void retrieveFromStorage(QSettings& settings, QString fileName="default", bool clear=true);
     void saveToStorage( QSettings& settings ) const;
-    void saveToStorage( const Collection& filters );
+    void saveToStorage( const GroupCollection& filters );
 
   private:
     static constexpr int PredefinedFiltersCollection_VERSION = 2;
+    static constexpr int MultiPredefinedFiltersCollection_VERSION = 3;
 
-    Collection filters_;
+    GroupCollection filterGroups_;
 };
 
 Q_DECLARE_METATYPE(PredefinedFilter)
