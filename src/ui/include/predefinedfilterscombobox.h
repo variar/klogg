@@ -58,6 +58,9 @@ class PredefinedFiltersComboBox final : public QComboBox {
     PredefinedFiltersComboBox& operator=( PredefinedFiltersComboBox&& other ) = delete;
 
     void populatePredefinedFilters();
+    void updateSearchPattern( const QString newSearchPattern, bool useLogicalCombining );
+
+    virtual void showPopup();
 
   Q_SIGNALS:
     void filterChanged( const QList<PredefinedFilter>& selectedFilters);
@@ -71,6 +74,12 @@ class PredefinedFiltersComboBox final : public QComboBox {
     PredefinedFiltersCollection filtersCollection_;
 
     QStandardItemModel* model_;
+    struct {
+        QString lastOne;
+        QString newOne;
+        bool useLogicalCombining;
+    } searchPattern_;
+    bool ignoreCollecting_;
 };
 
 #endif

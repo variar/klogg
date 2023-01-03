@@ -384,6 +384,11 @@ void CrawlerWidget::startNewSearch()
     replaceCurrentSearch( searchLineEdit_->currentText() );
 }
 
+void CrawlerWidget::updatePredefinedFiltersWidget()
+{
+    predefinedFilters_->updateSearchPattern( searchLineEdit_->currentText(), booleanButton_->isChecked() );
+}
+
 void CrawlerWidget::stopSearch()
 {
     logFilteredData_->interruptSearch();
@@ -778,6 +783,7 @@ void CrawlerWidget::useRegexpChangeHandler( bool )
 void CrawlerWidget::searchTextChangeHandler( QString )
 {
     resetStateOnSearchPatternChanges();
+    updatePredefinedFiltersWidget();
 }
 
 void CrawlerWidget::changeFilteredViewVisibility( int index )
@@ -867,6 +873,7 @@ void CrawlerWidget::replaceSearch( const QString& searchString )
 void CrawlerWidget::setSearchPattern( const QString& searchPattern )
 {
     searchLineEdit_->setEditText( searchPattern );
+    updatePredefinedFiltersWidget();
     // Set the focus to lineEdit so that the user can press 'Return' immediately
     searchLineEdit_->lineEdit()->setFocus();
 
@@ -1111,6 +1118,11 @@ void CrawlerWidget::setup()
              &QToolButton::click );
     connect( searchLineEdit_->lineEdit(), &QLineEdit::textEdited, this,
              &CrawlerWidget::searchTextChangeHandler );
+
+    connect( searchLineEdit_, QOverload<int>::of( &QComboBox::currentIndexChanged ), this,
+             [ this ]( auto ) {
+                 updatePredefinedFiltersWidget();
+             } );
 
     connect( predefinedFilters_, &PredefinedFiltersComboBox::filterChanged, this,
              &CrawlerWidget::setSearchPatternFromPredefinedFilters );
