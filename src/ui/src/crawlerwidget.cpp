@@ -793,12 +793,13 @@ void CrawlerWidget::changeFilteredViewVisibility( int index )
     }
 }
 
-void CrawlerWidget::setSearchPatternFromPredefinedFilters( const QList<PredefinedFilter>& filters )
+void CrawlerWidget::setSearchPatternFromPredefinedFilters( const QList<PredefinedFilter> &filters, const QStandardItem &changedItem )
 {
     QString searchPattern;
     for ( const auto& filter : qAsConst( filters ) ) {
         combinePatterns( searchPattern, escapeSearchPattern( filter.pattern, filter.useRegex ) );
     }
+    combinePatterns( searchPattern, getUserProvidedFilters( filters, changedItem ) );
     setSearchPattern( searchPattern );
 }
 
@@ -817,7 +818,7 @@ QString CrawlerWidget::escapeSearchPattern( const QString& pattern, bool isRegex
 
 QString& CrawlerWidget::combinePatterns( QString& currentPattern, const QString& newPattern ) const
 {
-    if ( !currentPattern.isEmpty() ) {
+    if ( !currentPattern.isEmpty() && !newPattern.isEmpty() ) {
         if ( booleanButton_->isChecked() ) {
             currentPattern.append( " or " );
         }
@@ -829,6 +830,56 @@ QString& CrawlerWidget::combinePatterns( QString& currentPattern, const QString&
     currentPattern.append( newPattern );
 
     return currentPattern;
+}
+
+// Filters provided by user are obtained by removal all active filters from the current content of searchLineExit
+QString CrawlerWidget::getUserProvidedFilters( const QList<PredefinedFilter> &filters, const QStandardItem &changedItem ) const
+{
+    QString currentText = searchLineEdit_->currentText();
+
+    // remove selected predefined filters from currentText until changedItem is found
+    int i = 0;
+    for ( i = 0 ; i < filters.length(); ++i ) {
+        if ( filters[i].index >= changedItem.row() ) {
+            break;
+        }
+        QString escapedFilter = escapeSearchPattern( filters[i].pattern, filters[i].useRegex );
+        auto index = currentText.indexOf (escapedFilter );
+        if ( index != -1 ) {
+            int length = escapedFilter.length() + ( useRegexpButton_->isChecked() ? 1 : 0 );
+            currentText = currentText.remove( index, length );
+        } 
+    }
+
+    // Remove the filter which was just Unchecked
+    if ( changedItem.checkState() == Qt::Unchecked ) {
+        QString recentlyRemovedFilter = escapeSearchPattern( changedItem.data( PatternRole ).toString(), changedItem.data( RegexRole ).toBool() );
+
+        if ( !recentlyRemovedFilter.isEmpty() ) {
+            auto index = currentText.indexOf( recentlyRemovedFilter);
+            if ( index != -1 ) {
+                int length = recentlyRemovedFilter.length() + ( useRegexpButton_->isChecked() ? 1 : 0 );
+                currentText = currentText.remove( index, length );
+            }
+        }
+    }
+
+    // Skip over just Checked filter because it is not present in the currentText
+    if ( changedItem.checkState() == Qt::Checked ) {
+        ++i;
+    }
+
+    // remove remaining selected predefined filters from currentText 
+    for ( ; i < filters.length(); ++i ) {
+
+        QString escapedFilter = escapeSearchPattern( filters[i].pattern, filters[i].useRegex );
+        auto index = currentText.indexOf(escapedFilter);
+        if ( index != -1 ) {
+            int length = escapedFilter.length() + ( useRegexpButton_->isChecked() ? 1 : 0 );
+            currentText = currentText.remove( index, length );
+        }
+    }
+    return currentText;
 }
 
 void CrawlerWidget::addToSearch( const QString& searchString )

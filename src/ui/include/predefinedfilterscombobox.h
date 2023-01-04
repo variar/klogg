@@ -41,10 +41,14 @@
 #define PREDEFINEDFILTERSCOMBOBOX_H_
 
 #include <QComboBox>
+#include <qstandarditemmodel.h>
 
 #include "predefinedfilters.h"
 
 class QStandardItemModel;
+
+constexpr int PatternRole = Qt::UserRole + 1;
+constexpr int RegexRole = PatternRole + 1;
 
 class PredefinedFiltersComboBox final : public QComboBox {
     Q_OBJECT
@@ -60,12 +64,12 @@ class PredefinedFiltersComboBox final : public QComboBox {
     void populatePredefinedFilters();
 
   Q_SIGNALS:
-    void filterChanged( const QList<PredefinedFilter>& selectedFilters);
+    void filterChanged( const QList<PredefinedFilter> &selectedFilters, const QStandardItem &changedItem );
 
   private:
     void setTitle( const QString& title );
     void insertFilters( const PredefinedFiltersCollection::Collection& filters );
-    void collectFilters();
+    void collectFilters( const QStandardItem &changedItem );
 
   private:
     PredefinedFiltersCollection filtersCollection_;

@@ -45,9 +45,6 @@
 
 #include "log.h"
 
-constexpr int PatternRole = Qt::UserRole + 1;
-constexpr int RegexRole = PatternRole + 1;
-
 class QCheckListStyledItemDelegate : public QStyledItemDelegate {
   public:
     QCheckListStyledItemDelegate( QObject* parent = 0 )
@@ -73,9 +70,8 @@ PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     populatePredefinedFilters();
 
     connect( model_, &QStandardItemModel::itemChanged, this,
-             [ this ]( const QStandardItem* changedItem ) {
-                 Q_UNUSED( changedItem );
-                 collectFilters();
+             [ this ]( const QStandardItem *changedItem ) {
+                 collectFilters( *changedItem );
              } );
 
     const auto changeCheckState = [ this ]( const QModelIndex& index ) {
@@ -133,7 +129,7 @@ void PredefinedFiltersComboBox::insertFilters(
     }
 }
 
-void PredefinedFiltersComboBox::collectFilters()
+void PredefinedFiltersComboBox::collectFilters( const QStandardItem &changedItem )
 {
     const auto totalRows = model_->rowCount();
 
@@ -149,8 +145,8 @@ void PredefinedFiltersComboBox::collectFilters()
         }
 
         selectedPatterns.append( { item->text(), item->data( PatternRole ).toString(),
-                                   item->data( RegexRole ).toBool() } );
+                                   item->data( RegexRole ).toBool(), filterIndex } );
     }
 
-    Q_EMIT filterChanged( selectedPatterns );
+    Q_EMIT filterChanged( selectedPatterns, changedItem );
 }

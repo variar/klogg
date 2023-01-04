@@ -49,6 +49,7 @@ struct PredefinedFilter {
     QString name;
     QString pattern;
     bool useRegex;
+    int index;
 };
 
 // Represents collection of filters read from settings file.

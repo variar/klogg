@@ -56,7 +56,8 @@ void PredefinedFiltersCollection::retrieveFromStorage( QSettings& settings )
 
                 filters_.push_back( { settings.value( "name" ).toString(),
                                       settings.value( "filter" ).toString(),
-                                      settings.value( "regex", true ).toBool() } );
+                                      settings.value( "regex", true ).toBool(),
+                                      i } );
             }
             settings.endArray();
         }

@@ -201,7 +201,7 @@ PredefinedFiltersCollection::Collection PredefinedFiltersDialog::readFiltersTabl
         const auto useRegex = useRegexCheckbox ? useRegexCheckbox->isChecked() : false;
 
         if ( !name.isEmpty() && !value.isEmpty() ) {
-            currentFilters.push_back( { name, value, useRegex } );
+            currentFilters.push_back( { name, value, useRegex, i } );
         }
     }
 
