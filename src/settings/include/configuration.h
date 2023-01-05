@@ -57,6 +57,7 @@ enum class SearchRegexpType {
 };
 
 enum class RegexpEngine { Hyperscan, QRegularExpression };
+static constexpr int MAX_RECENT_FILES = 25;
 
 // Configuration class containing everything in the "Settings" dialog
 class Configuration final : public Persistable<Configuration> {

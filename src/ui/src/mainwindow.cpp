@@ -297,6 +297,10 @@ void MainWindow::createActions()
     openAction->setStatusTip( tr( "Open a file" ) );
     connect( openAction, &QAction::triggered, [ this ]( auto ) { this->open(); } );
 
+    recentFilesCleanup = new QAction( tr( "Clear List" ), this );
+    connect( recentFilesCleanup, &QAction::triggered, this,
+             [ this ]( auto ) { this->clearRecentFileActions(); } );
+
     closeAction = new QAction( tr( "&Close" ), this );
     closeAction->setStatusTip( tr( "Close document" ) );
     connect( closeAction, &QAction::triggered, this,
@@ -549,16 +553,21 @@ void MainWindow::createMenus()
     fileMenu->addAction( openAction );
     fileMenu->addAction( openClipboardAction );
     fileMenu->addAction( openUrlAction );
+    recentFilesMenu = fileMenu->addMenu( tr( "Open Recent" ) );
+    for ( auto i = 0u; i < recentFileActions.size(); ++i ) {
+        recentFilesMenu->addAction( recentFileActions[ i ] );
+    }
+    recentFilesMenu->addSeparator();
+    recentFilesMenu->addAction( recentFilesCleanup );
+    recentFilesMenu->setEnabled( false );
+    fileMenu->addSeparator();
+
     fileMenu->addAction( closeAction );
     fileMenu->addAction( closeAllAction );
     fileMenu->addSeparator();
 
     fileMenu->addAction( optionsAction );
     fileMenu->addSeparator();
-
-    for ( auto i = 0u; i < recentFileActions.size(); ++i ) {
-        fileMenu->addAction( recentFileActions[ i ] );
-    }
 
     fileMenu->addSeparator();
     fileMenu->addAction( exitAction );
@@ -992,6 +1001,7 @@ void MainWindow::options()
         followAction->setEnabled( config.anyFileWatchEnabled() );
 
         updateShortcuts();
+        updateRecentFileActions();
     } );
     dialog.exec();
 
@@ -1615,25 +1625,42 @@ void MainWindow::addRecentFile( const QString& fileName )
 // Must be called after having added a new name to the list.
 void MainWindow::updateRecentFileActions()
 {
-    QStringList recent_files = RecentFiles::get().recentFiles();
+    auto& recentFiles = RecentFiles::get();
+    QStringList recent_files = recentFiles.recentFiles();
+    int recent_files_max_items = recentFiles.getNumberItemsToShow();
 
-    for ( auto j = 0; j < MaxRecentFiles; ++j ) {
-        const auto actionIndex = static_cast<size_t>( j );
-        if ( j < recent_files.count() ) {
-            QString text = tr( "&%1 %2" ).arg( j + 1 ).arg( strippedName( recent_files[ j ] ) );
-            recentFileActions[ actionIndex ]->setText( text );
-            recentFileActions[ actionIndex ]->setToolTip( recent_files[ j ] );
-            recentFileActions[ actionIndex ]->setData( recent_files[ j ] );
-            recentFileActions[ actionIndex ]->setVisible( true );
+    if ( recentFiles.recentFiles().count() > 0 ) {
+        recentFilesMenu->setEnabled( true );
+        for ( auto j = 0; j < MAX_RECENT_FILES; ++j ) {
+            const auto actionIndex = static_cast<size_t>( j );
+            if ( j < recent_files_max_items ) {
+                int key= j + ( ( j < 9 ) ? 0x31 : ( 0x61 - 9 ) ); // shortcuts: 1..9 next a,b...
+                QString text = tr( "&%1 %2" ).arg( QChar( key ) ).arg( strippedName( recent_files[ j ] ) );
+                recentFileActions[ actionIndex ]->setText( text );
+                recentFileActions[ actionIndex ]->setToolTip( recent_files[ j ] );
+                recentFileActions[ actionIndex ]->setData( recent_files[ j ] );
+                recentFileActions[ actionIndex ]->setVisible( true );
+            }
+            else {
+                recentFileActions[ actionIndex ]->setVisible( false );
+            }
         }
-        else {
-            recentFileActions[ actionIndex ]->setVisible( false );
-        }
+    }
+    else {
+        recentFilesMenu->setEnabled( false );
     }
 
     // separatorAction->setVisible(!recentFiles.isEmpty());
 }
 
+// Clear the list of the recent files
+void MainWindow::clearRecentFileActions()
+{
+    auto& recentFiles = RecentFiles::getSynced();
+    recentFiles.removeAll();
+    recentFiles.save();
+    updateRecentFileActions();
+}
 // Update our menu bar to match the settings of the crawler
 // (used when the tab is changed)
 void MainWindow::updateMenuBarFromDocument( const CrawlerWidget* crawler )

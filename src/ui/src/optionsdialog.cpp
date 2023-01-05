@@ -47,6 +47,7 @@
 #include "highlighteredit.h"
 #include "log.h"
 #include "savedsearches.h"
+#include "recentfiles.h"
 #include "shortcuts.h"
 #include "styles.h"
 
@@ -336,6 +337,11 @@ void OptionsDialog::updateDialogFromConfig()
 
     const auto& savedSearches = SavedSearches::get();
     searchHistorySpinBox->setValue( savedSearches.historySize() );
+
+    const auto& recentFiles = RecentFiles::get();
+    filesHistoryMaxItemsSpinBox->setMinimum( 1 );
+    filesHistoryMaxItemsSpinBox->setMaximum( MAX_RECENT_FILES );
+    filesHistoryMaxItemsSpinBox->setValue( recentFiles.filesHistoryMaxItems() );
 }
 
 //
@@ -463,6 +469,10 @@ void OptionsDialog::updateConfigFromDialog()
     auto& savedSearches = SavedSearches::get();
     savedSearches.setHistorySize( searchHistorySpinBox->value() );
     savedSearches.save();
+
+    auto& recentFiles = RecentFiles::get();
+    recentFiles.setFilesHistoryMaxItems( filesHistoryMaxItemsSpinBox->value() );
+    recentFiles.save();
 
     Q_EMIT optionsChanged();
 }

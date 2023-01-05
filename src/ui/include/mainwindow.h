@@ -47,6 +47,7 @@
 #include <memory>
 #include <mutex>
 
+#include "configuration.h"
 #include "crawlerwidget.h"
 #include "downloader.h"
 #include "iconloader.h"
@@ -196,6 +197,7 @@ class MainWindow : public QMainWindow {
     void updateTitleBar( const QString& fileName );
     void addRecentFile( const QString& fileName );
     void updateRecentFileActions();
+    void clearRecentFileActions();
     void updateFavoritesMenu();
     void updateOpenedFilesMenu();
     void updateHighlightersMenu();
@@ -214,11 +216,11 @@ class MainWindow : public QMainWindow {
     WindowSession session_;
     QString loadingFileName;
 
-    enum { MaxRecentFiles = 5 };
-    std::array<QAction*, MaxRecentFiles> recentFileActions;
+    std::array<QAction*, MAX_RECENT_FILES> recentFileActions;
     QActionGroup* recentFilesGroup;
 
     QMenu* fileMenu;
+    QMenu* recentFilesMenu;
     QMenu* editMenu;
     QMenu* viewMenu;
     QMenu* toolsMenu;
@@ -273,6 +275,7 @@ class MainWindow : public QMainWindow {
     QAction* addToFavoritesMenuAction;
     QAction* removeFromFavoritesAction;
     QAction* selectOpenFileAction;
+    QAction* recentFilesCleanup;
     QActionGroup* favoritesGroup;
     QActionGroup* openedFilesGroup;
     QActionGroup* highlightersActionGroup = nullptr;
