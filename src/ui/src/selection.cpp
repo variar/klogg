@@ -191,16 +191,15 @@ QString Selection::getSelectedTextWithLineNumbers( const AbstractLogData* logDat
     QString text;
 
     if ( selectedLine_.has_value() ) {
-        text = logData->getLineString( *selectedLine_ )
-               + QStringLiteral( ":%1" ).arg(
-                   logData->getLineNumber( selectedLine_.value() ).get() );
+        text = QStringLiteral( "%1: " ).arg( logData->getLineNumber( selectedLine_.value() ).get() )
+               + logData->getLineString( *selectedLine_ );
     }
     else if ( selectedPartial_.line.has_value() ) {
-        text = logData->getExpandedLineString( *selectedPartial_.line )
-                   .mid( selectedPartial_.startColumn,
-                         ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 )
-               + QStringLiteral( ":%1" ).arg(
-                   logData->getLineNumber( selectedPartial_.line.value() ).get() );
+        text = QStringLiteral( "%1: " ).arg(
+                   logData->getLineNumber( selectedPartial_.line.value() ).get() )
+               + logData->getExpandedLineString( *selectedPartial_.line )
+                     .mid( selectedPartial_.startColumn,
+                           ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 );
     }
     else if ( selectedRange_.startLine.has_value() ) {
         const auto list = logData->getLines( *selectedRange_.startLine, selectedRange_.size() );
