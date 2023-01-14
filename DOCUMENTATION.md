@@ -202,7 +202,8 @@ highlighter overrides colors for the current line.
 
 Highlighter configuration can be exported to a file and 
 imported on another machine. Each set is identified
-by unique id. Only new sets are imported from the file.
+by unique id. Only new sets are imported from the file. Please export the file
+with a `.conf` extension to ensure *klogg* will be able to import it.
 
 ### Color labels
 
