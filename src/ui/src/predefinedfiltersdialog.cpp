@@ -55,32 +55,34 @@
 #include "log.h"
 #include "predefinedfilters.h"
 
-class CenteredCheckbox : public QWidget
-{
-    public: 
-        explicit CenteredCheckbox(QWidget* parent = nullptr) : QWidget(parent)
-        {
-            auto layout = new QHBoxLayout;
-            layout->setAlignment(Qt::AlignCenter);
-            checkbox_ = new QCheckBox;
-            layout->addWidget(checkbox_);
-            this->setLayout(layout);
+class CenteredCheckbox : public QWidget {
+  public:
+    explicit CenteredCheckbox( QWidget* parent = nullptr )
+        : QWidget( parent )
+    {
+        auto layout = new QHBoxLayout;
+        layout->setAlignment( Qt::AlignCenter );
+        checkbox_ = new QCheckBox;
+        layout->addWidget( checkbox_ );
+        this->setLayout( layout );
 
-            QPalette palette = this->palette();
-            palette.setColor(QPalette::Base, palette.color(QPalette::Window));
-            checkbox_->setPalette(palette);
-        }
+        QPalette palette = this->palette();
+        palette.setColor( QPalette::Base, palette.color( QPalette::Window ) );
+        checkbox_->setPalette( palette );
+    }
 
-        bool isChecked() const {
-            return checkbox_->isChecked();
-        }
+    bool isChecked() const
+    {
+        return checkbox_->isChecked();
+    }
 
-        void setChecked(bool isChecked) {
-            checkbox_->setChecked(isChecked);
-        }
+    void setChecked( bool isChecked )
+    {
+        checkbox_->setChecked( isChecked );
+    }
 
-    private:
-        QCheckBox* checkbox_;
+  private:
+    QCheckBox* checkbox_;
 };
 
 PredefinedFiltersDialog::PredefinedFiltersDialog( QWidget* parent )
@@ -258,10 +260,10 @@ void PredefinedFiltersDialog::swapFilters( int currentRow, int newRow, int selec
 {
     dispatchToMainThread( [ this, currentRow, newRow, selectedColumn ] {
         for ( int column = 0; column < filtersTableWidget->columnCount(); ++column ) {
-            auto currentUseRegex
-                = static_cast<CenteredCheckbox*>( filtersTableWidget->cellWidget( currentRow, column ) );
-            auto newUseRegex
-                = static_cast<CenteredCheckbox*>( filtersTableWidget->cellWidget( newRow, column ) );
+            auto currentUseRegex = static_cast<CenteredCheckbox*>(
+                filtersTableWidget->cellWidget( currentRow, column ) );
+            auto newUseRegex = static_cast<CenteredCheckbox*>(
+                filtersTableWidget->cellWidget( newRow, column ) );
 
             if ( currentUseRegex && newUseRegex ) {
                 const auto currentCheckState = currentUseRegex->isChecked();
@@ -283,8 +285,8 @@ void PredefinedFiltersDialog::swapFilters( int currentRow, int newRow, int selec
 
 void PredefinedFiltersDialog::importFilters()
 {
-    const auto file = QFileDialog::getOpenFileName( this, "Select file to import", "",
-                                                    tr("Predefined filters (*.conf);;All files (*)"));
+    const auto file = QFileDialog::getOpenFileName(
+        this, "Select file to import", "", tr( "Predefined filters (*.conf);;All files (*)" ) );
 
     if ( file.isEmpty() ) {
         return;
@@ -301,13 +303,13 @@ void PredefinedFiltersDialog::importFilters()
 void PredefinedFiltersDialog::exportFilters()
 {
     auto file = QFileDialog::getSaveFileName( this, "Export predefined filters", "",
-                                                    tr( "Predefined filters (*.conf)" ) );
+                                              tr( "Predefined filters (*.conf)" ) );
 
     if ( file.isEmpty() ) {
         return;
     }
 
-    if( not file.endsWith(".conf") ) {
+    if ( not file.endsWith( ".conf" ) ) {
         file += ".conf";
     }
 
