@@ -201,7 +201,8 @@ class LogFilteredData : public AbstractLogData {
         LineLength maxLength;
     };
 
-    using SearchCacheKey = std::tuple<RegularExpressionPattern, LineNumber::UnderlyingType, LineNumber::UnderlyingType>;
+    using SearchCacheKey = std::tuple<RegularExpressionPattern, LineNumber::UnderlyingType,
+                                      LineNumber::UnderlyingType>;
     struct SearchCacheKeyHash {
         template <class T>
         void hash_combine( std::size_t& seed, const T& v ) const

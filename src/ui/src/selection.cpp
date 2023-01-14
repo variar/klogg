@@ -186,19 +186,21 @@ QString Selection::getSelectedText( const AbstractLogData* logData ) const
     return text;
 }
 
-QString Selection::getSelectedTextWithLineNumbers(const AbstractLogData *logData) const
+QString Selection::getSelectedTextWithLineNumbers( const AbstractLogData* logData ) const
 {
     QString text;
 
     if ( selectedLine_.has_value() ) {
-        text = logData->getLineString( *selectedLine_ ) + QStringLiteral(":%1").arg(logData->getLineNumber( selectedLine_.value()).get());
+        text = logData->getLineString( *selectedLine_ )
+               + QStringLiteral( ":%1" ).arg(
+                   logData->getLineNumber( selectedLine_.value() ).get() );
     }
     else if ( selectedPartial_.line.has_value() ) {
         text = logData->getExpandedLineString( *selectedPartial_.line )
                    .mid( selectedPartial_.startColumn,
-                         ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 ) +
-               QStringLiteral(":%1").arg(logData->getLineNumber(selectedPartial_.line.value()).get());
-
+                         ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 )
+               + QStringLiteral( ":%1" ).arg(
+                   logData->getLineNumber( selectedPartial_.line.value() ).get() );
     }
     else if ( selectedRange_.startLine.has_value() ) {
         const auto list = logData->getLines( *selectedRange_.startLine, selectedRange_.size() );
@@ -219,8 +221,9 @@ QString Selection::getSelectedTextWithLineNumbers(const AbstractLogData *logData
                 text.append( QChar::LineFeed );
             }
 
-            text.append( line + QStringLiteral(":%1").arg(logData->getLineNumber(ln).get()));
-            ln += LineNumber(1);
+            text.append( QStringLiteral( "%1: " ).arg( logData->getLineNumber( ln ).get() )
+                         + line );
+            ln += LineNumber( 1 );
         }
     }
 
