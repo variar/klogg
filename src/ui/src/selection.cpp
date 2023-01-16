@@ -150,83 +150,64 @@ std::vector<LineNumber> Selection::getLines() const
 
 // The tab behaviour is a bit odd at the moment, full lines are not expanded
 // but partials (part of line) are, they probably should not ideally.
-QString Selection::getSelectedText( const AbstractLogData* logData ) const
+QString Selection::getSelectedText( const AbstractLogData* logData, bool lineNumbers ) const
 {
+    const auto selectionData = getSelectionWithLineNumbers( logData );
+
     QString text;
 
-    if ( selectedLine_.has_value() ) {
-        text = logData->getLineString( *selectedLine_ );
-    }
-    else if ( selectedPartial_.line.has_value() ) {
-        text = logData->getExpandedLineString( *selectedPartial_.line )
-                   .mid( selectedPartial_.startColumn,
-                         ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 );
-    }
-    else if ( selectedRange_.startLine.has_value() ) {
-        const auto list = logData->getLines( *selectedRange_.startLine, selectedRange_.size() );
+    const auto selectionSizeEstimate = std::accumulate(
+        selectionData.begin(), selectionData.end(), static_cast<int>( selectionData.size() ),
+        []( const auto& acc, const auto& next ) { return acc + next.first.size(); } );
 
-        const auto selectionSizeEstimate = std::accumulate(
-            list.begin(), list.end(), static_cast<int>( list.size() ),
-            []( const auto& acc, const auto& next ) { return acc + next.size(); } );
+    text.reserve( selectionSizeEstimate );
 
-        text.reserve( selectionSizeEstimate );
-
-        for ( const auto& line : list ) {
-            if ( !text.isEmpty() ) {
+    for ( const auto& line : selectionData ) {
+        if ( !text.isEmpty() ) {
 #if defined( Q_OS_WIN )
-                text.append( QChar::CarriageReturn );
+            text.append( QChar::CarriageReturn );
 #endif
-                text.append( QChar::LineFeed );
-            }
+            text.append( QChar::LineFeed );
+        }
 
-            text.append( line );
+        if ( lineNumbers ) {
+            text.append( QStringLiteral( "%1: " ).arg( line.second.get() ) + line.first );
+        }
+        else {
+            text.append( line.first );
         }
     }
 
     return text;
 }
 
-QString Selection::getSelectedTextWithLineNumbers( const AbstractLogData* logData ) const
+QList<std::pair<QString, LineNumber>>
+Selection::getSelectionWithLineNumbers( const AbstractLogData* logData ) const
 {
-    QString text;
+    QList<std::pair<QString, LineNumber>> selectionData;
 
     if ( selectedLine_.has_value() ) {
-        text = QStringLiteral( "%1: " ).arg( logData->getLineNumber( selectedLine_.value() ).get() )
-               + logData->getLineString( *selectedLine_ );
+        selectionData.append( { logData->getLineString( *selectedLine_ ),
+                                logData->getLineNumber( selectedLine_.value() ) } );
     }
     else if ( selectedPartial_.line.has_value() ) {
-        text = QStringLiteral( "%1: " ).arg(
-                   logData->getLineNumber( selectedPartial_.line.value() ).get() )
-               + logData->getExpandedLineString( *selectedPartial_.line )
-                     .mid( selectedPartial_.startColumn,
-                           ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 );
+        selectionData.append(
+            { logData->getExpandedLineString( *selectedPartial_.line )
+                  .mid( selectedPartial_.startColumn,
+                        ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 ),
+              logData->getLineNumber( selectedPartial_.line.value() ) } );
     }
     else if ( selectedRange_.startLine.has_value() ) {
         const auto list = logData->getLines( *selectedRange_.startLine, selectedRange_.size() );
-
-        const auto selectionSizeEstimate = std::accumulate(
-            list.begin(), list.end(), static_cast<int>( list.size() ),
-            []( const auto& acc, const auto& next ) { return acc + next.size(); } );
-
-        text.reserve( selectionSizeEstimate );
-
         LineNumber ln = *selectedRange_.startLine;
 
         for ( const auto& line : list ) {
-            if ( !text.isEmpty() ) {
-#if defined( Q_OS_WIN )
-                text.append( QChar::CarriageReturn );
-#endif
-                text.append( QChar::LineFeed );
-            }
-
-            text.append( QStringLiteral( "%1: " ).arg( logData->getLineNumber( ln ).get() )
-                         + line );
+            selectionData.append( { line, logData->getLineNumber( ln ) } );
             ln += LineNumber( 1 );
         }
     }
 
-    return text;
+    return selectionData;
 }
 
 FilePosition Selection::getNextPosition() const

@@ -1235,7 +1235,7 @@ void AbstractLogView::copyWithLineNumbers()
 {
     try {
         auto clipboard = QApplication::clipboard();
-        auto text = selection_.getSelectedTextWithLineNumbers( logData_ );
+        auto text = selection_.getSelectedText( logData_, true );
         text.replace( QChar::Null, QChar::Space );
         clipboard->setText( text );
     } catch ( std::exception& err ) {
@@ -1769,7 +1769,8 @@ void AbstractLogView::createMenu()
 
     copyWithLineNumbersAction_ = new QAction( tr( "Copy with line numbers" ), this );
     // No text as this action title depends on the type of selection
-    connect( copyWithLineNumbersAction_, &QAction::triggered, this, [ this ]( auto ) { this->copyWithLineNumbers(); } );
+    connect( copyWithLineNumbersAction_, &QAction::triggered, this,
+             [ this ]( auto ) { this->copyWithLineNumbers(); } );
 
     markAction_ = new QAction( tr( "&Mark" ), this );
     connect( markAction_, &QAction::triggered, this, [ this ]( auto ) { this->markSelected(); } );

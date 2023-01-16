@@ -149,10 +149,7 @@ class Selection {
     OptionalLineNumber selectedLine() const;
 
     // Returns the text selected from the passed AbstractLogData
-    QString getSelectedText( const AbstractLogData* logData ) const;
-    // Returns the text selected with line numbers from the passed AbstractLogData
-    QString getSelectedTextWithLineNumbers( const AbstractLogData* logData ) const;
-
+    QString getSelectedText( const AbstractLogData* logData, bool lineNumbers = false ) const;
 
     // Return the position immediately after the current selection
     // (used for searches).
@@ -161,6 +158,10 @@ class Selection {
 
     // Idem from the position immediately before selection.
     FilePosition getPreviousPosition() const;
+
+  private:
+    QList<std::pair<QString, LineNumber>>
+    getSelectionWithLineNumbers( const AbstractLogData* logData ) const;
 
   private:
     // Line number currently selected, or -1 if none selected
