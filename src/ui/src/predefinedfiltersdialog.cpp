@@ -309,7 +309,7 @@ void PredefinedFiltersDialog::exportFilters()
         return;
     }
 
-    if ( not file.endsWith( ".conf" ) ) {
+    if ( !file.endsWith( ".conf" ) ) {
         file += ".conf";
     }
 

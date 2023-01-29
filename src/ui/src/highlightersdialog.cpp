@@ -197,6 +197,10 @@ void HighlightersDialog::exportHighlighters()
         return;
     }
 
+	if ( !file.endsWith( ".conf" ) ) {
+        file += ".conf";
+	}
+
     QSettings settings{ file, QSettings::IniFormat };
     highlighterSetCollection_.saveToStorage( settings );
 }
