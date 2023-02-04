@@ -370,6 +370,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
 
         if ( line.has_value() && mouseEvent->modifiers() & Qt::ShiftModifier ) {
             selection_.selectRangeFromPrevious( *line );
+            selectionCurrentEndPos_ = convertCoordToFilePos( mouseEvent->pos() );
             Q_EMIT updateLineNumber( *line );
             update();
         }
@@ -689,11 +690,7 @@ void AbstractLogView::doRegisterShortcuts()
     registerShortcut( ShortcutAction::LogViewJumpToTop,
                       [ this ]() { selectAndDisplayLine( 0_lnum ); } );
     registerShortcut( ShortcutAction::LogViewJumpToButtom, [ this ]() {
-        disableFollow();
-        const auto line = LineNumber( logData_->getNbLine().get() ) - 1_lcount;
-        selection_.selectLine( line );
-        Q_EMIT updateLineNumber( line );
-        Q_EMIT newSelection( line );
+        selectAndDisplayLine( maxDisplayLineNumber() - 1_lcount );
         jumpToBottom();
     } );
 
@@ -728,7 +725,25 @@ void AbstractLogView::doRegisterShortcuts()
     registerShortcut( ShortcutAction::LogViewAddToSearch, [ this ]() { addToSearch(); } );
     registerShortcut( ShortcutAction::LogViewExcludeFromSearch,
                       [ this ]() { excludeFromSearch(); } );
-    registerShortcut( ShortcutAction::LogViewReplaceSearch, [ this ]() { replaceSearch(); } );
+    registerShortcut( ShortcutAction::LogViewSelectLinesUp, [ this ]() {
+        auto newPosition = selectionCurrentEndPos_;
+        if ( newPosition.line == 0_lcount ) {
+            // Reached the begin
+            return;
+        }
+        --newPosition.line;
+        selectAndDisplayRange( newPosition );
+    } );
+
+    registerShortcut( ShortcutAction::LogViewSelectLinesDown, [ this ]() {
+        auto newPosition = selectionCurrentEndPos_;
+        if ( newPosition.line >= maxDisplayLineNumber() - 1_lcount ) {
+            // Reached the end
+             return;
+         }
+        ++newPosition.line;
+         selectAndDisplayRange( newPosition );
+    } );
 }
 
 void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
@@ -1500,6 +1515,8 @@ void AbstractLogView::selectAndDisplayLine( LineNumber line )
 {
     disableFollow();
     selection_.selectLine( line );
+    selectionStartPos_ = FilePos{ line, 0 };
+    selectionCurrentEndPos_ = selectionStartPos_;
     displayLine( line );
     Q_EMIT updateLineNumber( line );
     Q_EMIT newSelection( line );
@@ -1640,6 +1657,8 @@ void AbstractLogView::moveSelection( LinesCount delta, bool isDeltaNegative )
     // Select and display the new line
     selection_.selectLine( newLine );
     displayLine( newLine );
+    selectionStartPos_ = FilePos{ newLine, 0 };
+    selectionCurrentEndPos_ = selectionStartPos_;
     Q_EMIT updateLineNumber( newLine );
     Q_EMIT newSelection( newLine );
 }
@@ -1743,6 +1762,16 @@ void AbstractLogView::updateGlobalSelection()
     } catch ( std::exception& err ) {
         LOG_ERROR << "failed to copy data to clipboard " << err.what();
     }
+}
+
+void AbstractLogView::selectAndDisplayRange( FilePos pos )
+{
+    disableFollow();
+    selection_.selectRange( selectionStartPos_.line, pos.line );
+    selectionCurrentEndPos_ = pos;
+    displayLine( pos.line );
+    Q_EMIT updateLineNumber( pos.line );
+    Q_EMIT newSelection( pos.line );
 }
 
 // Create the pop-up menu

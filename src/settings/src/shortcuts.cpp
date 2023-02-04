@@ -145,6 +145,9 @@ const std::map<std::string, QStringList>& ShortcutAction::defaultShortcuts()
         shortcuts.emplace( LogViewExcludeFromSearch, QStringList() << "Shift+E" );
         shortcuts.emplace( LogViewReplaceSearch, QStringList() << "Shift+R" );
 
+        shortcuts.emplace( LogViewSelectLinesUp, QStringList() << "Shift+Up" );
+        shortcuts.emplace( LogViewSelectLinesDown, QStringList() << "Shift+Down" );
+
         return shortcuts;
     }();
 

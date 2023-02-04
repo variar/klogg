@@ -103,6 +103,8 @@ struct ShortcutAction {
     static constexpr auto LogViewAddToSearch = "logview.add_to_search";
     static constexpr auto LogViewExcludeFromSearch = "logview.exclude_from_search";
     static constexpr auto LogViewReplaceSearch = "logview.replace_search";
+    static constexpr auto LogViewSelectLinesUp = "logview.select_lines_up";
+    static constexpr auto LogViewSelectLinesDown = "logview.select_lines_down";
     
     static const std::map<std::string, QStringList>& defaultShortcuts();
 

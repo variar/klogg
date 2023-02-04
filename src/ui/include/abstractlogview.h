@@ -536,6 +536,8 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
 
     // Utils functions
     void updateGlobalSelection();
+
+    void selectAndDisplayRange( FilePos pos );
 };
 
 #endif
