@@ -356,6 +356,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void copy();
     void markSelected();
     void saveToFile();
+    void saveSelectedToFile();
     void setSearchStart();
     void setSearchEnd();
     void setSelectionStart();
@@ -448,6 +449,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     QAction* sendToScratchpadAction_;
     QAction* replaceInScratchpadAction_;
     QAction* saveToFileAction_;
+    QAction* saveSelectedToFileAction_;
     QAction* findNextAction_;
     QAction* findPreviousAction_;
     QAction* addToSearchAction_;
@@ -518,6 +520,9 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void considerMouseHovering( int xPos, int yPos );
 
     LineLength maxLineLength(const std::vector<LineNumber>& lines) const;
+
+    // Save specified lines in range [begin, end) to a file
+    void saveLinesToFile( LineNumber begin, LineNumber end );
 
     // Search functions (for n/N)
     using QuickFindSearchFn = void ( QuickFind::* )( Selection, QuickFindMatcher );

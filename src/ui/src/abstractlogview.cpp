@@ -1238,12 +1238,31 @@ void AbstractLogView::markSelected()
 
 void AbstractLogView::saveToFile()
 {
+    auto start = 0_lnum;
+    const auto totalLines = logData_->getNbLine();
+    auto end = LineNumber{ totalLines.get() };
+
+    saveLinesToFile( start, end );
+}
+
+void AbstractLogView::saveSelectedToFile()
+{
+    auto start = selectionStartPos_.line;
+    auto lastLine = selectionCurrentEndPos_.line;
+    if ( start > lastLine ) {
+        std::swap( start, lastLine );
+    }
+    auto end = lastLine + 1_lcount;
+    saveLinesToFile( start, end );
+}
+
+void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
+{
     auto filename = QFileDialog::getSaveFileName( this, "Save content" );
     if ( filename.isEmpty() ) {
         return;
     }
 
-    const auto totalLines = logData_->getNbLine();
     QSaveFile saveFile{ filename };
     saveFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
     if ( !saveFile.isOpen() ) {
@@ -1253,18 +1272,16 @@ void AbstractLogView::saveToFile()
 
     QProgressDialog progressDialog( this );
     progressDialog.setLabelText( QString( "Saving content to %1" ).arg( filename ) );
-
     std::vector<std::pair<LineNumber, LinesCount>> offsets;
-    auto lineOffset = 0_lnum;
+    auto lineOffset = begin;
     const auto chunkSize = 5000_lcount;
 
-    for ( ; lineOffset + chunkSize < LineNumber( totalLines.get() );
-          lineOffset += LineNumber( chunkSize.get() ) ) {
+    for ( ; lineOffset + chunkSize < end; lineOffset += LineNumber( chunkSize.get() ) ) {
         offsets.emplace_back( lineOffset, chunkSize );
     }
-    offsets.emplace_back( lineOffset, LinesCount( totalLines.get() % chunkSize.get() ) );
+    offsets.emplace_back( lineOffset, LinesCount( ( end - lineOffset ).get() % chunkSize.get() ) );
 
-    QTextCodec* codec = logData_->getDisplayEncoding();
+    const QTextCodec* codec = logData_->getDisplayEncoding();
     if ( !codec ) {
         codec = QTextCodec::codecForName( "utf-8" );
     }
@@ -1759,6 +1776,10 @@ void AbstractLogView::createMenu()
     connect( saveToFileAction_, &QAction::triggered, this,
              [ this ]( auto ) { this->saveToFile(); } );
 
+    saveSelectedToFileAction_ = new QAction( tr( "Save selected to file" ), this );
+    connect( saveSelectedToFileAction_, &QAction::triggered, this,
+             [ this ]( auto ) { this->saveSelectedToFile(); } );
+
     // For '#' and '*', shortcuts doesn't seem to work but
     // at least it displays them in the menu, we manually handle those keys
     // as keys event anyway (in keyPressEvent).
@@ -1848,6 +1869,7 @@ void AbstractLogView::createMenu()
     popupMenu_->addSeparator();
     popupMenu_->addAction( saveDefaultSplitterSizesAction_ );
     popupMenu_->addAction( saveToFileAction_ );
+    popupMenu_->addAction( saveSelectedToFileAction_ );
 }
 
 void AbstractLogView::considerMouseHovering( int xPos, int yPos )
