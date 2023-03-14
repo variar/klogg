@@ -19,6 +19,7 @@
 
 #include <QFile>
 #include <QSettings>
+#include <algorithm>
 
 #include "log.h"
 #include "recentfiles.h"
@@ -57,18 +58,18 @@ void RecentFiles::addRecent( const QString& text )
 
 int RecentFiles::getNumberItemsToShow() const
 {
-    return ( filesHistoryMaxItems_ < recentFiles_.count() ? filesHistoryMaxItems_ : recentFiles_.count() );
+    return ( std::min(recentFiles_.count(), filesHistoryMaxItemsToShow_) );
 }
 
 int RecentFiles::filesHistoryMaxItems() const
 {
-    return filesHistoryMaxItems_;
+    return filesHistoryMaxItemsToShow_;
 }
 
-void RecentFiles::setFilesHistoryMaxItems( const int recentMaxFiles )
+void RecentFiles::setFilesHistoryMaxItems( const int recentMaxFilesToShow )
 {
-    if ( recentMaxFiles > 0 && recentMaxFiles <= MAX_RECENT_FILES ) {
-        filesHistoryMaxItems_ = recentMaxFiles;
+    if (recentMaxFilesToShow > 0) {
+        filesHistoryMaxItemsToShow_ = std::clamp(recentMaxFilesToShow, 0, MAX_RECENT_FILES);
     }
 }
 
@@ -94,7 +95,7 @@ void RecentFiles::saveToStorage( QSettings& settings ) const
         settings.setValue( "name", recentFiles_.at( i ) );
     }
     settings.endArray();
-    settings.setValue( "maxMenuItems", filesHistoryMaxItems_ );
+    settings.setValue( "maxMenuItems", filesHistoryMaxItemsToShow_ );
     settings.endGroup();
 }
 
@@ -108,7 +109,7 @@ void RecentFiles::retrieveFromStorage( QSettings& settings )
         settings.beginGroup( "RecentFiles" );
         if ( settings.value( "version" ).toInt() == RECENTFILES_VERSION ) {
             int size = settings.beginReadArray( "filesHistory" );
-            size = ( size < MAX_RECENT_FILES ) ? size : MAX_RECENT_FILES ;
+            size = std::min(size, MAX_RECENT_FILES);
             for ( int i = 0; i < size; ++i ) {
                 settings.setArrayIndex( i );
                 QString file = settings.value( "name" ).toString();

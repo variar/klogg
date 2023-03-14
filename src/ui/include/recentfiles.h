@@ -51,7 +51,7 @@ class RecentFiles final : public Persistable<RecentFiles, session_settings> {
     static constexpr int DEFAULT_MAX_ITEMS_TO_SHOW = 5;
 
     QStringList recentFiles_;
-    int filesHistoryMaxItems_ = DEFAULT_MAX_ITEMS_TO_SHOW;
+    int filesHistoryMaxItemsToShow_ = DEFAULT_MAX_ITEMS_TO_SHOW;
 };
 
 #endif
