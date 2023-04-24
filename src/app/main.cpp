@@ -127,6 +127,7 @@ int main( int argc, char* argv[] )
     setApplicationAttributes( config.enableQtHighDpi(), config.scaleFactorRounding() );
 
     KloggApp app( argc, argv );
+    MainWindow::installLanguage( config.language() );
     CliParameters parameters( app );
 
     const auto logLevel

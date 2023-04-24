@@ -43,6 +43,7 @@
 #include <QSystemTrayIcon>
 #include <QTemporaryDir>
 
+#include <QTranslator>
 #include <array>
 #include <memory>
 #include <mutex>
@@ -79,6 +80,10 @@ class MainWindow : public QMainWindow {
     void reloadSession();
     // Loads the initial file (parameter passed or from config file)
     void loadInitialFile( QString fileName, bool followFile );
+
+    void reTranslateUI();
+
+    static int installLanguage( QString lang );
 
   public Q_SLOTS:
     // Load a file in a new tab (non-interactive)
@@ -122,8 +127,8 @@ class MainWindow : public QMainWindow {
     void aboutQt();
     void documentation();
     void showScratchPad();
-    void sendToScratchpad(QString);
-    void replaceDataInScratchpad(QString);
+    void sendToScratchpad( QString );
+    void replaceDataInScratchpad( QString );
     void encodingChanged( QAction* action );
     void addToFavorites();
     void removeFromFavorites();
@@ -290,6 +295,8 @@ class MainWindow : public QMainWindow {
 
     // Multiplex signals to any of the CrawlerWidgets
     SignalMux signalMux_;
+
+    static QTranslator mTranslator;
 
     // QuickFind widget
     QuickFindWidget quickFindWidget_;

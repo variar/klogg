@@ -101,6 +101,8 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         = settings.value( "mainFont.antialiasing", DefaultConfiguration.forceFontAntialiasing_ )
               .toBool();
 
+    language_ = settings.value( "view.language", DefaultConfiguration.language_ ).toString();
+
     enableQtHighDpi_
         = settings.value( "view.qtHiDpi", DefaultConfiguration.enableQtHighDpi_ ).toBool();
 
@@ -328,6 +330,7 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "mainFont.family", fi.family() );
     settings.setValue( "mainFont.size", fi.pointSize() );
     settings.setValue( "mainFont.antialiasing", forceFontAntialiasing_ );
+    settings.setValue( "view.language", language_ );
 
     settings.setValue( "regexpType.engine", static_cast<int>( regexpEngine_ ) );
 

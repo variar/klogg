@@ -72,6 +72,16 @@ class Configuration final : public Persistable<Configuration> {
     QFont mainFont() const;
     void setMainFont( QFont newFont );
 
+    QString language() const
+    {
+        return language_;
+    }
+
+    void setLanguage( QString lang )
+    {
+        language_ = lang;
+    }
+
     // Accesses the regexp types
     SearchRegexpType mainRegexpType() const
     {
@@ -495,6 +505,8 @@ class Configuration final : public Persistable<Configuration> {
     SearchRegexpType mainRegexpType_ = SearchRegexpType::ExtendedRegexp;
     SearchRegexpType quickfindRegexpType_ = SearchRegexpType::FixedString;
     bool quickfindIncremental_ = true;
+
+    QString language_{ "en" };
 
     bool nativeFileWatchEnabled_ = true;
 #ifdef Q_OS_WIN

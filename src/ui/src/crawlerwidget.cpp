@@ -314,13 +314,13 @@ void CrawlerWidget::goToLine()
 void CrawlerWidget::doSetData( std::shared_ptr<LogData> logData,
                                std::shared_ptr<LogFilteredData> filteredData )
 {
-    logData_ = std::move(logData);
-    logFilteredData_ = std::move(filteredData);
+    logData_ = std::move( logData );
+    logFilteredData_ = std::move( filteredData );
 }
 
 void CrawlerWidget::doSetQuickFindPattern( std::shared_ptr<QuickFindPattern> qfp )
 {
-    quickFindPattern_ = std::move(qfp);
+    quickFindPattern_ = std::move( qfp );
 }
 
 void CrawlerWidget::doSetSavedSearches( SavedSearches* saved_searches )
@@ -471,10 +471,14 @@ void CrawlerWidget::updateFilteredView( LinesCount nbMatches, int progress,
         // Search in progress
         // We ignore 0% and 100% to avoid a flash when the search is very short
         if ( progress > 0 ) {
+            // Some languages translate the plural the same as the singular, so use the full string
+
             searchInfoLine_->setText(
-                tr( "Search in progress (%1 %)... %2 match%3 found so far." )
-                    .arg( QString::number( progress ), QString::number( nbMatches.get() ),
-                          QLatin1String( nbMatches.get() > 1 ? "es" : "" ) ) );
+                tr( "Search in progress (%1 %)..." ).arg( QString::number( progress ) )
+                + ( nbMatches.get() > 1 ? tr( " %1 matches found so far." )
+                                              .arg( QString::number( nbMatches.get() ) )
+                                        : tr( " %1 match found so far." )
+                                              .arg( QString::number( nbMatches.get() ) ) ) );
 
             searchInfoLine_->displayGauge( progress );
         }
@@ -1289,7 +1293,7 @@ void CrawlerWidget::setup()
              [ this ]() { Q_EMIT sendToScratchpad( logMainView_->getSelection() ); } );
     connect( filteredView_, &AbstractLogView::sendSelectionToScratchpad, this,
              [ this ]() { Q_EMIT sendToScratchpad( filteredView_->getSelection() ); } );
-    
+
     connect( logMainView_, &AbstractLogView::replaceScratchpadWithSelection, this,
              [ this ]() { Q_EMIT replaceDataInScratchpad( logMainView_->getSelection() ); } );
     connect( filteredView_, &AbstractLogView::replaceScratchpadWithSelection, this,
@@ -1484,9 +1488,9 @@ void CrawlerWidget::printSearchInfoMessage( LinesCount nbMatches )
         break;
     case SearchState::Static:
     case SearchState::Autorefreshing:
-        text = tr( "%1 match%2 found." )
-                   .arg( nbMatches.get() )
-                   .arg( nbMatches.get() > 1 ? "es" : "" );
+        // Some languages translate the plural the same as the singular, so use the full string
+        text = nbMatches.get() > 1 ? tr( "%1 matches found" ).arg( nbMatches.get() )
+                                   : tr( "%1 match found" ).arg( nbMatches.get() );
         break;
     case SearchState::FileTruncated:
     case SearchState::TruncatedAutorefreshing:

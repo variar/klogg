@@ -46,6 +46,7 @@
 #include "fontutils.h"
 #include "highlighteredit.h"
 #include "log.h"
+#include "mainwindow.h"
 #include "savedsearches.h"
 #include "recentfiles.h"
 #include "shortcuts.h"
@@ -67,6 +68,7 @@ OptionsDialog::OptionsDialog( QWidget* parent )
     setupRegexp();
     setupStyles();
     setupEncodings();
+    setupLanguageList();
 
     // Validators
     QValidator* pollingIntervalValidator = new QIntValidator( PollIntervalMin, PollIntervalMax );
@@ -161,6 +163,27 @@ void OptionsDialog::setupEncodings()
 
     for ( const auto& codec : allMibs ) {
         encodingComboBox->addItem( codec.first, codec.second );
+    }
+}
+
+void OptionsDialog::setupLanguageList()
+{
+    QResource resource( ":/i18n/Languages.xml" );
+    QByteArray bytes( reinterpret_cast<const char*>( resource.data() ), (int)resource.size() );
+    QXmlStreamReader xml( bytes );
+
+    while ( !xml.atEnd() ) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if ( xml.hasError() ) {
+            LOG_ERROR << "load language error";
+            return;
+        }
+
+        if ( xml.name() == QString( "language" ) && token == QXmlStreamReader::StartElement ) {
+            QXmlStreamAttributes attributes = xml.attributes();
+            languageComboBox->addItem( attributes.value( "name" ).toString(),
+                                       attributes.value( "ietfCode" ).toString() );
+        }
     }
 }
 
@@ -272,6 +295,13 @@ void OptionsDialog::updateDialogFromConfig()
     enableQtHiDpiCheckBox->setChecked( config.enableQtHighDpi() );
     scaleRoundingComboBox->setCurrentIndex( config.scaleFactorRounding() - 1 );
 
+    // Language
+    auto langIdx = languageComboBox->findData( { config.language() } );
+    if ( langIdx == -1 ) {
+        langIdx = 0;
+    }
+    languageComboBox->setCurrentIndex( langIdx );
+
     const auto style = config.style();
     if ( !styleComboBox->findText( style, Qt::MatchExactly ) ) {
         styleComboBox->setCurrentIndex( 0 );
@@ -381,6 +411,12 @@ void OptionsDialog::changeQfColor()
     }
 }
 
+int OptionsDialog::updateTranslate()
+{
+    auto mw = dynamic_cast<MainWindow*>( parent() );
+    return mw->installLanguage( languageComboBox->currentData().toString() );
+}
+
 void OptionsDialog::updateConfigFromDialog()
 {
     auto& config = Configuration::get();
@@ -463,6 +499,11 @@ void OptionsDialog::updateConfigFromDialog()
         shortcuts[ action ] = actionKeys;
     }
     config.setShortcuts( shortcuts );
+
+    // update translate when accept or apply clicked
+    updateTranslate();
+    config.setLanguage( languageComboBox->currentData().toString() );
+    retranslateUi( this );
 
     config.save();
 
