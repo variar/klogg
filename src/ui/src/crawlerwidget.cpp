@@ -460,6 +460,7 @@ void CrawlerWidget::updateFilteredView( LinesCount nbMatches, int progress,
         stopButton_->setEnabled( false );
         stopButton_->hide();
         searchButton_->show();
+        clearButton_->show();
     }
     else {
         // Search in progress
@@ -1050,6 +1051,11 @@ void CrawlerWidget::setup()
 
     setFocusProxy( searchLineEdit_ );
 
+    clearButton_ = new QToolButton();
+    clearButton_->setText( tr( "Clear search text" ) );
+    clearButton_->setAutoRaise( true );
+    clearButton_->setContentsMargins( 2, 2, 2, 2 );
+    
     searchButton_ = new QToolButton();
     searchButton_->setText( tr( "Search" ) );
     searchButton_->setAutoRaise( true );
@@ -1074,6 +1080,7 @@ void CrawlerWidget::setup()
     searchLineLayout->addWidget( searchRefreshButton_ );
     searchLineLayout->addWidget( predefinedFilters_ );
     searchLineLayout->addWidget( searchLineEdit_ );
+    searchLineLayout->addWidget( clearButton_ );
     searchLineLayout->addWidget( searchButton_ );
     searchLineLayout->addWidget( stopButton_ );
     searchLineLayout->addWidget( searchInfoLine_ );
@@ -1125,6 +1132,7 @@ void CrawlerWidget::setup()
              &CrawlerWidget::editSearchHistory );
     connect( searchButton_, &QToolButton::clicked, this, &CrawlerWidget::startNewSearch );
     connect( stopButton_, &QToolButton::clicked, this, &CrawlerWidget::stopSearch );
+    connect( clearButton_, &QToolButton::clicked, searchLineEdit_, &QComboBox::clearEditText );
 
     connect( visibilityBox_, QOverload<int>::of( &QComboBox::currentIndexChanged ), this,
              &CrawlerWidget::changeFilteredViewVisibility );
@@ -1350,9 +1358,10 @@ void CrawlerWidget::loadIcons()
     useRegexpButton_->setIcon( iconLoader_.load( "regex" ) );
     inverseButton_->setIcon( iconLoader_.load( "icons8-not-equal" ) );
     booleanButton_->setIcon( iconLoader_.load( "icons8-venn-diagram" ) );
+    clearButton_->setIcon( iconLoader_.load( "icons8-delete" ) );
     searchButton_->setIcon( iconLoader_.load( "icons8-search" ) );
     matchCaseButton_->setIcon( iconLoader_.load( "icons8-font-size" ) );
-    stopButton_->setIcon( iconLoader_.load( "icons8-delete" ) );
+    stopButton_->setIcon( iconLoader_.load( "icons8-cancel" ) );
 }
 
 // Create a new search using the text passed, replace the currently
@@ -1395,6 +1404,7 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
             // Activate the stop button
             stopButton_->setEnabled( true );
             stopButton_->show();
+            clearButton_->hide();
             searchButton_->hide();
             // Start a new asynchronous search
             logFilteredData_->runSearch( regexpPattern, searchStartLine_, searchEndLine_ );

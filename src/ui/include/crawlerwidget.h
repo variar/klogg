@@ -360,6 +360,7 @@ class CrawlerWidget : public QSplitter,
 
     InfoLine* searchInfoLine_;
 
+    QToolButton* clearButton_;
     QToolButton* searchButton_;
     QToolButton* stopButton_;
 
