@@ -190,8 +190,8 @@ HighlightersDialog::HighlightersDialog( QWidget* parent )
 
 void HighlightersDialog::exportHighlighters()
 {
-    QString file = QFileDialog::getSaveFileName( this, "Export highlighters configuration", "",
-                                                 "Highlighters (*.conf)" );
+    QString file = QFileDialog::getSaveFileName( this, tr( "Export highlighters configuration" ),
+                                                 "", "Highlighters (*.conf)" );
 
     if ( file.isEmpty() ) {
         return;
@@ -207,8 +207,8 @@ void HighlightersDialog::exportHighlighters()
 
 void HighlightersDialog::importHighlighters()
 {
-    QStringList files = QFileDialog::getOpenFileNames( this, "Select one or more files to open", "",
-                                                       "Highlighters (*.conf)" );
+    QStringList files = QFileDialog::getOpenFileNames(
+        this, tr( "Select one or more files to open" ), "", tr( "Highlighters (*.conf)" ) );
 
     for ( const auto& file : qAsConst( files ) ) {
         LOG_DEBUG << "Loading highlighters from " << file;

@@ -105,8 +105,6 @@
 #include "styles.h"
 #include "tabbedcrawlerwidget.h"
 
-#include <iostream>
-
 namespace {
 
 void signalCrawlerToFollowFile( CrawlerWidget* crawler_widget )
@@ -192,7 +190,7 @@ MainWindow::MainWindow( WindowSession session )
     mainTabWidget_.setTabsClosable( true );
 
     scratchPad_.setWindowIcon( mainIcon_ );
-    scratchPad_.setWindowTitle( "klogg - scratchpad" );
+    scratchPad_.setWindowTitle( tr( "klogg - scratchpad" ) );
 
     connect( &mainTabWidget_, &TabbedCrawlerWidget::tabCloseRequested, this,
              [ this ]( int index ) { this->closeTab( index, ActionInitiator::User ); } );
@@ -811,7 +809,8 @@ void MainWindow::createToolBars()
     lineNbField->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
     lineNbField->setContentsMargins( 2, 0, 2, 0 );
 
-    toolBar = addToolBar( tr( klogg::mainwindow::toolbar::toolbarTitle ) );
+    toolBar = addToolBar( QApplication::translate( "klogg::mainwindow::toolbar",
+                                                   klogg::mainwindow::toolbar::toolbarTitle ) );
     toolBar->setIconSize( QSize( 16, 16 ) );
     toolBar->setMovable( false );
     toolBar->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Minimum );
@@ -1940,7 +1939,9 @@ void MainWindow::updateFavoritesMenu()
     addToFavoritesMenuAction->setIcon( iconLoader_.load( "icons8-star" ) );
 
     using namespace klogg::mainwindow;
-    addToFavoritesAction->setText( tr( action::addToFavoritesText ) );
+
+    addToFavoritesAction->setText(
+        QApplication::translate( "klogg::mainwindow::action", action::addToFavoritesText ) );
     addToFavoritesAction->setIcon( iconLoader_.load( "icons8-star" ) );
     addToFavoritesAction->setData( true );
 
@@ -1954,7 +1955,9 @@ void MainWindow::updateFavoritesMenu()
     if ( crawler ) {
         const auto path = session_.getFilename( crawler );
         if ( std::any_of( favorites.begin(), favorites.end(), FullPathComparator( path ) ) ) {
-            addToFavoritesAction->setText( tr( action::removeFromFavoritesText ) );
+
+            addToFavoritesAction->setText( QApplication::translate(
+                "klogg::mainwindow::action", action::removeFromFavoritesText ) );
             addToFavoritesAction->setIcon( iconLoader_.load( "icons8-star-filled" ) );
             addToFavoritesAction->setData( false );
 

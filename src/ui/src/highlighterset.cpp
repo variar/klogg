@@ -518,15 +518,31 @@ void HighlighterSetCollection::retrieveFromStorage( QSettings& settings )
     }
 
     QList<QuickHighlighter> defaultLabels;
-    defaultLabels.append( { "Color label 1", { QColor{"#001e80"}, QColor{"#a1b7ff"} }, true } );
-    defaultLabels.append( { "Color label 2", { QColor{"#80005D"}, QColor{"#ffa1c6"} }, true } );
-    defaultLabels.append( { "Color label 3", { QColor{"#0f8000"}, QColor{"#acffa1"} }, true } );
-    defaultLabels.append( { "Color label 4", { QColor{"#806000"}, QColor{"#ffe8a1"} }, true } );
-    defaultLabels.append( { "Color label 5", { QColor{"#420080"}, QColor{"#d2a1ff"} }, true } );
-    defaultLabels.append( { "Color label 6", { QColor{"#007f80"}, QColor{"#a1feff"} }, true } );
-    defaultLabels.append( { "Color label 7", { QColor{"#004e80"}, QColor{"#a1dbff"} }, true } );
-    defaultLabels.append( { "Color label 8", { QColor{"#120080"}, QColor{"#a29ccf"} }, true } );
-    defaultLabels.append( { "Color label 9", { QColor{}, Qt::gray }, true } );
+    defaultLabels.append( { QApplication::tr( "Color label 1" ),
+                            { QColor{ "#001e80" }, QColor{ "#a1b7ff" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 2" ),
+                            { QColor{ "#80005D" }, QColor{ "#ffa1c6" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 3" ),
+                            { QColor{ "#0f8000" }, QColor{ "#acffa1" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 4" ),
+                            { QColor{ "#806000" }, QColor{ "#ffe8a1" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 5" ),
+                            { QColor{ "#420080" }, QColor{ "#d2a1ff" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 6" ),
+                            { QColor{ "#007f80" }, QColor{ "#a1feff" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 7" ),
+                            { QColor{ "#004e80" }, QColor{ "#a1dbff" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 8" ),
+                            { QColor{ "#120080" }, QColor{ "#a29ccf" } },
+                            true } );
+    defaultLabels.append( { QApplication::tr( "Color label 9" ), { QColor{}, Qt::gray }, true } );
 
     if ( quickHighlighters_.size() < defaultLabels.size() ) {
         LOG_WARNING << "Got " << quickHighlighters_.size() << " quick highlighters";

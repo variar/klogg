@@ -47,8 +47,8 @@
 #include "highlighteredit.h"
 #include "log.h"
 #include "mainwindow.h"
-#include "savedsearches.h"
 #include "recentfiles.h"
+#include "savedsearches.h"
 #include "shortcuts.h"
 #include "styles.h"
 
@@ -419,6 +419,7 @@ int OptionsDialog::updateTranslate()
 
 void OptionsDialog::updateConfigFromDialog()
 {
+    bool restartAppMessage = false;
     auto& config = Configuration::get();
 
     QFont font = QFont( fontFamilyBox->currentText(), ( fontSizeBox->currentText() ).toInt() );
@@ -472,10 +473,7 @@ void OptionsDialog::updateConfigFromDialog()
 
     config.setVerifySslPeers( verifySslCheckBox->isChecked() );
 
-    if ( config.style() != styleComboBox->currentText() ) {
-        QMessageBox::warning( this, "klogg",
-                              QString( "Klogg needs to be restarted to apply style changes. " ) );
-    }
+    restartAppMessage = config.style() != styleComboBox->currentText();
 
     config.setStyle( styleComboBox->currentText() );
     config.setHideAnsiColorSequences( hideAnsiColorsCheckBox->isChecked() );
@@ -501,6 +499,7 @@ void OptionsDialog::updateConfigFromDialog()
     config.setShortcuts( shortcuts );
 
     // update translate when accept or apply clicked
+    restartAppMessage |= config.language() != languageComboBox->currentData().toString();
     updateTranslate();
     config.setLanguage( languageComboBox->currentData().toString() );
     retranslateUi( this );
@@ -514,6 +513,13 @@ void OptionsDialog::updateConfigFromDialog()
     auto& recentFiles = RecentFiles::get();
     recentFiles.setFilesHistoryMaxItems( filesHistoryMaxItemsSpinBox->value() );
     recentFiles.save();
+
+    if ( restartAppMessage ) {
+        QMessageBox::warning(
+            this, "klogg",
+            QApplication::translate( "OptionsDialog",
+                                     "Klogg needs to be restarted to apply some changes. " ) );
+    }
 
     Q_EMIT optionsChanged();
 }
@@ -616,9 +622,10 @@ void OptionsDialog::buildShortcutsTable()
 
     shortcutsTable->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch );
     shortcutsTable->verticalHeader()->setSectionResizeMode( QHeaderView::Stretch );
-    shortcutsTable->setHorizontalHeaderItem( 0, new QTableWidgetItem( "Action" ) );
-    shortcutsTable->setHorizontalHeaderItem( 1, new QTableWidgetItem( "Primary shortcut" ) );
-    shortcutsTable->setHorizontalHeaderItem( 2, new QTableWidgetItem( "Secondary shortcut" ) );
+    shortcutsTable->setHorizontalHeaderItem( 0, new QTableWidgetItem( tr( "Action" ) ) );
+    shortcutsTable->setHorizontalHeaderItem( 1, new QTableWidgetItem( tr( "Primary shortcut" ) ) );
+    shortcutsTable->setHorizontalHeaderItem( 2,
+                                             new QTableWidgetItem( tr( "Secondary shortcut" ) ) );
 
     shortcutsTable->sortItems( 0 );
 }

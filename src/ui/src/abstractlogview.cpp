@@ -412,7 +412,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
         }
 
         if ( selection_.isSingleLine() ) {
-            copyAction_->setText( "&Copy this line" );
+            copyAction_->setText( tr( "&Copy this line" ) );
 
             setSearchStartAction_->setEnabled( true );
             setSearchEndAction_->setEnabled( true );
@@ -421,7 +421,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             setSelectionEndAction_->setEnabled( !!selectionStart_ );
         }
         else {
-            copyAction_->setText( "&Copy" );
+            copyAction_->setText( tr( "&Copy" ) );
             copyAction_->setStatusTip( tr( "Copy the selection" ) );
 
             setSearchStartAction_->setEnabled( false );
@@ -466,7 +466,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
                 }
             }
 
-            auto noneAction = colorLabelsMenu_->addAction( "None" );
+            auto noneAction = colorLabelsMenu_->addAction( tr( "None" ) );
             noneAction->setActionGroup( colorLablesActionGroup );
             noneAction->setCheckable( true );
             noneAction->setChecked( !currentLabel.has_value() );
@@ -502,7 +502,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
 #endif
             }
             colorLabelsMenu_->addSeparator();
-            auto clearAllAction = colorLabelsMenu_->addAction( "Clear all" );
+            auto clearAllAction = colorLabelsMenu_->addAction( tr( "Clear all" ) );
             connect( clearAllAction, &QAction::triggered, this,
                      &AbstractLogView::clearColorLabels );
         }
@@ -741,10 +741,10 @@ void AbstractLogView::doRegisterShortcuts()
         auto newPosition = selectionCurrentEndPos_;
         if ( newPosition.line >= maxDisplayLineNumber() - 1_lcount ) {
             // Reached the end
-             return;
-         }
+            return;
+        }
         ++newPosition.line;
-         selectAndDisplayRange( newPosition );
+        selectAndDisplayRange( newPosition );
     } );
 }
 
@@ -1288,7 +1288,7 @@ void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
     }
 
     QProgressDialog progressDialog( this );
-    progressDialog.setLabelText( QString( "Saving content to %1" ).arg( filename ) );
+    progressDialog.setLabelText( tr( "Saving content to %1" ).arg( filename ) );
     std::vector<std::pair<LineNumber, LinesCount>> offsets;
     auto lineOffset = begin;
     const auto chunkSize = 5000_lcount;
@@ -1874,8 +1874,8 @@ void AbstractLogView::createMenu()
              [ this ]( auto ) { Q_EMIT replaceScratchpadWithSelection(); } );
 
     popupMenu_ = new QMenu( this );
-    highlightersMenu_ = popupMenu_->addMenu( "Highlighters" );
-    colorLabelsMenu_ = popupMenu_->addMenu( "Color labels" );
+    highlightersMenu_ = popupMenu_->addMenu( tr( "Highlighters" ) );
+    colorLabelsMenu_ = popupMenu_->addMenu( tr( "Color labels" ) );
 
     popupMenu_->addSeparator();
     popupMenu_->addAction( markAction_ );

@@ -105,7 +105,7 @@ void PredefinedFiltersComboBox::populatePredefinedFilters()
     model_->clear();
     const auto filters = filtersCollection_.getSyncedFilters();
 
-    setTitle( "Predefined filters" );
+    setTitle( tr("Predefined filters") );
 
     insertFilters( filters );
 

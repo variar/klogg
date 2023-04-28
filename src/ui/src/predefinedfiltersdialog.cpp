@@ -158,9 +158,8 @@ void PredefinedFiltersDialog::populateFiltersTable(
     filtersTableWidget->setRowCount( static_cast<int>( filters.size() ) );
     filtersTableWidget->setColumnCount( 3 );
 
-    filtersTableWidget->setHorizontalHeaderLabels( QStringList() << "Name"
-                                                                 << "Pattern"
-                                                                 << "Regex" );
+    filtersTableWidget->setHorizontalHeaderLabels( QStringList() << tr( "Name" ) << tr( "Pattern" )
+                                                                 << tr( "Regex" ) );
 
     int filterIndex = 0;
     for ( const auto& filter : filters ) {
@@ -285,8 +284,9 @@ void PredefinedFiltersDialog::swapFilters( int currentRow, int newRow, int selec
 
 void PredefinedFiltersDialog::importFilters()
 {
-    const auto file = QFileDialog::getOpenFileName(
-        this, "Select file to import", "", tr( "Predefined filters (*.conf);;All files (*)" ) );
+    const auto file
+        = QFileDialog::getOpenFileName( this, tr( "Select file to import" ), "",
+                                        tr( "Predefined filters (*.conf);;All files (*)" ) );
 
     if ( file.isEmpty() ) {
         return;
@@ -302,7 +302,7 @@ void PredefinedFiltersDialog::importFilters()
 
 void PredefinedFiltersDialog::exportFilters()
 {
-    auto file = QFileDialog::getSaveFileName( this, "Export predefined filters", "",
+    auto file = QFileDialog::getSaveFileName( this, tr( "Export predefined filters" ), "",
                                               tr( "Predefined filters (*.conf)" ) );
 
     if ( file.isEmpty() ) {

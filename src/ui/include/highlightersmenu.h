@@ -33,7 +33,7 @@ inline void populateHighlightersMenu( QMenu* highlightersMenu,
     const auto& highlighterSets = highlightersCollection.highlighterSets();
     const auto& activeSetIds = highlightersCollection.activeSetIds();
 
-    auto noneAction = highlightersMenu->addAction( "None" );
+    auto noneAction = highlightersMenu->addAction( QApplication::tr( "None" ) );
     noneAction->setActionGroup( highlightersActionGroup );
     noneAction->setEnabled( !activeSetIds.isEmpty() );
 
