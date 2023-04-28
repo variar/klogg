@@ -725,6 +725,8 @@ void AbstractLogView::doRegisterShortcuts()
     registerShortcut( ShortcutAction::LogViewAddToSearch, [ this ]() { addToSearch(); } );
     registerShortcut( ShortcutAction::LogViewExcludeFromSearch,
                       [ this ]() { excludeFromSearch(); } );
+    registerShortcut( ShortcutAction::LogViewReplaceSearch, [ this ]() { replaceSearch(); } );
+
     registerShortcut( ShortcutAction::LogViewSelectLinesUp, [ this ]() {
         auto newPosition = selectionCurrentEndPos_;
         if ( newPosition.line == 0_lcount ) {
