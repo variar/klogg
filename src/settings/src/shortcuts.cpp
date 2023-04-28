@@ -246,6 +246,9 @@ QString ShortcutAction::actionName( const std::string& action )
         shortcuts.emplace( LogViewExcludeFromSearch, "Exclude selection from search pattern " );
         shortcuts.emplace( LogViewReplaceSearch, "Replace search pattern with selection" );
 
+        shortcuts.emplace( LogViewSelectLinesUp, "Select lines down" );
+        shortcuts.emplace( LogViewSelectLinesDown, "Select lines up" );
+
         return shortcuts;
     }();
 
