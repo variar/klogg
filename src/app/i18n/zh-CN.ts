@@ -6,7 +6,7 @@
     <message>
         <location filename="../../ui/src/abstractlogview.cpp" line="425"/>
         <source>Copy the selection</source>
-        <translation>拷贝当前段</translation>
+        <translation>拷贝选中内容</translation>
     </message>
     <message>
         <location filename="../../ui/src/abstractlogview.cpp" line="424"/>
@@ -1183,7 +1183,7 @@
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="179"/>
         <source>Copy selection to clipboard</source>
-        <translation type="unfinished">拷贝选中到剪贴板</translation>
+        <translation type="unfinished">拷贝选中内容到剪贴板</translation>
     </message>
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="180"/>
@@ -1308,12 +1308,12 @@
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="213"/>
         <source>Move selection up</source>
-        <translation type="unfinished">向上一行</translation>
+        <translation type="unfinished">向上移动</translation>
     </message>
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="214"/>
         <source>Move selection down</source>
-        <translation type="unfinished">向下一行</translation>
+        <translation type="unfinished">向下移动</translation>
     </message>
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="215"/>
@@ -1373,7 +1373,7 @@
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="230"/>
         <source>Main view: find previous</source>
-        <translation type="unfinished">主窗口：跳转到前一个选中内容</translation>
+        <translation type="unfinished">主窗口: 跳转到前一个选中内容</translation>
     </message>
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="233"/>
@@ -1677,7 +1677,7 @@
     <message>
         <location filename="../../ui/src/mainwindowtext.cpp" line="41"/>
         <source>Copy the selection</source>
-        <translation>拷贝当前段</translation>
+        <translation>拷贝选中内容</translation>
     </message>
     <message>
         <location filename="../../ui/src/mainwindowtext.cpp" line="42"/>
