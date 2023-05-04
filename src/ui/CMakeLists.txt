@@ -45,6 +45,7 @@ add_library(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/downloader.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/decompressor.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/fontutils.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/translator.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/colorlabelsmanager.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/highlighteredit.ui
   ${CMAKE_CURRENT_SOURCE_DIR}/include/highlightersetedit.ui
@@ -91,6 +92,7 @@ add_library(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/downloader.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/decompressor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/colorlabelsmanager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/translator.cpp
 )
 
 set_target_properties(klogg_ui PROPERTIES AUTOUIC ON)

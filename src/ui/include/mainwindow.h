@@ -43,7 +43,6 @@
 #include <QSystemTrayIcon>
 #include <QTemporaryDir>
 
-#include <QTranslator>
 #include <array>
 #include <memory>
 #include <mutex>
@@ -59,6 +58,7 @@
 #include "signalmux.h"
 #include "tabbedcrawlerwidget.h"
 #include "tabbedscratchpad.h"
+#include "translator.h"
 
 class QAction;
 class QActionGroup;
@@ -297,7 +297,7 @@ class MainWindow : public QMainWindow {
     // Multiplex signals to any of the CrawlerWidgets
     SignalMux signalMux_;
 
-    static QTranslator mTranslator;
+    static Translator mTranslator;
 
     // QuickFind widget
     QuickFindWidget quickFindWidget_;

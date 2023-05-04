@@ -116,7 +116,7 @@ static constexpr auto ClipboardMaxTry = 5;
 
 } // namespace
 
-QTranslator MainWindow::mTranslator;
+Translator MainWindow::mTranslator;
 
 MainWindow::MainWindow( WindowSession session )
     : session_( std::move( session ) )
@@ -419,21 +419,7 @@ void MainWindow::reTranslateUI()
 
 int MainWindow::installLanguage( QString lang )
 {
-    if ( lang.isEmpty() ) {
-        return -1;
-    }
-
-    QString path( ":/i18n/" + lang + ".qm" );
-    QResource locale( path );
-    if ( !mTranslator.load( locale.data(), (int)locale.size() ) ) {
-        LOG_ERROR << "load fail";
-        return -1;
-    }
-    if ( !QApplication::installTranslator( &mTranslator ) ) {
-        LOG_ERROR << "install fail";
-        return -1;
-    }
-    return 0;
+    return mTranslator.install( lang );
 }
 
 // Menu actions

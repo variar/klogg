@@ -17,11 +17,18 @@ set(TS_FILES
   ${CMAKE_CURRENT_SOURCE_DIR}/i18n/zh-CN.ts
 )
 
+set(QTBASE_TS_FILES
+  ${CMAKE_CURRENT_SOURCE_DIR}/i18n/qtbase/${QT_VERSION_MAJOR}/qtbase_en.ts
+  ${CMAKE_CURRENT_SOURCE_DIR}/i18n/qtbase/${QT_VERSION_MAJOR}/qtbase_zh-CN.ts
+)
+
 find_package(Qt${QT_VERSION_MAJOR}LinguistTools REQUIRED)
 if (${QT_VERSION_MAJOR} EQUAL 5)
   qt5_add_translation(QM_FILES ${TS_FILES})
+  qt5_add_translation(QTBASE_QM_FILES ${QTBASE_TS_FILES})
 else (${QT_VERSION_MAJOR} EQUAL 6)
   qt6_add_translation(QM_FILES ${TS_FILES})
+  qt6_add_translation(QTBASE_QM_FILES ${QTBASE_TS_FILES})
 endif()
 
 set(KLOGG_I18N_RES ${CMAKE_CURRENT_BINARY_DIR}/app_translations.qrc)
@@ -29,6 +36,12 @@ file(WRITE ${KLOGG_I18N_RES} "<!DOCTYPE RCC><RCC version=\"1.0\">\n <qresource p
 foreach(klogg_lang ${QM_FILES})
     get_filename_component(klogg_lang_filename ${klogg_lang} NAME)
     file(APPEND ${KLOGG_I18N_RES} "  <file>${klogg_lang_filename}</file>\n")
+endforeach()
+file(APPEND ${KLOGG_I18N_RES} " </qresource>\n")
+file(APPEND ${KLOGG_I18N_RES} " <qresource prefix=\"/i18n/qtbase\">\n")
+foreach(klogg_lang ${QTBASE_QM_FILES})
+  get_filename_component(klogg_lang_filename ${klogg_lang} NAME)
+  file(APPEND ${KLOGG_I18N_RES} "  <file>${klogg_lang_filename}</file>\n")
 endforeach()
 file(APPEND ${KLOGG_I18N_RES} " </qresource>\n</RCC>\n")
 
