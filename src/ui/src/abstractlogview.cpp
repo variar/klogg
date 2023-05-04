@@ -1062,7 +1062,7 @@ void AbstractLogView::searchUsingFunction( QuickFindSearchFn searchFunction )
     ( quickFind_->*searchFunction )( selection_, quickFindPattern_->getMatcher() );
 }
 
-void AbstractLogView::setQuickFindResult( bool hasMatch, Portion portion )
+void AbstractLogView::setQuickFindResult( bool hasMatch, const Portion& portion )
 {
     if ( portion.isValid() ) {
         LOG_DEBUG << "search " << portion.line();

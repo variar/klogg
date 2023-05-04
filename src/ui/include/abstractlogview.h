@@ -361,7 +361,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void setSearchEnd();
     void setSelectionStart();
     void setSelectionEnd();
-    void setQuickFindResult( bool hasMatch, Portion selection );
+    void setQuickFindResult( bool hasMatch, const Portion& selection );
     void setHighlighterSet( QAction* action );
     void setColorLabel( QAction* action );
 

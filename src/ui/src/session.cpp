@@ -192,7 +192,7 @@ WindowSession::restore( const std::function<ViewInterface*()>& view_factory,
     LOG_DEBUG << "Session returned " << session_files.size();
     std::vector<std::pair<QString, ViewInterface*>> result;
 
-    for ( auto file : session_files ) {
+    for ( const auto& file : session_files ) {
         LOG_DEBUG << "Create view for " << file.fileName;
         ViewInterface* view
             = appSession_->openAlways( file.fileName, view_factory, file.viewContext );

@@ -116,7 +116,7 @@ struct ShortcutAction {
                                   QWidget* shortcutsParent, Qt::ShortcutContext context,
                                   const std::string& action, const std::function<void()>& func );
 
-    static void registerShortcut( const QString key,
+    static void registerShortcut( const QString& key,
                                   std::map<QString, QShortcut*>& shortcutsStorage,
                                   QWidget* shortcutsParent, Qt::ShortcutContext context,
                                   const std::function<void()>& func );

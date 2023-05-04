@@ -32,10 +32,10 @@
 SCENARIO( "LinePositionArray with small number of lines", "[linepositionarray]" )
 {
 
-    std::vector<LineOffset> offsets = { 4_offset,     8_offset, 10_offset,
-                                        345_offset,   // A longer (>128) line
-                                        20000_offset, // An even longer (>16384) line
-                                        20020_offset };
+    std::array<LineOffset, 6> offsets = { 4_offset,     8_offset, 10_offset,
+                                          345_offset,   // A longer (>128) line
+                                          20000_offset, // An even longer (>16384) line
+                                          20020_offset };
 
     GIVEN( "LinePositionArray with small number of lines" )
     {
@@ -195,15 +195,15 @@ SCENARIO( "LinePositionArray with full block of lines", "[linepositionarray]" )
 SCENARIO( "LinePositionArray with UINT32_MAX offsets", "[linepositionarray]" )
 {
 
-    std::vector<LineOffset> offsets = { 4_offset,
-                                        8_offset,
-                                        LineOffset( UINT32_MAX - 10 ),
-                                        LineOffset( (uint64_t)UINT32_MAX + 10LL ),
-                                        LineOffset( (uint64_t)UINT32_MAX + 30LL ),
-                                        LineOffset( (uint64_t)2 * UINT32_MAX ),
-                                        LineOffset( (uint64_t)2 * UINT32_MAX + 10LL ),
-                                        LineOffset( (uint64_t)2 * UINT32_MAX + 1000LL ),
-                                        LineOffset( (uint64_t)3 * UINT32_MAX ) };
+    std::array<LineOffset, 9> offsets = { 4_offset,
+                                          8_offset,
+                                          LineOffset( UINT32_MAX - 10 ),
+                                          LineOffset( (uint64_t)UINT32_MAX + 10LL ),
+                                          LineOffset( (uint64_t)UINT32_MAX + 30LL ),
+                                          LineOffset( (uint64_t)2 * UINT32_MAX ),
+                                          LineOffset( (uint64_t)2 * UINT32_MAX + 10LL ),
+                                          LineOffset( (uint64_t)2 * UINT32_MAX + 1000LL ),
+                                          LineOffset( (uint64_t)3 * UINT32_MAX ) };
 
     GIVEN( "LinePositionArray with long offsets" )
     {
