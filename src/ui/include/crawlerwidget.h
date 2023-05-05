@@ -190,7 +190,8 @@ class CrawlerWidget : public QSplitter,
     void updateFilteredView( LinesCount nbMatches, int progress, LineNumber initialPosition );
     // Called when a new line has been selected in the filtered view,
     // to instruct the main view to jump to the matching line.
-    void jumpToMatchingLine( LineNumber filteredLineNb );
+    void jumpToMatchingLine( LineNumber filteredLineNb, uint64_t nLines, uint64_t startCol,
+                             uint64_t nSymbols );
     // Called when the main view is on a new line number
     void updateLineNumberHandler( LineNumber line, uint64_t nLines, uint64_t startCol,
                                   uint64_t nSymbols );

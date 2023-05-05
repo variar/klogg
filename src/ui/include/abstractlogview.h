@@ -311,6 +311,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     // Scrolling as necessary
     void trySelectLine( LineNumber newLine );
     void selectAndDisplayLine( LineNumber line );
+    void selectPortionAndDisplayLine( LineNumber line, uint64_t nLines, uint64_t startCol, uint64_t nSymbols);
 
     // Use the current QFP to go and select the next match.
     void searchForward() override;

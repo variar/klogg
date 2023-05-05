@@ -513,10 +513,12 @@ void CrawlerWidget::updateFilteredView( LinesCount nbMatches, int progress,
     }
 }
 
-void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb )
+void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, uint64_t nLines,
+                                        uint64_t startCol, uint64_t nSymbols )
 {
     const auto mainViewLine = logFilteredData_->getMatchingLineNumber( filteredLineNb );
-    logMainView_->selectAndDisplayLine( mainViewLine ); // FIXME: should be done with a signal.
+    logMainView_->selectPortionAndDisplayLine( mainViewLine, nLines, startCol,
+                                               nSymbols ); // FIXME: should be done with a signal.
 }
 
 void CrawlerWidget::updateLineNumberHandler( LineNumber line, uint64_t nLines, uint64_t startCol,
@@ -1154,8 +1156,7 @@ void CrawlerWidget::setup()
     connect( filteredView_, &FilteredView::newSelection,
              [ this ]( auto ) { filteredView_->update(); } );
 
-    connect( filteredView_, &FilteredView::newSelection, this,
-             &CrawlerWidget::jumpToMatchingLine );
+    connect( filteredView_, &FilteredView::newSelection, this, &CrawlerWidget::jumpToMatchingLine );
 
     connect( logMainView_, &LogMainView::newSelection, this,
              &CrawlerWidget::updateLineNumberHandler );

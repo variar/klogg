@@ -533,10 +533,9 @@ void AbstractLogView::mouseMoveEvent( QMouseEvent* mouseEvent )
                     // This is a 'range' selection
                     selection_.selectRange( selectionStartPos_.line, lineNumber );
 
-                    Q_EMIT newSelection(
-                        lineNumber, selection_.getSelectedLinesCount(),
-                        0, // portion selection always starts from the first column
-                        getSelection().size() );
+                    Q_EMIT newSelection( lineNumber, selection_.getSelectedLinesCount(),
+                                         0, // portion selection always starts from the first column
+                                         getSelection().size() );
 
                     update();
                 }
@@ -548,7 +547,7 @@ void AbstractLogView::mouseMoveEvent( QMouseEvent* mouseEvent )
                                           thisEndPos.column );
                 auto selectionStr = getSelection();
                 Q_EMIT newSelection( lineNumber, 1, selectionStartPos_.column,
-                                         selectionStr.size() );
+                                     selectionStr.size() );
                 update();
             }
             // On the same line, and moving vertically then
@@ -1543,7 +1542,18 @@ void AbstractLogView::selectAndDisplayLine( LineNumber line )
     selectionStartPos_ = FilePos{ line, 0 };
     selectionCurrentEndPos_ = selectionStartPos_;
     displayLine( line );
-    Q_EMIT newSelection( line, 1, 0, getSelection().size() );
+    Q_EMIT newSelection( line, 1, 0, 0 );
+}
+
+void AbstractLogView::selectPortionAndDisplayLine( LineNumber line, uint64_t nLines,
+                                                   uint64_t startCol, uint64_t nSymbols )
+{
+    disableFollow();
+    selection_.selectLine( line );
+    selectionStartPos_ = FilePos{ line, static_cast<int>( startCol ) };
+    selectionCurrentEndPos_ = FilePos{ line, static_cast<int>( startCol + nSymbols ) };
+    displayLine( line );
+    Q_EMIT newSelection( line, nLines, startCol, nSymbols );
 }
 
 // The difference between this function and displayLine() is quite
@@ -1683,8 +1693,7 @@ void AbstractLogView::moveSelection( LinesCount delta, bool isDeltaNegative )
     displayLine( newLine );
     selectionStartPos_ = FilePos{ newLine, 0 };
     selectionCurrentEndPos_ = selectionStartPos_;
-    Q_EMIT newSelection( newLine, selection_.getSelectedLinesCount(), 0,
-                             getSelection().size() );
+    Q_EMIT newSelection( newLine, selection_.getSelectedLinesCount(), 0, getSelection().size() );
 }
 
 // Make the start of the lines visible
@@ -1794,8 +1803,7 @@ void AbstractLogView::selectAndDisplayRange( FilePos pos )
     selection_.selectRange( selectionStartPos_.line, pos.line );
     selectionCurrentEndPos_ = pos;
     displayLine( pos.line );
-    Q_EMIT newSelection( pos.line, selection_.getSelectedLinesCount(), 0,
-                             getSelection().size() );
+    Q_EMIT newSelection( pos.line, selection_.getSelectedLinesCount(), 0, getSelection().size() );
 }
 
 // Create the pop-up menu
