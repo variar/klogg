@@ -159,7 +159,8 @@ class CrawlerWidget : public QSplitter,
     // Sent up to the MainWindow to enable/disable the follow mode
     void followModeChanged( bool follow );
     // Sent up when the current line number is updated
-    void updateLineNumber( LineNumber line );
+    void newSelection( LineNumber startLine, uint64_t nLines, uint64_t startCol,
+                           uint64_t nSymbols );
     // Sent up when user wants to save new predefined filter from current search
     void saveCurrentSearchAsPredefinedFilter( QString newFilter );
 
@@ -191,7 +192,8 @@ class CrawlerWidget : public QSplitter,
     // to instruct the main view to jump to the matching line.
     void jumpToMatchingLine( LineNumber filteredLineNb );
     // Called when the main view is on a new line number
-    void updateLineNumberHandler( LineNumber line );
+    void updateLineNumberHandler( LineNumber line, uint64_t nLines, uint64_t startCol,
+                                  uint64_t nSymbols );
     // Mark a line that has been clicked on the main (top) view.
     void markLinesFromMain( const std::vector<LineNumber>& lines );
     // Mark a line that has been clicked on the filtered (bottom) view.

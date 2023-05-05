@@ -139,6 +139,8 @@ class Selection {
     // Get a list of selected line(s), in order.
     std::vector<LineNumber> getLines() const;
 
+    uint64_t getSelectedLinesCount() const;
+
     // Returns wether the line passed is selected (entirely).
     bool isLineSelected( LineNumber line ) const;
 

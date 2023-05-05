@@ -148,6 +148,8 @@ std::vector<LineNumber> Selection::getLines() const
     return selection;
 }
 
+uint64_t Selection::getSelectedLinesCount() const { return selectedRange_.size().get(); }
+
 // The tab behaviour is a bit odd at the moment, full lines are not expanded
 // but partials (part of line) are, they probably should not ideally.
 QString Selection::getSelectedText( const AbstractLogData* logData ) const

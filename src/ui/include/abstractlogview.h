@@ -262,14 +262,13 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void registerShortcut( const std::string& action, std::function<void()> func );
 
   Q_SIGNALS:
-    // Sent when a new line has been selected by the user.
-    void newSelection( LineNumber line );
     // Sent up to the MainWindow to enable/disable the follow mode
     void followModeChanged( bool enabled );
     // Sent when the view wants the QuickFind widget pattern to change.
     void changeQuickFind( const QString& newPattern, QuickFindMux::QFDirection newDirection );
-    // Sent up when the current line number is updated
-    void updateLineNumber( LineNumber line );
+    // Sent when a new line has been selected by the user
+    void newSelection( LineNumber startLine, uint64_t nLines, uint64_t startCol,
+                           uint64_t nSymbols );
     // Sent up when quickFind wants to show a message to the user.
     void notifyQuickFind( const QFNotification& message );
     // Sent up when quickFind wants to clear the notification.

@@ -138,9 +138,10 @@ class MainWindow : public QMainWindow {
     // Change the follow mode checkbox and send the followSet signal down
     void changeFollowMode( bool follow );
 
-    // Update the line number displayed in the status bar.
+    // Update the selection information displayed in the status bar.
     // Must be passed as the internal (starts at 0) line number.
-    void lineNumberHandler( LineNumber line );
+    void lineNumberHandler( LineNumber startLine, uint64_t nLines, uint64_t startCol,
+                            uint64_t nSymbols );
 
     // Save current search in line edit as predefined filter.
     // Opens dialog with new entry.

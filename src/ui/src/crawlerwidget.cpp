@@ -234,7 +234,7 @@ std::vector<QObject*> CrawlerWidget::doGetAllSearchables() const
 // Update the state of the parent
 void CrawlerWidget::doSendAllStateSignals()
 {
-    Q_EMIT updateLineNumber( currentLineNumber_ );
+    Q_EMIT newSelection( currentLineNumber_, 0, 0, 0 );
     if ( !loadingInProgress_ )
         Q_EMIT loadingFinished( LoadingStatus::Successful );
 }
@@ -314,13 +314,13 @@ void CrawlerWidget::goToLine()
 void CrawlerWidget::doSetData( std::shared_ptr<LogData> logData,
                                std::shared_ptr<LogFilteredData> filteredData )
 {
-    logData_ = std::move(logData);
-    logFilteredData_ = std::move(filteredData);
+    logData_ = std::move( logData );
+    logFilteredData_ = std::move( filteredData );
 }
 
 void CrawlerWidget::doSetQuickFindPattern( std::shared_ptr<QuickFindPattern> qfp )
 {
-    quickFindPattern_ = std::move(qfp);
+    quickFindPattern_ = std::move( qfp );
 }
 
 void CrawlerWidget::doSetSavedSearches( SavedSearches* saved_searches )
@@ -386,7 +386,8 @@ void CrawlerWidget::startNewSearch()
 
 void CrawlerWidget::updatePredefinedFiltersWidget()
 {
-    predefinedFilters_->updateSearchPattern( searchLineEdit_->currentText(), booleanButton_->isChecked() );
+    predefinedFilters_->updateSearchPattern( searchLineEdit_->currentText(),
+                                             booleanButton_->isChecked() );
 }
 
 void CrawlerWidget::stopSearch()
@@ -518,10 +519,11 @@ void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb )
     logMainView_->selectAndDisplayLine( mainViewLine ); // FIXME: should be done with a signal.
 }
 
-void CrawlerWidget::updateLineNumberHandler( LineNumber line )
+void CrawlerWidget::updateLineNumberHandler( LineNumber line, uint64_t nLines, uint64_t startCol,
+                                             uint64_t nSymbols )
 {
     currentLineNumber_ = line;
-    Q_EMIT updateLineNumber( line );
+    Q_EMIT newSelection( line, nLines, startCol, nSymbols );
 }
 
 void CrawlerWidget::markLinesFromMain( const std::vector<LineNumber>& lines )
@@ -1062,7 +1064,7 @@ void CrawlerWidget::setup()
     clearButton_->setText( tr( "Clear search text" ) );
     clearButton_->setAutoRaise( true );
     clearButton_->setContentsMargins( 2, 2, 2, 2 );
-    
+
     searchButton_ = new QToolButton();
     searchButton_->setText( tr( "Search" ) );
     searchButton_->setAutoRaise( true );
@@ -1127,9 +1129,7 @@ void CrawlerWidget::setup()
              &CrawlerWidget::searchTextChangeHandler );
 
     connect( searchLineEdit_, QOverload<int>::of( &QComboBox::currentIndexChanged ), this,
-             [ this ]( auto ) {
-                 updatePredefinedFiltersWidget();
-             } );
+             [ this ]( auto ) { updatePredefinedFiltersWidget(); } );
 
     connect( predefinedFilters_, &PredefinedFiltersComboBox::filterChanged, this,
              &CrawlerWidget::setSearchPatternFromPredefinedFilters );
@@ -1154,9 +1154,10 @@ void CrawlerWidget::setup()
     connect( filteredView_, &FilteredView::newSelection,
              [ this ]( auto ) { filteredView_->update(); } );
 
-    connect( filteredView_, &FilteredView::newSelection, this, &CrawlerWidget::jumpToMatchingLine );
+    connect( filteredView_, &FilteredView::newSelection, this,
+             &CrawlerWidget::jumpToMatchingLine );
 
-    connect( logMainView_, &LogMainView::updateLineNumber, this,
+    connect( logMainView_, &LogMainView::newSelection, this,
              &CrawlerWidget::updateLineNumberHandler );
 
     connect( logMainView_, &LogMainView::markLines, this, &CrawlerWidget::markLinesFromMain );
@@ -1289,7 +1290,7 @@ void CrawlerWidget::setup()
              [ this ]() { Q_EMIT sendToScratchpad( logMainView_->getSelection() ); } );
     connect( filteredView_, &AbstractLogView::sendSelectionToScratchpad, this,
              [ this ]() { Q_EMIT sendToScratchpad( filteredView_->getSelection() ); } );
-    
+
     connect( logMainView_, &AbstractLogView::replaceScratchpadWithSelection, this,
              [ this ]() { Q_EMIT replaceDataInScratchpad( logMainView_->getSelection() ); } );
     connect( filteredView_, &AbstractLogView::replaceScratchpadWithSelection, this,
