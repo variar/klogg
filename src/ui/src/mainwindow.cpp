@@ -157,8 +157,7 @@ MainWindow::MainWindow( WindowSession session )
     // Actions from the CrawlerWidget
     signalMux_.connect( SIGNAL( followModeChanged( bool ) ), this,
                         SLOT( changeFollowMode( bool ) ) );
-    signalMux_.connect( SIGNAL( newSelection( LineNumber, uint64_t, uint64_t, uint64_t ) ),
-                        this,
+    signalMux_.connect( SIGNAL( newSelection( LineNumber, uint64_t, uint64_t, uint64_t ) ), this,
                         SLOT( lineNumberHandler( LineNumber, uint64_t, uint64_t, uint64_t ) ) );
     signalMux_.connect( SIGNAL( saveCurrentSearchAsPredefinedFilter( QString ) ), this,
                         SLOT( newPredefinedFilterHandler( QString ) ) );
@@ -1139,12 +1138,23 @@ void MainWindow::lineNumberHandler( LineNumber startLine, uint64_t nLines, uint6
             lineNbField->setText( tr( "Ln:%1/%2" ).arg( startLine.get() + 1 ).arg( fileNbLine ) );
         }
         else {
-            lineNbField->setText( tr( "Ln:%1/%2 Col:%3 Sel:%4|%5" )
-                                      .arg( startLine.get() + 1 )
-                                      .arg( fileNbLine )
-                                      .arg( startCol )
-                                      .arg( nSymbols )
-                                      .arg( nLines ) );
+            if ( nLines == 1 ) {
+                // portion selection on one line
+                lineNbField->setText( tr( "Ln:%1/%2 Col:%3 Sel:%4|%5" )
+                                          .arg( startLine.get() + 1 )
+                                          .arg( fileNbLine )
+                                          .arg( startCol )
+                                          .arg( nSymbols )
+                                          .arg( nLines ) );
+            }
+            else {
+                // multiple lines selection
+                lineNbField->setText( tr( "Ln:%1/%2 Sel:%4|%5" )
+                                          .arg( startLine.get() + 1 )
+                                          .arg( fileNbLine )
+                                          .arg( nSymbols )
+                                          .arg( nLines ) );
+            }
         }
     }
     else {
@@ -1192,7 +1202,7 @@ void MainWindow::handleLoadingFinished( LoadingStatus status )
         stopAction->setEnabled( false );
         reloadAction->setEnabled( true );
 
-        lineNumberHandler( 0_lnum, 0, 0, 0);
+        lineNumberHandler( 0_lnum, 0, 0, 0 );
 
         // Now everything is ready, we can finally show the file!
         currentCrawlerWidget()->show();
