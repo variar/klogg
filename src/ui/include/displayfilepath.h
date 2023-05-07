@@ -45,21 +45,4 @@ class FullPathComparator {
     QString fullPath_;
 };
 
-class FullPathNativeComparator {
-  public:
-    explicit FullPathNativeComparator( const QString& path );
-    bool operator()( const DisplayFilePath& f ) const;
-
-  private:
-    QString fullPathNative_;
-};
-
-class DisplayNameComparator {
-  public:
-    bool operator()( const DisplayFilePath& lhs, const DisplayFilePath& rhs )
-    {
-        return lhs.displayName() < rhs.displayName();
-    }
-};
-
 #endif // KLOGG_DISPLAYFILEPATH_H

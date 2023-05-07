@@ -93,13 +93,3 @@ bool FullPathComparator::operator()( const DisplayFilePath& f ) const
 {
     return f.fullPath() == fullPath_;
 }
-
-FullPathNativeComparator::FullPathNativeComparator( const QString& path )
-    : fullPathNative_( path )
-{
-}
-
-bool FullPathNativeComparator::operator()( const DisplayFilePath& f ) const
-{
-    return f.nativeFullPath() == fullPathNative_;
-}

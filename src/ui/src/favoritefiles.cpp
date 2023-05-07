@@ -38,8 +38,10 @@ void FavoriteFiles::add( const QString& path )
 
     auto newFile = DisplayFilePath( path );
 
-    auto lowerBound
-        = std::lower_bound( files_.begin(), files_.end(), newFile, DisplayNameComparator{} );
+    auto lowerBound = std::lower_bound( files_.begin(), files_.end(), newFile,
+                                        []( const DisplayFilePath& lhs, const DisplayFilePath& rhs ) {
+                                            return lhs.displayName() < rhs.displayName();
+                                        } );
 
     files_.insert( lowerBound, newFile );
 }

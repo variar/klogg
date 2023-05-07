@@ -1832,7 +1832,9 @@ void MainWindow::removeFromFavorites( const QString& pathToRemove )
     auto& favoriteFiles = FavoriteFiles::get();
     const auto& favorites = favoriteFiles.favorites();
     const auto selectedFile = std::find_if( favorites.begin(), favorites.end(),
-                                            FullPathNativeComparator( pathToRemove ) );
+                                            [pathToRemove](const DisplayFilePath& f) {
+                                                return f.nativeFullPath() == pathToRemove;
+                                            } );
 
     if ( selectedFile != favorites.end() ) {
         favoriteFiles.remove( selectedFile->fullPath() );
@@ -1902,10 +1904,12 @@ void MainWindow::selectOpenedFile()
                  if ( result != QDialog::Accepted || !view->selectionModel()->hasSelection() ) {
                      return;
                  }
-                 const auto selectedPath
+                 const auto& selectedPath
                      = model->data( view->selectionModel()->selectedIndexes().front() ).toString();
                  const auto selectedFile = std::find_if( openedFiles.begin(), openedFiles.end(),
-                                                         FullPathNativeComparator( selectedPath ) );
+                                                         [selectedPath](const DisplayFilePath& f) {
+                                                             return f.nativeFullPath() == selectedPath;
+                                                         } );
 
                  if ( selectedFile != openedFiles.end() ) {
                      loadFile( selectedFile->fullPath() );
