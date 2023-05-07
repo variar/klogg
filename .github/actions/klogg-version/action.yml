@@ -6,4 +6,4 @@ runs:
     - name: Set klogg version
       shell: sh
       run: |
-        echo "KLOGG_VERSION=22.06.0.$((${{ github.run_number }} + 717))" >> $GITHUB_ENV 
+        echo "KLOGG_VERSION=23.04.0.$((${{ github.run_number }} + 717))" >> $GITHUB_ENV 

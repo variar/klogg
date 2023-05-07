@@ -4,13 +4,13 @@ COPY epel.repo /etc/yum.repos.d
 
 RUN yum update -y
 
-RUN yum install -y ragel make wget python38 rpm-build git \
+RUN yum install -y ragel make wget rpm-build git \
     qt5-qtbase-devel openssl-devel boost-devel zlib-devel \
-    devtoolset-10-gcc devtoolset-10-gcc-c++ ninja-build
+    devtoolset-7-gcc devtoolset-7-gcc-c++ ninja-build
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2-linux-x86_64.sh && \
     chmod 755 cmake-3.20.2-linux-x86_64.sh && \
     ./cmake-3.20.2-linux-x86_64.sh --prefix=/opt/ --exclude-subdir --skip-license
 
-ENV PATH=/opt/rh/devtoolset-10/root/usr/bin:/opt/bin:$PATH
+ENV PATH=/opt/rh/devtoolset-7/root/usr/bin:/opt/bin:$PATH
 

@@ -57,6 +57,7 @@ enum class SearchRegexpType {
 };
 
 enum class RegexpEngine { Hyperscan, QRegularExpression };
+static constexpr int MAX_RECENT_FILES = 25;
 
 // Configuration class containing everything in the "Settings" dialog
 class Configuration final : public Persistable<Configuration> {
@@ -70,6 +71,16 @@ class Configuration final : public Persistable<Configuration> {
     // Accesses the main font used for display
     QFont mainFont() const;
     void setMainFont( QFont newFont );
+
+    QString language() const
+    {
+        return language_;
+    }
+
+    void setLanguage( QString lang )
+    {
+        language_ = lang;
+    }
 
     // Accesses the regexp types
     SearchRegexpType mainRegexpType() const
@@ -494,6 +505,8 @@ class Configuration final : public Persistable<Configuration> {
     SearchRegexpType mainRegexpType_ = SearchRegexpType::ExtendedRegexp;
     SearchRegexpType quickfindRegexpType_ = SearchRegexpType::FixedString;
     bool quickfindIncremental_ = true;
+
+    QString language_{ "en" };
 
     bool nativeFileWatchEnabled_ = true;
 #ifdef Q_OS_WIN

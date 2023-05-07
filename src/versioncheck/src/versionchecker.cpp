@@ -58,11 +58,19 @@ static constexpr std::time_t CHECK_INTERVAL_S = 3600 * 24 * 7; /* 7 days */
 
 bool isVersionNewer( const QString& current_version, const QString& new_version )
 {
+#if ( QT_VERSION >= QT_VERSION_CHECK( 6, 4, 0 ) )
+    const auto parseVersion = []( const QString& version_string ) {
+        qsizetype tweak_index = 0;
+        auto version = QVersionNumber::fromString( QAnyStringView(version_string), &tweak_index );
+        return std::make_pair( version, version_string.right( tweak_index + 1 ).toUInt() );
+    };
+#else
     const auto parseVersion = []( const QString& version_string ) {
         int tweak_index = 0;
         auto version = QVersionNumber::fromString( version_string, &tweak_index );
         return std::make_pair( version, version_string.right( tweak_index + 1 ).toUInt() );
     };
+#endif
 
     const auto old = parseVersion( current_version );
     const auto next = parseVersion( new_version );

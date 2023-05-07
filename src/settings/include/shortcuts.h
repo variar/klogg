@@ -103,6 +103,8 @@ struct ShortcutAction {
     static constexpr auto LogViewAddToSearch = "logview.add_to_search";
     static constexpr auto LogViewExcludeFromSearch = "logview.exclude_from_search";
     static constexpr auto LogViewReplaceSearch = "logview.replace_search";
+    static constexpr auto LogViewSelectLinesUp = "logview.select_lines_up";
+    static constexpr auto LogViewSelectLinesDown = "logview.select_lines_down";
     
     static const std::map<std::string, QStringList>& defaultShortcuts();
 
@@ -116,7 +118,7 @@ struct ShortcutAction {
                                   QWidget* shortcutsParent, Qt::ShortcutContext context,
                                   const std::string& action, const std::function<void()>& func );
 
-    static void registerShortcut( const QString key,
+    static void registerShortcut( const QString& key,
                                   std::map<QString, QShortcut*>& shortcutsStorage,
                                   QWidget* shortcutsParent, Qt::ShortcutContext context,
                                   const std::function<void()>& func );

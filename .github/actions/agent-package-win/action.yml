@@ -10,25 +10,25 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Setup codesing env
-      if: ${{ github.event_name != 'pull_request' }}
-      shell: sh
-      run: |
-        echo "CS_CLIENT_S3_KEY_ID=${{ inputs.s3-key-id }}" >> $GITHUB_ENV 
-        echo "CS_CLIENT_S3_SECRET=${{ inputs.s3-secret }}" >> $GITHUB_ENV 
-        echo "CS_CLIENT_S3_BUCKET=${{ inputs.s3-bucket }}" >> $GITHUB_ENV 
+    #- name: Setup codesing env
+    #  if: ${{ github.event_name != 'pull_request' }}
+    #  shell: sh
+    #  run: |
+    #    echo "CS_CLIENT_S3_KEY_ID=${{ inputs.s3-key-id }}" >> $GITHUB_ENV 
+    #    echo "CS_CLIENT_S3_SECRET=${{ inputs.s3-secret }}" >> $GITHUB_ENV 
+    #    echo "CS_CLIENT_S3_BUCKET=${{ inputs.s3-bucket }}" >> $GITHUB_ENV 
     
-    - name: Win codesign executables
-      if: ${{ github.event_name != 'pull_request' }}
-      shell: cmd
-      run: |
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg.exe
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_portable.exe
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_crashpad_handler.exe
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_minidump_dump.exe
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbb12.dll
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc.dll
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc_proxy.dll
+    #- name: Win codesign executables
+    #  if: ${{ github.event_name != 'pull_request' }}
+    #  shell: cmd
+    #  run: |
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg.exe
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_portable.exe
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_crashpad_handler.exe
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_minidump_dump.exe
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbb12.dll
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc.dll
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc_proxy.dll
     
     - name: Win portable
       shell: cmd
@@ -49,9 +49,9 @@ runs:
         xcopy klogg-%KLOGG_VERSION%-%KLOGG_ARCH%-%KLOGG_QT%-pdb.zip %KLOGG_BUILD_ROOT%\packages /y
         xcopy klogg-%KLOGG_VERSION%-%KLOGG_ARCH%-%KLOGG_QT%-setup.exe %KLOGG_BUILD_ROOT%\packages /y
 
-    - name: Win codesign installer
-      if: ${{ github.event_name != 'pull_request' }}
-      shell: cmd
-      run: |
-        packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\packages\klogg-%KLOGG_VERSION%-%KLOGG_ARCH%-%KLOGG_QT%-setup.exe
+    #- name: Win codesign installer
+    #  if: ${{ github.event_name != 'pull_request' }}
+    #  shell: cmd
+    #  run: |
+    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\packages\klogg-%KLOGG_VERSION%-%KLOGG_ARCH%-%KLOGG_QT%-setup.exe
       

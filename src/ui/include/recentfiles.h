@@ -35,6 +35,10 @@ class RecentFiles final : public Persistable<RecentFiles, session_settings> {
 
     void addRecent( const QString& text );
     void removeRecent( const QString& text );
+    void removeAll();
+    int getNumberItemsToShow() const;
+    int filesHistoryMaxItems() const;
+    void setFilesHistoryMaxItems( const int recentFilesItems );
 
     // Returns a list of recent files (latest loaded first)
     QStringList recentFiles() const;
@@ -44,9 +48,10 @@ class RecentFiles final : public Persistable<RecentFiles, session_settings> {
 
   private:
     static constexpr int RECENTFILES_VERSION = 1;
-    static constexpr int MAX_NUMBER_OF_FILES = 10;
+    static constexpr int DEFAULT_MAX_ITEMS_TO_SHOW = 5;
 
     QStringList recentFiles_;
+    int filesHistoryMaxItemsToShow_ = DEFAULT_MAX_ITEMS_TO_SHOW;
 };
 
 #endif

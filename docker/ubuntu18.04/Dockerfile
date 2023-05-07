@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update -y
 
 RUN apt install build-essential \
-                    qtbase5-dev qt5-qmake qtbase5-dev-tools \
+                    qtbase5-dev qt5-qmake qtbase5-dev-tools qttools5-dev \
                     libboost-dev libicu-dev libssl-dev \
                     ragel ninja-build zlib1g-dev git \
                     wget fuse -y && \

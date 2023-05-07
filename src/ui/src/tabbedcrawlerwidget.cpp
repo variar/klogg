@@ -177,19 +177,20 @@ void TabbedCrawlerWidget::showContextMenu( const QPoint& point )
     int tab = myTabBar_.tabAt( point );
     if ( -1 != tab ) {
         QMenu menu( this );
-        auto closeThis = menu.addAction( "Close this" );
-        auto closeOthers = menu.addAction( "Close others" );
-        auto closeLeft = menu.addAction( "Close to the left" );
-        auto closeRight = menu.addAction( "Close to the right" );
-        auto closeAll = menu.addAction( "Close all" );
+        auto closeThis = menu.addAction( tr( "Close this" ) );
+        auto closeOthers = menu.addAction( tr( "Close others" ) );
+        auto closeLeft = menu.addAction( tr( "Close to the left" ) );
+        auto closeRight = menu.addAction( tr( "Close to the right" ) );
+        auto closeAll = menu.addAction( tr( "Close all" ) );
         menu.addSeparator();
-        auto copyFullPath = menu.addAction( "Copy full path" );
-        auto openContainingFolder = menu.addAction( "Open containing folder" );
+        auto copyFullPath = menu.addAction( tr( "Copy full path" ) );
+        auto openContainingFolder = menu.addAction( tr( "Open containing folder" ) );
         menu.addSeparator();
-        auto renameTab = menu.addAction( "Rename tab" );
-        auto resetTabName = menu.addAction( "Reset tab name" );
+        auto renameTab = menu.addAction( tr( "Rename tab" ) );
+        auto resetTabName = menu.addAction( tr( "Reset tab name" ) );
 
-        connect( closeThis, &QAction::triggered, [ tab, this ] { Q_EMIT tabCloseRequested( tab ); } );
+        connect( closeThis, &QAction::triggered,
+                 [ tab, this ] { Q_EMIT tabCloseRequested( tab ); } );
 
         connect( closeOthers, &QAction::triggered, [ tabWidget = widget( tab ), this ] {
             while ( count() != 1 ) {

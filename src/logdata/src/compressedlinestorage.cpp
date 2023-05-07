@@ -61,7 +61,7 @@ void block_add_one_byte_relative( uint8_t* block, BlockOffset& offset, uint8_t v
     offset += BlockOffset( sizeof( value ) );
 }
 
-uint8_t block_get_alignment_offset( uint8_t alignment, const uint64_t& offset )
+uint8_t block_get_alignment_offset( uint8_t alignment, uint64_t offset )
 {
     return static_cast<uint8_t>( alignment - offset % alignment );
 }

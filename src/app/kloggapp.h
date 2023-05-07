@@ -276,7 +276,7 @@ class KloggApp : public SingleApplication {
         auto mainWindows = mainWindows_;
         mainWindows.reverse();
         for ( const auto& [ session, window ] : mainWindows ) {
-            Q_UNUSED(session);
+            Q_UNUSED( session );
             window->close();
         }
 

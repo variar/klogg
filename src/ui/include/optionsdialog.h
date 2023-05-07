@@ -39,12 +39,12 @@
 #ifndef OPTIONSDIALOG_H
 #define OPTIONSDIALOG_H
 
-#include <QDialog>
-#include <QPushButton>
-#include <QLabel>
-#include <QKeySequenceEdit>
-#include <QHBoxLayout>
 #include <QColor>
+#include <QDialog>
+#include <QHBoxLayout>
+#include <QKeySequenceEdit>
+#include <QLabel>
+#include <QPushButton>
 
 #include "configuration.h"
 
@@ -55,7 +55,7 @@ class KeySequencePresenter : public QWidget {
   public:
     explicit KeySequencePresenter( const QString& keySequence );
 
-  QString keySequence() const;
+    QString keySequence() const;
 
   private Q_SLOTS:
     void showEditor();
@@ -98,6 +98,9 @@ class OptionsDialog : public QDialog, public Ui::OptionsDialog {
     void setupArchives();
     void setupStyles();
     void setupEncodings();
+    void setupLanguageList();
+
+    int updateTranslate();
 
     void buildShortcutsTable();
 

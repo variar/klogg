@@ -46,6 +46,8 @@
 #include "fontutils.h"
 #include "highlighteredit.h"
 #include "log.h"
+#include "mainwindow.h"
+#include "recentfiles.h"
 #include "savedsearches.h"
 #include "shortcuts.h"
 #include "styles.h"
@@ -66,6 +68,7 @@ OptionsDialog::OptionsDialog( QWidget* parent )
     setupRegexp();
     setupStyles();
     setupEncodings();
+    setupLanguageList();
 
     // Validators
     QValidator* pollingIntervalValidator = new QIntValidator( PollIntervalMin, PollIntervalMax );
@@ -160,6 +163,27 @@ void OptionsDialog::setupEncodings()
 
     for ( const auto& codec : allMibs ) {
         encodingComboBox->addItem( codec.first, codec.second );
+    }
+}
+
+void OptionsDialog::setupLanguageList()
+{
+    QResource resource( ":/i18n/Languages.xml" );
+    QByteArray bytes( reinterpret_cast<const char*>( resource.data() ), (int)resource.size() );
+    QXmlStreamReader xml( bytes );
+
+    while ( !xml.atEnd() ) {
+        QXmlStreamReader::TokenType token = xml.readNext();
+        if ( xml.hasError() ) {
+            LOG_ERROR << "load language error";
+            return;
+        }
+
+        if ( xml.name() == QString( "language" ) && token == QXmlStreamReader::StartElement ) {
+            QXmlStreamAttributes attributes = xml.attributes();
+            languageComboBox->addItem( attributes.value( "name" ).toString(),
+                                       attributes.value( "ietfCode" ).toString() );
+        }
     }
 }
 
@@ -271,6 +295,13 @@ void OptionsDialog::updateDialogFromConfig()
     enableQtHiDpiCheckBox->setChecked( config.enableQtHighDpi() );
     scaleRoundingComboBox->setCurrentIndex( config.scaleFactorRounding() - 1 );
 
+    // Language
+    auto langIdx = languageComboBox->findData( { config.language() } );
+    if ( langIdx == -1 ) {
+        langIdx = 0;
+    }
+    languageComboBox->setCurrentIndex( langIdx );
+
     const auto style = config.style();
     if ( !styleComboBox->findText( style, Qt::MatchExactly ) ) {
         styleComboBox->setCurrentIndex( 0 );
@@ -336,6 +367,11 @@ void OptionsDialog::updateDialogFromConfig()
 
     const auto& savedSearches = SavedSearches::get();
     searchHistorySpinBox->setValue( savedSearches.historySize() );
+
+    const auto& recentFiles = RecentFiles::get();
+    filesHistoryMaxItemsSpinBox->setMinimum( 1 );
+    filesHistoryMaxItemsSpinBox->setMaximum( MAX_RECENT_FILES );
+    filesHistoryMaxItemsSpinBox->setValue( recentFiles.filesHistoryMaxItems() );
 }
 
 //
@@ -375,8 +411,15 @@ void OptionsDialog::changeQfColor()
     }
 }
 
+int OptionsDialog::updateTranslate()
+{
+    auto mw = dynamic_cast<MainWindow*>( parent() );
+    return mw->installLanguage( languageComboBox->currentData().toString() );
+}
+
 void OptionsDialog::updateConfigFromDialog()
 {
+    bool restartAppMessage = false;
     auto& config = Configuration::get();
 
     QFont font = QFont( fontFamilyBox->currentText(), ( fontSizeBox->currentText() ).toInt() );
@@ -430,10 +473,7 @@ void OptionsDialog::updateConfigFromDialog()
 
     config.setVerifySslPeers( verifySslCheckBox->isChecked() );
 
-    if ( config.style() != styleComboBox->currentText() ) {
-        QMessageBox::warning( this, "klogg",
-                              QString( "Klogg needs to be restarted to apply style changes. " ) );
-    }
+    restartAppMessage = config.style() != styleComboBox->currentText();
 
     config.setStyle( styleComboBox->currentText() );
     config.setHideAnsiColorSequences( hideAnsiColorsCheckBox->isChecked() );
@@ -458,11 +498,28 @@ void OptionsDialog::updateConfigFromDialog()
     }
     config.setShortcuts( shortcuts );
 
+    // update translate when accept or apply clicked
+    restartAppMessage |= config.language() != languageComboBox->currentData().toString();
+    updateTranslate();
+    config.setLanguage( languageComboBox->currentData().toString() );
+    retranslateUi( this );
+
     config.save();
 
     auto& savedSearches = SavedSearches::get();
     savedSearches.setHistorySize( searchHistorySpinBox->value() );
     savedSearches.save();
+
+    auto& recentFiles = RecentFiles::get();
+    recentFiles.setFilesHistoryMaxItems( filesHistoryMaxItemsSpinBox->value() );
+    recentFiles.save();
+
+    if ( restartAppMessage ) {
+        QMessageBox::warning(
+            this, "klogg",
+            QApplication::translate( "OptionsDialog",
+                                     "Klogg needs to be restarted to apply some changes. " ) );
+    }
 
     Q_EMIT optionsChanged();
 }
@@ -565,9 +622,10 @@ void OptionsDialog::buildShortcutsTable()
 
     shortcutsTable->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch );
     shortcutsTable->verticalHeader()->setSectionResizeMode( QHeaderView::Stretch );
-    shortcutsTable->setHorizontalHeaderItem( 0, new QTableWidgetItem( "Action" ) );
-    shortcutsTable->setHorizontalHeaderItem( 1, new QTableWidgetItem( "Primary shortcut" ) );
-    shortcutsTable->setHorizontalHeaderItem( 2, new QTableWidgetItem( "Secondary shortcut" ) );
+    shortcutsTable->setHorizontalHeaderItem( 0, new QTableWidgetItem( tr( "Action" ) ) );
+    shortcutsTable->setHorizontalHeaderItem( 1, new QTableWidgetItem( tr( "Primary shortcut" ) ) );
+    shortcutsTable->setHorizontalHeaderItem( 2,
+                                             new QTableWidgetItem( tr( "Secondary shortcut" ) ) );
 
     shortcutsTable->sortItems( 0 );
 }

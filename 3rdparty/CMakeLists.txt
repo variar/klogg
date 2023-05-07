@@ -2,7 +2,7 @@ set(QAPPLICATION_CLASS QApplication)
 
 include(CPM)
 
-cpmaddpackage("gh:simdutf/simdutf@1.0.1")
+cpmaddpackage("gh:simdutf/simdutf@3.2.8")
 
 if(APPLE)
   cpmaddpackage(
@@ -86,8 +86,8 @@ endif()
 cpmaddpackage(
   NAME
   Uchardet
-  GITHUB_REPOSITORY
-  freedesktop/Uchardet
+  GIT_REPOSITORY
+  https://gitlab.freedesktop.org/uchardet/uchardet
   VERSION
   0.0.7
   EXCLUDE_FROM_ALL

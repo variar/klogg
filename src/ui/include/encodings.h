@@ -11,11 +11,13 @@
 #endif // Q_OS_WIN
 
 #include <QActionGroup>
+#include <QApplication>
 #include <QMenu>
 #include <QString>
 #include <QTextCodec>
 
 #include <configuration.h>
+#include <mainwindowtext.h>
 
 class EncodingMenu {
   public:
@@ -46,10 +48,14 @@ class EncodingMenu {
         const auto supportedEncodings = EncodingMenu::supportedEncodings();
         const auto defaultEncodingMib = Configuration::get().defaultEncodingMib();
 
-        QMenu* encodingsMenu = new QMenu( "E&ncoding" );
+        using namespace klogg::mainwindow;
+        QMenu* encodingsMenu = new QMenu(
+            QApplication::translate( "klogg::mainwindow::menu", menu::encodingTitle ) );
 
-        auto autoEncoding = encodingsMenu->addAction( "Auto" );
-        autoEncoding->setStatusTip( "Automatically detect the file's encoding" );
+        auto autoEncoding = encodingsMenu->addAction(
+            QApplication::translate( "klogg::mainwindow::action", action::autoEncodingText ) );
+        autoEncoding->setStatusTip(
+            QApplication::translate( "klogg::mainwindow::action", action::autoEncodingStatusTip ) );
         autoEncoding->setCheckable( true );
         autoEncoding->setActionGroup( actionGroup );
         autoEncoding->setChecked( defaultEncodingMib < 0 );
@@ -67,7 +73,8 @@ class EncodingMenu {
             systemCodec = QTextCodec::codecForLocale();
         }
 
-        auto systemEncodingName = QString( "System (%1)" ).arg( systemCodec->name().constData() );
+        auto systemEncodingName
+            = QApplication::tr( "System (%1)" ).arg( systemCodec->name().constData() );
 
         auto systemEncoding = encodingsMenu->addAction( systemEncodingName );
         systemEncoding->setCheckable( true );

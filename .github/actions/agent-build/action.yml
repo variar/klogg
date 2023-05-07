@@ -15,7 +15,7 @@ runs:
       run: |
         mkdir $KLOGG_BUILD_ROOT
         cd $KLOGG_BUILD_ROOT
-        cmake $KLOGG_CMAKE_OPTS -DCPM_SOURCE_CACHE=$KLOGG_WORKSPACE/cpm_cache $KLOGG_WORKSPACE
+        cmake $KLOGG_CMAKE_OPTS -DCPM_SOURCE_CACHE=$KLOGG_WORKSPACE/cpm_cache -DKLOGG_OVERRIDE_MALLOC=OFF $KLOGG_WORKSPACE
 
     - name: build
       shell: sh

@@ -12,6 +12,15 @@ add_custom_command(
   DEPENDS maddy ${DOCUMENTATION_FILE}
 )
 
+file(GLOB TS_FILES ${CMAKE_CURRENT_SOURCE_DIR}/i18n/*.ts)
+set_source_files_properties(${TS_FILES} PROPERTIES OUTPUT_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/i18n")
+find_package(Qt${QT_VERSION_MAJOR}LinguistTools REQUIRED)
+if (${QT_VERSION_MAJOR} EQUAL 5)
+  qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/src ${TS_FILES} OPTIONS -recursive -no-obsolete)
+else (${QT_VERSION_MAJOR} EQUAL 6)
+  qt6_create_translation(QM_FILES ${CMAKE_SOURCE_DIR}/src ${TS_FILES} OPTIONS -recursive -no-obsolete)
+endif()
+
 set(MAIN_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/cli.h ${CMAKE_CURRENT_SOURCE_DIR}/klogg.qrc)
 
 set(KLOGG_UI_SOURCES

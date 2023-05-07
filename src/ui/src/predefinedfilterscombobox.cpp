@@ -67,6 +67,7 @@ class QCheckListStyledItemDelegate : public QStyledItemDelegate {
 PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     : QComboBox( parent )
     , model_( new QStandardItemModel() )
+    , ignoreCollecting_( false )
 {
     setFocusPolicy( Qt::ClickFocus );
     setItemDelegate( new QCheckListStyledItemDelegate( this ) );
@@ -104,11 +105,65 @@ void PredefinedFiltersComboBox::populatePredefinedFilters()
     model_->clear();
     const auto filters = filtersCollection_.getSyncedFilters();
 
-    setTitle( "Predefined filters" );
+    setTitle( tr("Predefined filters") );
 
     insertFilters( filters );
 
     this->setModel( model_ );
+}
+
+void PredefinedFiltersComboBox::updateSearchPattern( const QString newSearchPattern, bool useLogicalCombining )
+{
+    searchPattern_.newOne_ = newSearchPattern;
+    searchPattern_.useLogicalCombining_ = useLogicalCombining;
+}
+
+void PredefinedFiltersComboBox::showPopup()
+{
+    if ( searchPattern_.newOne_ == searchPattern_.lastOne_ ) {
+        QComboBox::showPopup();
+        return;
+    }
+
+    searchPattern_.lastOne_ = searchPattern_.newOne_;
+
+    QString searchPattern = searchPattern_.newOne_;
+    QString delimeter( "\\|" );
+
+    if ( searchPattern_.useLogicalCombining_ ) {
+        delimeter = R"(" or ")";
+        // Remove " at the beginning and at the end
+        searchPattern = searchPattern.mid(1, searchPattern.length() - 1);
+    }
+
+    QStringList list = searchPattern.split( QRegularExpression( delimeter ) );
+
+    const auto totalRows = model_->rowCount();
+
+    ignoreCollecting_ = true;
+
+    for ( auto filterIndex = 0; filterIndex < totalRows; ++filterIndex ) {
+        const auto item = model_->item( filterIndex );
+        if ( item->isCheckable() ) {
+            item->setCheckState( Qt::Unchecked );
+        }
+    }
+
+    for ( auto &l : list ) {
+        for ( auto filterIndex = 0; filterIndex < totalRows; ++filterIndex ) {
+            const auto item = model_->item( filterIndex );
+            if ( !item->isCheckable() ) {
+                continue;
+            }
+            if ( l == item->data( PatternRole ).toString() ) {
+                item->setCheckState( Qt::Checked );
+            }
+        }
+    }
+
+    ignoreCollecting_ = false;
+
+    QComboBox::showPopup();
 }
 
 void PredefinedFiltersComboBox::setTitle( const QString& title )
@@ -135,6 +190,10 @@ void PredefinedFiltersComboBox::insertFilters(
 
 void PredefinedFiltersComboBox::collectFilters()
 {
+    if ( ignoreCollecting_ ) {
+        return;
+    }
+
     const auto totalRows = model_->rowCount();
 
     /* If multiple filters are selected connect those with "|" */

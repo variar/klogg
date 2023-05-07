@@ -317,6 +317,7 @@ class CrawlerWidget : public QSplitter,
     void changeDataStatus( DataStatus status );
     void updateEncoding();
     void changeTopViewSize( int32_t delta );
+    void updatePredefinedFiltersWidget();
 
     // Reload predefined filters after changing settings
     void reloadPredefinedFilters() const;
@@ -360,6 +361,7 @@ class CrawlerWidget : public QSplitter,
 
     InfoLine* searchInfoLine_;
 
+    QToolButton* clearButton_;
     QToolButton* searchButton_;
     QToolButton* stopButton_;
 

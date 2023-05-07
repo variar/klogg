@@ -11,7 +11,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Download artifacts for last successful CI workflow
       if: ${{ !github.event.inputs.ci-run-id }}
       uses: dawidd6/action-download-artifact@v2
@@ -59,13 +59,14 @@ jobs:
         rm -rf ./packages-focal/klogg_focal
         rm -rf ./packages-jammy/klogg_jammy
         rm -rf ./packages-oracle/klogg_oracle
+        rm -rf ./packages-oracle/klogg_oracle7
         rm -rf ./packages-appimage/klogg_appimage
 
     - name: Upload symbols mac
       shell: sh
       run: |
-        sentry-cli upload-dif ./packages-macos-qt5/klogg-Qt5.app/Contents/MacOS/klogg ./packages-catalina/klogg-Qt5.dSym
-        sentry-cli upload-dif ./packages-macos-qt6/klogg-Qt6.app/Contents/MacOS/klogg ./packages-monterey/klogg-Qt6.dSym
+        sentry-cli upload-dif ./packages-macos-qt5/klogg-Qt5.app/Contents/MacOS/klogg ./packages-macos-qt5/klogg-Qt5.dSym
+        sentry-cli upload-dif ./packages-macos-qt6/klogg-Qt6.app/Contents/MacOS/klogg ./packages-macos-qt6/klogg-Qt6.dSym
         rm -rf ./packages-macos-qt5/klogg-Qt5.app
         rm -rf ./packages-macos-qt6/klogg-Qt6.app
 
@@ -98,6 +99,7 @@ jobs:
           ./packages-focal/*
           ./packages-jammy/*
           ./packages-oracle/*
+          ./packages-oracle7/*
           ./packages-appimage/*
 
     - name: Release mac

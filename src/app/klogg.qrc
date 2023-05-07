@@ -7,6 +7,7 @@
     <file>images/arrowup.png</file>
     <file>images/darkclosebutton.png</file>
     <file>images/icons8-add-file-16.png</file>
+    <file>images/icons8-cancel-16.png</file>
     <file>images/icons8-create-16.png</file>
     <file>images/icons8-delete-16.png</file>
     <file>images/icons8-font-size-16.png</file>
@@ -33,6 +34,9 @@
     <file>images/olddata_icon.png</file>
     <file>images/olddata_icon@2x.png</file>
     <file>images/regex.png</file>
+    <file>i18n/Languages.xml</file>
+    <file>i18n/en.qm</file>
+    <file>i18n/zh-CN.qm</file>
 
     <file>fonts/DejaVuSansMono.ttf</file>
 </qresource>

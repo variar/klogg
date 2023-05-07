@@ -17,19 +17,19 @@ xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\mimalloc.pdb %KLOGG_WORKSPACE%
 xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\mimalloc-redirect.dll %KLOGG_WORKSPACE%\release\ /y
 xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\mimalloc-redirect32.dll %KLOGG_WORKSPACE%\release\ /y
 
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_64_md_relwithdebinfo\tbb12.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_64_md_relwithdebinfo\tbb12.pdb %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_64_md_relwithdebinfo\tbbmalloc.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_64_md_relwithdebinfo\tbbmalloc.pdb %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_64_md_relwithdebinfo\tbbmalloc_proxy.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_64_md_relwithdebinfo\tbbmalloc_proxy.pdb %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_64_md_relwithdebinfo\tbb12.dll %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_64_md_relwithdebinfo\tbb12.pdb %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_64_md_relwithdebinfo\tbbmalloc.dll %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_64_md_relwithdebinfo\tbbmalloc.pdb %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_64_md_relwithdebinfo\tbbmalloc_proxy.dll %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_64_md_relwithdebinfo\tbbmalloc_proxy.pdb %KLOGG_WORKSPACE%\release\ /y
 
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_32_md_relwithdebinfo\tbb12.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_32_md_relwithdebinfo\tbb12.pdb %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_32_md_relwithdebinfo\tbbmalloc.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_32_md_relwithdebinfo\tbbmalloc.pdb %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_32_md_relwithdebinfo\tbbmalloc_proxy.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.29_cxx17_32_md_relwithdebinfo\tbbmalloc_proxy.pdb %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_32_md_relwithdebinfo\tbb12.dll %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_32_md_relwithdebinfo\tbb12.pdb %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_32_md_relwithdebinfo\tbbmalloc.dll %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_32_md_relwithdebinfo\tbbmalloc.pdb %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_32_md_relwithdebinfo\tbbmalloc_proxy.dll %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.34_cxx17_32_md_relwithdebinfo\tbbmalloc_proxy.pdb %KLOGG_WORKSPACE%\release\ /y
 
 xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\generated\documentation.html %KLOGG_WORKSPACE%\release\ /y
 xcopy %KLOGG_WORKSPACE%\COPYING %KLOGG_WORKSPACE%\release\ /y
@@ -38,11 +38,11 @@ xcopy %KLOGG_WORKSPACE%\README.md %KLOGG_WORKSPACE%\release\ /y
 xcopy %KLOGG_WORKSPACE%\DOCUMENTATION.md %KLOGG_WORKSPACE%\release\ /y
 
 echo "Copying vc runtime..."
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC142.CRT\msvcp140.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC142.CRT\msvcp140_1.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC142.CRT\msvcp140_2.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC142.CRT\vcruntime140.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC142.CRT\vcruntime140_1.dll" %KLOGG_WORKSPACE%\release\ /y
+xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\msvcp140.dll" %KLOGG_WORKSPACE%\release\ /y
+xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\msvcp140_1.dll" %KLOGG_WORKSPACE%\release\ /y
+xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\msvcp140_2.dll" %KLOGG_WORKSPACE%\release\ /y
+xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\vcruntime140.dll" %KLOGG_WORKSPACE%\release\ /y
+xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\vcruntime140_1.dll" %KLOGG_WORKSPACE%\release\ /y
 
 echo "Copying ssl..."
 xcopy %SSL_DIR%\libcrypto-1_1%SSL_ARCH%.dll %KLOGG_WORKSPACE%\release\ /y

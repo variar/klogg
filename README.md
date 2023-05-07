@@ -16,10 +16,10 @@ Check [GitHub releases](https://github.com/variar/klogg/releases/latest) for Win
 
 Development status
 
-[![Next milestone](https://img.shields.io/github/milestones/progress-percent/variar/klogg/8?style=flat&)](https://github.com/variar/klogg/milestone/8)
+[![Next milestone](https://img.shields.io/github/milestones/progress-percent/variar/klogg/4?style=flat&)](https://github.com/variar/klogg/milestone/4)
 [![Ready for testing](https://img.shields.io/github/issues-raw/variar/klogg/status:%20ready%20for%20testing?color=green&label=issues%20ready%20for%20testing&style=flat)](https://github.com/variar/klogg/issues?q=is%3Aopen+is%3Aissue+label%3A%22status%3A+ready+for+testing%22)
 [![Need documentation](https://img.shields.io/github/issues-search/variar/klogg?color=yellow&label=features%20need%20documentation&query=is%3Aissue%20label%3A%22status%3A%20need%20documentation%22&style=flat)](https://github.com/variar/klogg/issues?q=is%3Aissue+label%3A%22status%3A+need+documentation%22)
-[![GitHub commits](https://img.shields.io/github/commits-since/variar/klogg/v20.12.svg?style=flat)](https://github.com/variar/klogg/commits/)
+[![GitHub commits](https://img.shields.io/github/commits-since/variar/klogg/v22.06.svg?style=flat)](https://github.com/variar/klogg/commits/)
 [![CI Build and Release](https://github.com/variar/klogg/actions/workflows/ci-build.yml/badge.svg)](https://github.com/variar/klogg/actions/workflows/ci-build.yml)
 
 [![Chat on Discord](https://img.shields.io/discord/838452586944266260?label=Discord&style=flat)](https://discord.gg/DruNyQftzB) [![Join the chat at https://gitter.im/klogg_log_viewer/community](https://badges.gitter.im/klogg_log_viewer/community.svg)](https://gitter.im/klogg_log_viewer/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)

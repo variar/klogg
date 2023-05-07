@@ -26,15 +26,15 @@ on:
 jobs:
   SaveVersion:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/klogg-version
 
       - name: Save version 
         run: echo $KLOGG_VERSION > klogg_version.txt
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: klogg_version
           path: 'klogg_version.txt'
@@ -46,6 +46,17 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          #- os: oraclelinux
+          #  os_version: 7
+          #  arch: x64
+          #  check_command: yum install -y --setopt tsflags=test /usr/local/klogg*.rpm
+          #  cpack_gen: RPM
+          #  artifacts_id: oracle7
+          #  package_suffix: rpm
+          #  check_container: oraclelinux:7
+          #  container_root: docker/oracle7
+          #  container: variar/klogg_oracle7
+          #  cmake_opts: -DKLOGG_USE_SENTRY=OFF -DKLOGG_USE_LTO=OFF -DKLOGG_USE_HYPERSCAN=OFF
 
           - os: oraclelinux
             os_version: 8
@@ -108,9 +119,9 @@ jobs:
             cmake_opts: -DKLOGG_USE_LTO=OFF -DCMAKE_PREFIX_PATH=/opt/qt515/
 
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       #- uses: satackey/action-docker-layer-caching@v0.0.11
       #  # Ignore the failure of a step and avoid terminating the job.
@@ -128,7 +139,7 @@ jobs:
       - uses: ./.github/actions/docker-package
           
 # Final upload of all packages
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*'
@@ -141,15 +152,15 @@ jobs:
       matrix:
         config:
           - os: macos
-            os_version: 10.15
+            os_version: 11
             qt_version: 5.15.2
             qt_modules:
             arch: x64
             artifacts_id: macos-qt5
             cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=10.14
           - os: macos
-            os_version: 10.15
-            qt_version: 6.2.4
+            os_version: 11
+            qt_version: 6.4.3
             qt_modules: qt5compat
             arch: x64
             artifacts_id: macos-qt6
@@ -157,7 +168,7 @@ jobs:
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
      
 #Install build deps
       - name: Set brew env
@@ -182,7 +193,7 @@ jobs:
           appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
           appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*' 
@@ -195,7 +206,7 @@ jobs:
       matrix:
         config:
           - os: windows
-            os_version: 2019
+            os_version: 2022
             qt_version: 5.15.2
             arch: x64
             ssl_arch: -x64
@@ -203,8 +214,8 @@ jobs:
             artifacts_id: windows-x64-qt5
 
           - os: windows
-            os_version: 2019
-            qt_version: 6.2.4
+            os_version: 2022
+            qt_version: 6.4.3
             qt_modules: qt5compat
             arch: x64
             ssl_arch: -x64
@@ -212,7 +223,7 @@ jobs:
             artifacts_id: windows-x64-qt6
 
           - os: windows
-            os_version: 2019
+            os_version: 2022
             qt_version: 5.15.2
             arch: x86
             qt_arch: win32_msvc2019
@@ -221,7 +232,7 @@ jobs:
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache openssl
         id: cache-openssl
@@ -233,7 +244,7 @@ jobs:
       - name: Download openssl
         if: ${{ steps.cache-openssl.outputs.cache-hit != 'true' }} 
         run: |
-          Invoke-WebRequest -Uri "https://mirror.firedaemon.com/OpenSSL/openssl-1.1.1n.zip" -OutFile openssl.zip
+          Invoke-WebRequest -Uri "https://www.firedaemon.com/download-firedaemon-openssl-1-zip" -OutFile openssl.zip
           7z x openssl.zip 
 
       - name: Set openssl paths
@@ -260,7 +271,7 @@ jobs:
           s3-bucket: ${{ secrets.WIN_CS_BUCKET }}
      
 # Final upload of all packages
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*'

@@ -370,6 +370,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
 
         if ( line.has_value() && mouseEvent->modifiers() & Qt::ShiftModifier ) {
             selection_.selectRangeFromPrevious( *line );
+            selectionCurrentEndPos_ = convertCoordToFilePos( mouseEvent->pos() );
             Q_EMIT updateLineNumber( *line );
             update();
         }
@@ -411,8 +412,9 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
         }
 
         if ( selection_.isSingleLine() ) {
-            copyAction_->setText( "&Copy this line" );
-            copyWithLineNumbersAction_->setText( "&Copy this line with line number" );
+            copyAction_->setText( tr( "&Copy this line" ) );
+            copyWithLineNumbersAction_->setText( tr( "Copy this line with line number" ) );
+
 
             setSearchStartAction_->setEnabled( true );
             setSearchEndAction_->setEnabled( true );
@@ -421,9 +423,10 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             setSelectionEndAction_->setEnabled( !!selectionStart_ );
         }
         else {
-            copyAction_->setText( "&Copy" );
-            copyWithLineNumbersAction_->setText( "&Copy with line numbers" );
+            copyAction_->setText( tr( "&Copy" ) );
             copyAction_->setStatusTip( tr( "Copy the selection" ) );
+
+            copyWithLineNumbersAction_->setText( tr( "Copy with line numbers" ) );
 
             setSearchStartAction_->setEnabled( false );
             setSearchEndAction_->setEnabled( false );
@@ -467,7 +470,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
                 }
             }
 
-            auto noneAction = colorLabelsMenu_->addAction( "None" );
+            auto noneAction = colorLabelsMenu_->addAction( tr( "None" ) );
             noneAction->setActionGroup( colorLablesActionGroup );
             noneAction->setCheckable( true );
             noneAction->setChecked( !currentLabel.has_value() );
@@ -503,7 +506,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
 #endif
             }
             colorLabelsMenu_->addSeparator();
-            auto clearAllAction = colorLabelsMenu_->addAction( "Clear all" );
+            auto clearAllAction = colorLabelsMenu_->addAction( tr( "Clear all" ) );
             connect( clearAllAction, &QAction::triggered, this,
                      &AbstractLogView::clearColorLabels );
         }
@@ -691,11 +694,7 @@ void AbstractLogView::doRegisterShortcuts()
     registerShortcut( ShortcutAction::LogViewJumpToTop,
                       [ this ]() { selectAndDisplayLine( 0_lnum ); } );
     registerShortcut( ShortcutAction::LogViewJumpToButtom, [ this ]() {
-        disableFollow();
-        const auto line = LineNumber( logData_->getNbLine().get() ) - 1_lcount;
-        selection_.selectLine( line );
-        Q_EMIT updateLineNumber( line );
-        Q_EMIT newSelection( line );
+        selectAndDisplayLine( maxDisplayLineNumber() - 1_lcount );
         jumpToBottom();
     } );
 
@@ -731,6 +730,26 @@ void AbstractLogView::doRegisterShortcuts()
     registerShortcut( ShortcutAction::LogViewExcludeFromSearch,
                       [ this ]() { excludeFromSearch(); } );
     registerShortcut( ShortcutAction::LogViewReplaceSearch, [ this ]() { replaceSearch(); } );
+
+    registerShortcut( ShortcutAction::LogViewSelectLinesUp, [ this ]() {
+        auto newPosition = selectionCurrentEndPos_;
+        if ( newPosition.line == 0_lcount ) {
+            // Reached the begin
+            return;
+        }
+        --newPosition.line;
+        selectAndDisplayRange( newPosition );
+    } );
+
+    registerShortcut( ShortcutAction::LogViewSelectLinesDown, [ this ]() {
+        auto newPosition = selectionCurrentEndPos_;
+        if ( newPosition.line >= maxDisplayLineNumber() - 1_lcount ) {
+            // Reached the end
+            return;
+        }
+        ++newPosition.line;
+        selectAndDisplayRange( newPosition );
+    } );
 }
 
 void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
@@ -739,7 +758,7 @@ void AbstractLogView::keyPressEvent( QKeyEvent* keyEvent )
 
     const auto text = keyEvent->text();
 
-    if ( keyEvent->modifiers() == Qt::NoModifier && text.count() == 1 ) {
+    if ( keyEvent->modifiers() == Qt::NoModifier && text.size() == 1 ) {
         const auto character = text.at( 0 ).toLatin1();
         if ( ( ( character > '0' ) && ( character <= '9' ) )
              || ( !digitsBuffer_.isEmpty() && character == '0' ) ) {
@@ -1064,7 +1083,7 @@ void AbstractLogView::searchUsingFunction( QuickFindSearchFn searchFunction )
     ( quickFind_->*searchFunction )( selection_, quickFindPattern_->getMatcher() );
 }
 
-void AbstractLogView::setQuickFindResult( bool hasMatch, Portion portion )
+void AbstractLogView::setQuickFindResult( bool hasMatch, const Portion& portion )
 {
     if ( portion.isValid() ) {
         LOG_DEBUG << "search " << portion.line();
@@ -1253,12 +1272,31 @@ void AbstractLogView::markSelected()
 
 void AbstractLogView::saveToFile()
 {
+    auto start = 0_lnum;
+    const auto totalLines = logData_->getNbLine();
+    auto end = LineNumber{ totalLines.get() };
+
+    saveLinesToFile( start, end );
+}
+
+void AbstractLogView::saveSelectedToFile()
+{
+    auto start = selectionStartPos_.line;
+    auto lastLine = selectionCurrentEndPos_.line;
+    if ( start > lastLine ) {
+        std::swap( start, lastLine );
+    }
+    auto end = lastLine + 1_lcount;
+    saveLinesToFile( start, end );
+}
+
+void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
+{
     auto filename = QFileDialog::getSaveFileName( this, "Save content" );
     if ( filename.isEmpty() ) {
         return;
     }
 
-    const auto totalLines = logData_->getNbLine();
     QSaveFile saveFile{ filename };
     saveFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
     if ( !saveFile.isOpen() ) {
@@ -1267,19 +1305,17 @@ void AbstractLogView::saveToFile()
     }
 
     QProgressDialog progressDialog( this );
-    progressDialog.setLabelText( QString( "Saving content to %1" ).arg( filename ) );
-
+    progressDialog.setLabelText( tr( "Saving content to %1" ).arg( filename ) );
     std::vector<std::pair<LineNumber, LinesCount>> offsets;
-    auto lineOffset = 0_lnum;
+    auto lineOffset = begin;
     const auto chunkSize = 5000_lcount;
 
-    for ( ; lineOffset + chunkSize < LineNumber( totalLines.get() );
-          lineOffset += LineNumber( chunkSize.get() ) ) {
+    for ( ; lineOffset + chunkSize < end; lineOffset += LineNumber( chunkSize.get() ) ) {
         offsets.emplace_back( lineOffset, chunkSize );
     }
-    offsets.emplace_back( lineOffset, LinesCount( totalLines.get() % chunkSize.get() ) );
+    offsets.emplace_back( lineOffset, LinesCount( ( end - lineOffset ).get() % chunkSize.get() ) );
 
-    QTextCodec* codec = logData_->getDisplayEncoding();
+    const QTextCodec* codec = logData_->getDisplayEncoding();
     if ( !codec ) {
         codec = QTextCodec::codecForName( "utf-8" );
     }
@@ -1515,6 +1551,8 @@ void AbstractLogView::selectAndDisplayLine( LineNumber line )
 {
     disableFollow();
     selection_.selectLine( line );
+    selectionStartPos_ = FilePos{ line, 0 };
+    selectionCurrentEndPos_ = selectionStartPos_;
     displayLine( line );
     Q_EMIT updateLineNumber( line );
     Q_EMIT newSelection( line );
@@ -1655,6 +1693,8 @@ void AbstractLogView::moveSelection( LinesCount delta, bool isDeltaNegative )
     // Select and display the new line
     selection_.selectLine( newLine );
     displayLine( newLine );
+    selectionStartPos_ = FilePos{ newLine, 0 };
+    selectionCurrentEndPos_ = selectionStartPos_;
     Q_EMIT updateLineNumber( newLine );
     Q_EMIT newSelection( newLine );
 }
@@ -1760,6 +1800,16 @@ void AbstractLogView::updateGlobalSelection()
     }
 }
 
+void AbstractLogView::selectAndDisplayRange( FilePos pos )
+{
+    disableFollow();
+    selection_.selectRange( selectionStartPos_.line, pos.line );
+    selectionCurrentEndPos_ = pos;
+    displayLine( pos.line );
+    Q_EMIT updateLineNumber( pos.line );
+    Q_EMIT newSelection( pos.line );
+}
+
 // Create the pop-up menu
 void AbstractLogView::createMenu()
 {
@@ -1778,6 +1828,10 @@ void AbstractLogView::createMenu()
     saveToFileAction_ = new QAction( tr( "Save to file" ), this );
     connect( saveToFileAction_, &QAction::triggered, this,
              [ this ]( auto ) { this->saveToFile(); } );
+
+    saveSelectedToFileAction_ = new QAction( tr( "Save selected to file" ), this );
+    connect( saveSelectedToFileAction_, &QAction::triggered, this,
+             [ this ]( auto ) { this->saveSelectedToFile(); } );
 
     // For '#' and '*', shortcuts doesn't seem to work but
     // at least it displays them in the menu, we manually handle those keys
@@ -1842,8 +1896,8 @@ void AbstractLogView::createMenu()
              [ this ]( auto ) { Q_EMIT replaceScratchpadWithSelection(); } );
 
     popupMenu_ = new QMenu( this );
-    highlightersMenu_ = popupMenu_->addMenu( "Highlighters" );
-    colorLabelsMenu_ = popupMenu_->addMenu( "Color labels" );
+    highlightersMenu_ = popupMenu_->addMenu( tr( "Highlighters" ) );
+    colorLabelsMenu_ = popupMenu_->addMenu( tr( "Color labels" ) );
 
     popupMenu_->addSeparator();
     popupMenu_->addAction( markAction_ );
@@ -1869,6 +1923,7 @@ void AbstractLogView::createMenu()
     popupMenu_->addSeparator();
     popupMenu_->addAction( saveDefaultSplitterSizesAction_ );
     popupMenu_->addAction( saveToFileAction_ );
+    popupMenu_->addAction( saveSelectedToFileAction_ );
 }
 
 void AbstractLogView::considerMouseHovering( int xPos, int yPos )

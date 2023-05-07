@@ -105,5 +105,6 @@ If possible commit message should be like `prefix: message`, where prefix is one
   ci = 'Continuous Integration',
   chore = 'Chores',
   revert = 'Reverts',
+  tr = 'Translations'
 ```
     

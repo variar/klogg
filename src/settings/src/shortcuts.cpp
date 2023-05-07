@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <functional>
 
+#include <QApplication>
 #include <QShortcut>
 #include <QWidget>
 
@@ -139,11 +140,14 @@ const std::map<std::string, QStringList>& ShortcutAction::defaultShortcuts()
         shortcuts.emplace( LogViewAddNextColorLabel, QStringList() << "Ctrl+D" );
 
         shortcuts.emplace( LogViewSendSelectionToScratchpad, QStringList() << "Ctrl+Z" );
-        shortcuts.emplace( LogViewReplaceScratchpadWithSelection, QStringList() << "Ctrl+Shift+Z");
-        
+        shortcuts.emplace( LogViewReplaceScratchpadWithSelection, QStringList() << "Ctrl+Shift+Z" );
+
         shortcuts.emplace( LogViewAddToSearch, QStringList() << "Shift+A" );
         shortcuts.emplace( LogViewExcludeFromSearch, QStringList() << "Shift+E" );
         shortcuts.emplace( LogViewReplaceSearch, QStringList() << "Shift+R" );
+
+        shortcuts.emplace( LogViewSelectLinesUp, QStringList() << "Shift+Up" );
+        shortcuts.emplace( LogViewSelectLinesDown, QStringList() << "Shift+Down" );
 
         return shortcuts;
     }();
@@ -167,81 +171,109 @@ QString ShortcutAction::actionName( const std::string& action )
     static const std::map<std::string, QString> actionNames = []() {
         std::map<std::string, QString> shortcuts;
 
-        shortcuts.emplace( MainWindowNewWindow, "Open new window" );
-        shortcuts.emplace( MainWindowOpenFile, "Open file" );
-        shortcuts.emplace( MainWindowCloseFile, "Close file" );
-        shortcuts.emplace( MainWindowCloseAll, "Close all files" );
-        shortcuts.emplace( MainWindowSelectAll, "Select all" );
-        shortcuts.emplace( MainWindowCopy, "Copy selection to clipboard" );
-        shortcuts.emplace( MainWindowQuit, "Exit application" );
-        shortcuts.emplace( MainWindowOpenQf, "Open quick find" );
-        shortcuts.emplace( MainWindowOpenQfForward, "Quick find forward" );
-        shortcuts.emplace( MainWindowOpenQfBackward, "Quick find backward" );
-        shortcuts.emplace( MainWindowFocusSearchInput, "Set focus to search input" );
-        shortcuts.emplace( MainWindowClearFile, "Clear file" );
-        shortcuts.emplace( MainWindowOpenContainingFolder, "Open containgin folder" );
-        shortcuts.emplace( MainWindowOpenInEditor, "Open file in editor" );
-        shortcuts.emplace( MainWindowCopyPathToClipboard, "Copy file path to clipboard" );
-        shortcuts.emplace( MainWindowOpenFromClipboard, "Paste text from clipboard" );
-        shortcuts.emplace( MainWindowOpenFromUrl, "Open file from URL" );
-        shortcuts.emplace( MainWindowFollowFile, "Monitor file changes" );
-        shortcuts.emplace( MainWindowReload, "Reload file" );
-        shortcuts.emplace( MainWindowStop, "Stop file loading" );
-        shortcuts.emplace( MainWindowScratchpad, "Open scratchpad" );
-        shortcuts.emplace( MainWindowSelectOpenFile, "Switch to file" );
+        shortcuts.emplace( MainWindowNewWindow, QApplication::tr( "Open new window" ) );
+        shortcuts.emplace( MainWindowOpenFile, QApplication::tr( "Open file" ) );
+        shortcuts.emplace( MainWindowCloseFile, QApplication::tr( "Close file" ) );
+        shortcuts.emplace( MainWindowCloseAll, QApplication::tr( "Close all files" ) );
+        shortcuts.emplace( MainWindowSelectAll, QApplication::tr( "Select all" ) );
+        shortcuts.emplace( MainWindowCopy, QApplication::tr( "Copy selection to clipboard" ) );
+        shortcuts.emplace( MainWindowQuit, QApplication::tr( "Exit application" ) );
+        shortcuts.emplace( MainWindowOpenQf, QApplication::tr( "Open quick find" ) );
+        shortcuts.emplace( MainWindowOpenQfForward, QApplication::tr( "Quick find forward" ) );
+        shortcuts.emplace( MainWindowOpenQfBackward, QApplication::tr( "Quick find backward" ) );
+        shortcuts.emplace( MainWindowFocusSearchInput,
+                           QApplication::tr( "Set focus to search input" ) );
+        shortcuts.emplace( MainWindowClearFile, QApplication::tr( "Clear file" ) );
+        shortcuts.emplace( MainWindowOpenContainingFolder,
+                           QApplication::tr( "Open containing folder" ) );
+        shortcuts.emplace( MainWindowOpenInEditor, QApplication::tr( "Open file in editor" ) );
+        shortcuts.emplace( MainWindowCopyPathToClipboard,
+                           QApplication::tr( "Copy file path to clipboard" ) );
+        shortcuts.emplace( MainWindowOpenFromClipboard,
+                           QApplication::tr( "Paste text from clipboard" ) );
+        shortcuts.emplace( MainWindowOpenFromUrl, QApplication::tr( "Open file from URL" ) );
+        shortcuts.emplace( MainWindowFollowFile, QApplication::tr( "Monitor file changes" ) );
+        shortcuts.emplace( MainWindowReload, QApplication::tr( "Reload file" ) );
+        shortcuts.emplace( MainWindowStop, QApplication::tr( "Stop file loading" ) );
+        shortcuts.emplace( MainWindowScratchpad, QApplication::tr( "Open scratchpad" ) );
+        shortcuts.emplace( MainWindowSelectOpenFile, QApplication::tr( "Switch to file" ) );
 
-        shortcuts.emplace( CrawlerChangeVisibility, "Change filtered lines visibility" );
-        shortcuts.emplace( CrawlerIncreseTopViewSize, "Increase main view" );
-        shortcuts.emplace( CrawlerDecreaseTopViewSize, "Decrease main view" );
+        shortcuts.emplace( CrawlerChangeVisibility,
+                           QApplication::tr( "Change filtered lines visibility" ) );
+        shortcuts.emplace( CrawlerIncreseTopViewSize, QApplication::tr( "Increase main view" ) );
+        shortcuts.emplace( CrawlerDecreaseTopViewSize, QApplication::tr( "Decrease main view" ) );
 
-        shortcuts.emplace( QfFindNext, "QuickFind: Find next" );
-        shortcuts.emplace( QfFindPrev, "QuickFind: Find previous" );
+        shortcuts.emplace( QfFindNext, QApplication::tr( "QuickFind: Find next" ) );
+        shortcuts.emplace( QfFindPrev, QApplication::tr( "QuickFind: Find previous" ) );
 
-        shortcuts.emplace( LogViewMark, "Add line mark" );
+        shortcuts.emplace( LogViewMark, QApplication::tr( "Add line mark" ) );
 
-        shortcuts.emplace( LogViewNextMark, "Jump to next mark" );
-        shortcuts.emplace( LogViewPrevMark, "Jump to previous mark" );
-        shortcuts.emplace( LogViewSelectionUp, "Move selection up" );
-        shortcuts.emplace( LogViewSelectionDown, "Move selection down" );
-        shortcuts.emplace( LogViewScrollUp, "Scroll up" );
-        shortcuts.emplace( LogViewScrollDown, "Scroll down" );
-        shortcuts.emplace( LogViewScrollLeft, "Scroll left" );
-        shortcuts.emplace( LogViewScrollRight, "Scroll right" );
-        shortcuts.emplace( LogViewJumpToStartOfLine, "Jump to the beginning of the current line" );
-        shortcuts.emplace( LogViewJumpToEndOfLine, "Jump to the end start of the current line" );
-        shortcuts.emplace( LogViewJumpToRightOfScreen, "Jump to the right of the text" );
-        shortcuts.emplace( LogViewJumpToButtom, "Jump to the buttom of the text" );
-        shortcuts.emplace( LogViewJumpToTop, "Jump to the top of the text" );
-        shortcuts.emplace( LogViewJumpToLine, "Jump to line" );
-        shortcuts.emplace( LogViewQfForward, "Main view: find next" );
-        shortcuts.emplace( LogViewQfBackward, "Main view: find previous" );
+        shortcuts.emplace( LogViewNextMark, QApplication::tr( "Jump to next mark" ) );
+        shortcuts.emplace( LogViewPrevMark, QApplication::tr( "Jump to previous mark" ) );
+        shortcuts.emplace( LogViewSelectionUp, QApplication::tr( "Move selection up" ) );
+        shortcuts.emplace( LogViewSelectionDown, QApplication::tr( "Move selection down" ) );
+        shortcuts.emplace( LogViewScrollUp, QApplication::tr( "Scroll up" ) );
+        shortcuts.emplace( LogViewScrollDown, QApplication::tr( "Scroll down" ) );
+        shortcuts.emplace( LogViewScrollLeft, QApplication::tr( "Scroll left" ) );
+        shortcuts.emplace( LogViewScrollRight, QApplication::tr( "Scroll right" ) );
+        shortcuts.emplace( LogViewJumpToStartOfLine,
+                           QApplication::tr( "Jump to the beginning of the current line" ) );
+        shortcuts.emplace( LogViewJumpToEndOfLine,
+                           QApplication::tr( "Jump to the end start of the current line" ) );
+        shortcuts.emplace( LogViewJumpToRightOfScreen,
+                           QApplication::tr( "Jump to the right of the text" ) );
+        shortcuts.emplace( LogViewJumpToButtom,
+                           QApplication::tr( "Jump to the buttom of the text" ) );
+        shortcuts.emplace( LogViewJumpToTop, QApplication::tr( "Jump to the top of the text" ) );
+        shortcuts.emplace( LogViewJumpToLine, QApplication::tr( "Jump to line" ) );
+        shortcuts.emplace( LogViewQfForward, QApplication::tr( "Main view: find next" ) );
+        shortcuts.emplace( LogViewQfBackward, QApplication::tr( "Main view: find previous" ) );
 
-        shortcuts.emplace( LogViewQfSelectedForward, "Set selection to QuickFind and find next" );
+        shortcuts.emplace( LogViewQfSelectedForward,
+                           QApplication::tr( "Set selection to QuickFind and find next" ) );
         shortcuts.emplace( LogViewQfSelectedBackward,
-                           "Set selection to QuickFind and find previous" );
+                           QApplication::tr( "Set selection to QuickFind and find previous" ) );
 
-        shortcuts.emplace( LogViewExitView, "Release focus from view" );
+        shortcuts.emplace( LogViewExitView, QApplication::tr( "Release focus from view" ) );
 
-        shortcuts.emplace( LogViewAddColorLabel1, "Highlight text with color 1" );
-        shortcuts.emplace( LogViewAddColorLabel2, "Highlight text with color 2" );
-        shortcuts.emplace( LogViewAddColorLabel3, "Highlight text with color 3" );
-        shortcuts.emplace( LogViewAddColorLabel4, "Highlight text with color 4" );
-        shortcuts.emplace( LogViewAddColorLabel5, "Highlight text with color 5" );
-        shortcuts.emplace( LogViewAddColorLabel6, "Highlight text with color 6" );
-        shortcuts.emplace( LogViewAddColorLabel7, "Highlight text with color 7" );
-        shortcuts.emplace( LogViewAddColorLabel8, "Highlight text with color 8" );
-        shortcuts.emplace( LogViewAddColorLabel9, "Highlight text with color 9" );
+        shortcuts.emplace( LogViewAddColorLabel1,
+                           QApplication::tr( "Highlight text with color 1" ) );
+        shortcuts.emplace( LogViewAddColorLabel2,
+                           QApplication::tr( "Highlight text with color 2" ) );
+        shortcuts.emplace( LogViewAddColorLabel3,
+                           QApplication::tr( "Highlight text with color 3" ) );
+        shortcuts.emplace( LogViewAddColorLabel4,
+                           QApplication::tr( "Highlight text with color 4" ) );
+        shortcuts.emplace( LogViewAddColorLabel5,
+                           QApplication::tr( "Highlight text with color 5" ) );
+        shortcuts.emplace( LogViewAddColorLabel6,
+                           QApplication::tr( "Highlight text with color 6" ) );
+        shortcuts.emplace( LogViewAddColorLabel7,
+                           QApplication::tr( "Highlight text with color 7" ) );
+        shortcuts.emplace( LogViewAddColorLabel8,
+                           QApplication::tr( "Highlight text with color 8" ) );
+        shortcuts.emplace( LogViewAddColorLabel9,
+                           QApplication::tr( "Highlight text with color 9" ) );
 
-        shortcuts.emplace( LogViewAddNextColorLabel, "Highlight text with next color" );
+        shortcuts.emplace( LogViewAddNextColorLabel,
+                           QApplication::tr( "Highlight text with next color" ) );
 
-        shortcuts.emplace( LogViewClearColorLabels, "Clear all color labels" );
+        shortcuts.emplace( LogViewClearColorLabels, QApplication::tr( "Clear all color labels" ) );
 
-        shortcuts.emplace( LogViewSendSelectionToScratchpad, "Send selection to scratchpad" );
-        shortcuts.emplace( LogViewReplaceScratchpadWithSelection, "Replace scratchpad with selection" );
+        shortcuts.emplace( LogViewSendSelectionToScratchpad,
+                           QApplication::tr( "Send selection to scratchpad" ) );
+        shortcuts.emplace( LogViewReplaceScratchpadWithSelection,
+                           QApplication::tr( "Replace scratchpad with selection" ) );
 
-        shortcuts.emplace( LogViewAddToSearch, "Add selection to search pattern" );
-        shortcuts.emplace( LogViewExcludeFromSearch, "Exclude selection from search pattern " );
-        shortcuts.emplace( LogViewReplaceSearch, "Replace search pattern with selection" );
+        shortcuts.emplace( LogViewAddToSearch,
+                           QApplication::tr( "Add selection to search pattern" ) );
+        shortcuts.emplace( LogViewExcludeFromSearch,
+                           QApplication::tr( "Exclude selection from search pattern " ) );
+        shortcuts.emplace( LogViewReplaceSearch,
+                           QApplication::tr( "Replace search pattern with selection" ) );
+
+        shortcuts.emplace( LogViewSelectLinesUp, QApplication::tr( "Select lines down" ) );
+        shortcuts.emplace( LogViewSelectLinesDown, QApplication::tr( "Select lines up" ) );
 
         return shortcuts;
     }();
@@ -276,7 +308,7 @@ void ShortcutAction::registerShortcut( const ConfiguredShortcuts& configuredShor
     }
 }
 
-void ShortcutAction::registerShortcut( const QString key,
+void ShortcutAction::registerShortcut( const QString& key,
                                        std::map<QString, QShortcut*>& shortcutsStorage,
                                        QWidget* shortcutsParent, Qt::ShortcutContext context,
                                        const std::function<void()>& func )

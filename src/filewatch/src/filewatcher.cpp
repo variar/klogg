@@ -91,7 +91,7 @@ class EfswFileWatcher final : public efsw::FileWatchListener {
             }
         }
         else {
-            for ( auto& dir : watchedPaths_ ) {
+            for ( const auto& dir : watchedPaths_ ) {
                 LOG_INFO << "Will disable watch for " << dir.name;
                 watcher_.removeWatch( dir.watchId );
             }
@@ -256,12 +256,12 @@ class EfswFileWatcher final : public efsw::FileWatchListener {
             qtDir.chop( 1 );
         }
 
-        const auto directory = qtDir.toStdString();
+        const auto& directory = qtDir.toStdString();
 
         LOG_DEBUG << "fileChangedOnDisk " << directory << " " << filename << ", old name "
                   << oldFilename;
 
-        const auto fullChangedFilename = findChangedFilename( directory, filename, oldFilename );
+        const auto& fullChangedFilename = findChangedFilename( directory, filename, oldFilename );
 
         if ( !fullChangedFilename.isEmpty() ) {
             dispatchToMainThread( [ watcher = parent_, fullChangedFilename ]() {

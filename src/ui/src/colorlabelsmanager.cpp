@@ -90,7 +90,7 @@ ColorLabelsManager::updateColorLabel( size_t label, const QString& text, bool re
     }
 
     if ( !( wasHighlightedAnyLabel ) || ( wasHighlightedOtherLabel && replaceCurrent ) ) {
-        quickHighlighters_[ label ].append( std::move( text ) );
+        quickHighlighters_[ label ].append( text );
     }
 
     return quickHighlighters_;

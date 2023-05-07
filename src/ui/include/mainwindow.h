@@ -43,10 +43,12 @@
 #include <QSystemTrayIcon>
 #include <QTemporaryDir>
 
+#include <QTranslator>
 #include <array>
 #include <memory>
 #include <mutex>
 
+#include "configuration.h"
 #include "crawlerwidget.h"
 #include "downloader.h"
 #include "iconloader.h"
@@ -78,6 +80,10 @@ class MainWindow : public QMainWindow {
     void reloadSession();
     // Loads the initial file (parameter passed or from config file)
     void loadInitialFile( QString fileName, bool followFile );
+
+    void reTranslateUI();
+
+    static int installLanguage( QString lang );
 
   public Q_SLOTS:
     // Load a file in a new tab (non-interactive)
@@ -121,8 +127,8 @@ class MainWindow : public QMainWindow {
     void aboutQt();
     void documentation();
     void showScratchPad();
-    void sendToScratchpad(QString);
-    void replaceDataInScratchpad(QString);
+    void sendToScratchpad( QString );
+    void replaceDataInScratchpad( QString );
     void encodingChanged( QAction* action );
     void addToFavorites();
     void removeFromFavorites();
@@ -196,6 +202,7 @@ class MainWindow : public QMainWindow {
     void updateTitleBar( const QString& fileName );
     void addRecentFile( const QString& fileName );
     void updateRecentFileActions();
+    void clearRecentFileActions();
     void updateFavoritesMenu();
     void updateOpenedFilesMenu();
     void updateHighlightersMenu();
@@ -214,11 +221,11 @@ class MainWindow : public QMainWindow {
     WindowSession session_;
     QString loadingFileName;
 
-    enum { MaxRecentFiles = 5 };
-    std::array<QAction*, MaxRecentFiles> recentFileActions;
+    std::array<QAction*, MAX_RECENT_FILES> recentFileActions;
     QActionGroup* recentFilesGroup;
 
     QMenu* fileMenu;
+    QMenu* recentFilesMenu;
     QMenu* editMenu;
     QMenu* viewMenu;
     QMenu* toolsMenu;
@@ -273,6 +280,7 @@ class MainWindow : public QMainWindow {
     QAction* addToFavoritesMenuAction;
     QAction* removeFromFavoritesAction;
     QAction* selectOpenFileAction;
+    QAction* recentFilesCleanup;
     QActionGroup* favoritesGroup;
     QActionGroup* openedFilesGroup;
     QActionGroup* highlightersActionGroup = nullptr;
@@ -287,6 +295,8 @@ class MainWindow : public QMainWindow {
 
     // Multiplex signals to any of the CrawlerWidgets
     SignalMux signalMux_;
+
+    static QTranslator mTranslator;
 
     // QuickFind widget
     QuickFindWidget quickFindWidget_;
