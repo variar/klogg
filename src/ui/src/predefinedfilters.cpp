@@ -51,6 +51,7 @@ void PredefinedFiltersCollection::retrieveFromStorage( QSettings& settings )
 
             int size = settings.beginReadArray( "filters" );
 
+            filters_.reserve( size );
             for ( int i = 0; i < size; ++i ) {
                 settings.setArrayIndex( i );
 

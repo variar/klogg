@@ -2104,6 +2104,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                                            patternMatches.end() );
             }
 
+            highlighterMatches.reserve( additionalHighlighters.size() );
             for ( const auto& highlighter : additionalHighlighters ) {
                 std::vector<HighlightedMatch> patternMatches;
                 highlighter.matchLine( logLine, patternMatches );

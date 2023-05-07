@@ -652,6 +652,7 @@ void MainWindow::createToolBars()
     toolBar->addWidget( infoLine );
     toolBar->addAction( stopAction );
 
+    infoToolbarSeparators.reserve( 5 );
     infoToolbarSeparators.push_back( toolBar->addSeparator() );
     toolBar->addWidget( sizeField );
     infoToolbarSeparators.push_back( toolBar->addSeparator() );
