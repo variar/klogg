@@ -428,6 +428,7 @@ std::vector<QString> LogData::getLinesFromFile( LineNumber firstLine, LinesCount
         processedLines.emplace_back( "KLOGG WARNING: not enough memory" );
     }
 
+    processedLines.reserve( number.get() - processedLines.size() );
     while ( processedLines.size() < number.get() ) {
         processedLines.emplace_back( "KLOGG WARNING: failed to read some lines before this one" );
     }
@@ -468,7 +469,8 @@ std::vector<QString> LogData::RawLines::decodeLines() const
             LOG_DEBUG << "line " << this->startLine.get() + currentLineIndex << ", length "
                       << length;
 
-            if ( length >= std::numeric_limits<LineLength::UnderlyingType>::max() / 2 ) {
+            constexpr auto maxlength = std::numeric_limits<LineLength::UnderlyingType>::max() / 2;
+            if ( length >= maxlength ) {
                 decodedLines.emplace_back( "KLOGG WARNING: this line is too long" );
                 break;
             }
@@ -495,6 +497,7 @@ std::vector<QString> LogData::RawLines::decodeLines() const
         decodedLines.emplace_back( "KLOGG WARNING: not enough memory" );
     }
 
+    decodedLines.reserve( this->endOfLines.size() - decodedLines.size() );
     while ( decodedLines.size() < this->endOfLines.size() ) {
         decodedLines.emplace_back( "KLOGG WARNING: failed to decode some lines before this one" );
     }
@@ -566,6 +569,7 @@ std::vector<std::string_view> LogData::RawLines::buildUtf8View() const
         LOG_ERROR << "failed to transform lines to utf8 " << e.what();
         const auto lastLineOffset = utf8Data_.size();
         utf8Data_.append( "KLOGG WARNING: not enough memory, try decrease search buffer" );
+        lines.reserve( this->endOfLines.size() - lines.size() );
         while ( lines.size() < this->endOfLines.size() ) {
             lines.emplace_back( utf8Data_.data() + lastLineOffset,
                                 utf8Data_.size() - lastLineOffset );

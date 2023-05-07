@@ -40,6 +40,7 @@ CpuInstructions supportedCpuInstructions()
 
     const auto nIds = cpui[ 0 ];
     std::vector<std::array<int, 4>> data;
+    data.reserve( nIds + 1 );
 
     for ( int i = 0; i <= nIds; ++i ) {
         __cpuidex( cpui.data(), i, 0 );

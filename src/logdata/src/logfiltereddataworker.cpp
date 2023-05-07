@@ -319,6 +319,7 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
     using MatcherContext = std::tuple<PatternMatcherPtr, microseconds, RegexMatcherNode>;
 
     std::vector<MatcherContext> regexMatchers;
+    regexMatchers.reserve( matchingThreadsCount );
     RegularExpression regularExpression{ regexp_ };
     for ( auto index = 0u; index < matchingThreadsCount; ++index ) {
         regexMatchers.emplace_back(

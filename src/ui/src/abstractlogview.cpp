@@ -1275,6 +1275,7 @@ void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
     std::vector<std::pair<LineNumber, LinesCount>> offsets;
     auto lineOffset = begin;
     const auto chunkSize = 5000_lcount;
+    offsets.reserve( ( end - (lineOffset + chunkSize) ).get() );
 
     for ( ; lineOffset + chunkSize < end; lineOffset += LineNumber( chunkSize.get() ) ) {
         offsets.emplace_back( lineOffset, chunkSize );

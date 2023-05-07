@@ -40,6 +40,7 @@ parseBooleanExpressions( QString& pattern, bool isCaseSensitive, bool isPlainTex
     }
 
     std::vector<RegularExpressionPattern> subPatterns;
+    subPatterns.reserve( static_cast<size_t>( pattern.size() ) );
 
     int currentIndex = 0;
     int leftQuote = -1;

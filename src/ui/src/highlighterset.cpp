@@ -181,6 +181,7 @@ bool Highlighter::matchLine( const QString& line, std::vector<HighlightedMatch>&
     while ( matchIterator.hasNext() ) {
         QRegularExpressionMatch match = matchIterator.next();
         if ( matchingRegex.captureCount() > 0 ) {
+            matches.reserve( static_cast<size_t>( match.lastCapturedIndex() ) );
             for ( int i = 1; i <= match.lastCapturedIndex(); ++i ) {
 
                 const auto colors = vairateColors( match.captured( i ) );
