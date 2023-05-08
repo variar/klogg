@@ -138,7 +138,8 @@ class CompressedLinePositionStorage {
     // Cache the last position read
     // This is to speed up consecutive reads (whole page)
     struct Cache {
-        LineNumber index {std::numeric_limits<LineNumber::UnderlyingType>::max() - 1U};
+        static constexpr auto i = std::numeric_limits<LineNumber::UnderlyingType>::max() - 1U;
+        LineNumber index {i};
         LineOffset position {0};
         BlockOffset offset {0};
     };

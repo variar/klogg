@@ -265,7 +265,7 @@ void CrawlerWidget::reload()
 {
     searchState_.resetState();
     constexpr auto DropCache = true;
-    logFilteredData_->clearSearch( DropCache );
+    logFilteredData_->clearSearch< DropCache >();
     logFilteredData_->clearMarks();
     filteredView_->updateData();
     printSearchInfoMessage();
@@ -698,7 +698,7 @@ void CrawlerWidget::fileChangedHandler( MonitoredFileStatus status )
         if ( !searchInfoLine_->text().isEmpty() ) {
             // Invalidate the search
             constexpr auto DropCache = true;
-            logFilteredData_->clearSearch( DropCache );
+            logFilteredData_->clearSearch< DropCache >();
             filteredView_->updateData();
             searchState_.truncateFile();
             printSearchInfoMessage();
@@ -1033,7 +1033,8 @@ void CrawlerWidget::setup()
     searchLineEdit_->addItems( savedSearches_->recentSearches() );
     searchLineEdit_->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Minimum );
     searchLineEdit_->setSizeAdjustPolicy( QComboBox::AdjustToMinimumContentsLengthWithIcon );
-    searchLineEdit_->lineEdit()->setMaxLength( std::numeric_limits<int>::max() / 1024 );
+    constexpr auto maxLength = std::numeric_limits<int>::max() / 1024;
+    searchLineEdit_->lineEdit()->setMaxLength( maxLength );
     searchLineEdit_->setContentsMargins( 2, 2, 2, 2 );
 
     QAction* clearSearchHistoryAction = new QAction( "Clear search history", this );

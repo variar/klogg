@@ -150,7 +150,8 @@ void LogFilteredData::interruptSearch()
     workerThread_.interrupt();
 }
 
-void LogFilteredData::clearSearch( bool dropCache )
+template <bool dropCache>
+void LogFilteredData::clearSearch()
 {
     interruptSearch();
 
@@ -160,7 +161,7 @@ void LogFilteredData::clearSearch( bool dropCache )
     maxLength_ = 0_length;
     nbLinesProcessed_ = 0_lcount;
 
-    if ( dropCache ) {
+    if constexpr ( dropCache ) {
         searchResultsCache_.clear();
     }
 }

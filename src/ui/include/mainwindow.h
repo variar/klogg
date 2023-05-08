@@ -208,7 +208,8 @@ class MainWindow : public QMainWindow {
     void logScreenInfo( QScreen* screen );
     void removeFromFavorites( const QString& pathToRemove );
     void removeFromRecent( const QString& pathToRemove );
-    void tryOpenClipboard( int tryTimes );
+    template<int tryTimes>
+    void tryOpenClipboard();
     void updateShortcuts();
 
     WindowSession session_;
