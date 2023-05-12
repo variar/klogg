@@ -57,6 +57,9 @@ class KeySequencePresenter : public QWidget {
 
     QString keySequence() const;
 
+  Q_SIGNALS:
+    void edited();
+
   private Q_SLOTS:
     void showEditor();
 
@@ -87,6 +90,8 @@ class OptionsDialog : public QDialog, public Ui::OptionsDialog {
 
     void changeMainColor();
     void changeQfColor();
+
+    void checkShortcutsOnDuplicate() const;
 
   private:
     void setupTabs();

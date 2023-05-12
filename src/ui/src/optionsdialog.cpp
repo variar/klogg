@@ -411,6 +411,54 @@ void OptionsDialog::changeQfColor()
     }
 }
 
+void OptionsDialog::checkShortcutsOnDuplicate() const
+{
+    static const int PRIMARY_COL = 1;
+    static const int SECONDARY_COL = 2;
+
+    for ( auto shortcutRow = 0; shortcutRow < shortcutsTable->rowCount(); ++shortcutRow ) {
+        static auto DEFAULT_BACKGROUND
+            = shortcutsTable->item( shortcutRow, PRIMARY_COL )->background();
+        shortcutsTable->item( shortcutRow, PRIMARY_COL )->setBackground( DEFAULT_BACKGROUND );
+        shortcutsTable->item( shortcutRow, SECONDARY_COL )->setBackground( DEFAULT_BACKGROUND );
+    }
+
+    std::unordered_map<QString, std::pair<int, int>> uniqueShortcuts;
+    for ( auto shortcutRow = 0; shortcutRow < shortcutsTable->rowCount(); ++shortcutRow ) {
+
+        auto check = [ &uniqueShortcuts, shortcutRow, this ]( int ncol ) {
+            auto keySequence = static_cast<KeySequencePresenter*>(
+                                   shortcutsTable->cellWidget( shortcutRow, ncol ) )
+                                   ->keySequence();
+
+            if ( !keySequence.isEmpty() ) {
+                if ( auto it = uniqueShortcuts.find( keySequence ); it != uniqueShortcuts.end() ) {
+
+                    shortcutsTable->item( it->second.first, it->second.second )
+                        ->setBackground( Qt::red );
+                    shortcutsTable->item( shortcutRow, ncol )->setBackground( Qt::red );
+
+                    buttonBox->button( QDialogButtonBox::Ok )->setEnabled( false );
+                    buttonBox->button( QDialogButtonBox::Apply )->setEnabled( false );
+
+                    return true;
+                }
+
+                uniqueShortcuts.insert(
+                    std::make_pair( keySequence, std::make_pair( shortcutRow, ncol ) ) );
+            }
+
+            return false;
+        };
+
+        if ( check( PRIMARY_COL ) || check( SECONDARY_COL ) )
+            return;
+    }
+
+    buttonBox->button( QDialogButtonBox::Ok )->setEnabled( true );
+    buttonBox->button( QDialogButtonBox::Apply )->setEnabled( true );
+}
+
 int OptionsDialog::updateTranslate()
 {
     auto mw = dynamic_cast<MainWindow*>( parent() );
@@ -585,6 +633,8 @@ void KeySequencePresenter::showEditor()
 
     if ( keyEditDialog.exec() == QDialog::Accepted ) {
         keySequenceLabel_->setText( editor->keySequence().toString() );
+        Q_EMIT edited(); // NOTE: it's important to emit this signal only after changing
+                         // \keySequenceLabel_'s text
     }
 }
 
@@ -613,11 +663,17 @@ void OptionsDialog::buildShortcutsTable()
 
         auto primaryKeySequence
             = new KeySequencePresenter( mapping.second.size() > 0 ? mapping.second[ 0 ] : "" );
+        shortcutsTable->setItem( currentRow, 1, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 1, primaryKeySequence );
+        connect( primaryKeySequence, &KeySequencePresenter::edited, this,
+                 &OptionsDialog::checkShortcutsOnDuplicate );
 
         auto secondaryKeySequence
             = new KeySequencePresenter( mapping.second.size() > 1 ? mapping.second[ 1 ] : "" );
+        shortcutsTable->setItem( currentRow, 2, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 2, secondaryKeySequence );
+        connect( secondaryKeySequence, &KeySequencePresenter::edited, this,
+                 &OptionsDialog::checkShortcutsOnDuplicate );
     }
 
     shortcutsTable->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch );
