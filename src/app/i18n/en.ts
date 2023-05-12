@@ -1040,22 +1040,22 @@
         <translation>Qt</translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="520"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="568"/>
         <source>Klogg needs to be restarted to apply some changes. </source>
         <translation>Klogg needs to be restarted to apply some changes. </translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="625"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="681"/>
         <source>Action</source>
         <translation>Action</translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="626"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="682"/>
         <source>Primary shortcut</source>
         <translation>Primary shortcut</translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="628"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="684"/>
         <source>Secondary shortcut</source>
         <translation>Secondary shortcut</translation>
     </message>
