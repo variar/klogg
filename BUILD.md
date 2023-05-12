@@ -25,7 +25,7 @@ To build Klogg:
     - QtConcurrent
     - QtNetwork
     - QtXml
-
+    - QtTools
 
 To build Hyperscan regular expressions backend (default):
  * CPU with support for [SSSE3](https://en.wikipedia.org/wiki/SSSE3) instructions (for Hyperscan backend)
