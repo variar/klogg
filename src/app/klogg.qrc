@@ -35,8 +35,8 @@
     <file>images/olddata_icon@2x.png</file>
     <file>images/regex.png</file>
     <file>i18n/Languages.xml</file>
-    <file>i18n/en.qm</file>
-    <file>i18n/zh-CN.qm</file>
+    <file alias="i18n/en.qm">i18n/en.ts</file>
+    <file alias="i18n/zh-CN.qm">i18n/zh-CN.ts</file>
 
     <file>fonts/DejaVuSansMono.ttf</file>
 </qresource>
