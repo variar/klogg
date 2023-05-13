@@ -1040,22 +1040,22 @@
         <translation>Qt</translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="568"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="569"/>
         <source>Klogg needs to be restarted to apply some changes. </source>
         <translation type="unfinished">Klogg 需要关闭后重新打开才能应用这些更改. </translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="681"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="682"/>
         <source>Action</source>
         <translation type="unfinished">动作</translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="682"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="683"/>
         <source>Primary shortcut</source>
         <translation type="unfinished">首选快捷键</translation>
     </message>
     <message>
-        <location filename="../../ui/src/optionsdialog.cpp" line="684"/>
+        <location filename="../../ui/src/optionsdialog.cpp" line="685"/>
         <source>Secondary shortcut</source>
         <translation type="unfinished">备选快捷键</translation>
     </message>

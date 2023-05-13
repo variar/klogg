@@ -423,7 +423,7 @@ void OptionsDialog::checkShortcutsOnDuplicate() const
         shortcutsTable->item( shortcutRow, SECONDARY_COL )->setBackground( DEFAULT_BACKGROUND );
     }
 
-    std::unordered_map<QString, std::pair<int, int>> uniqueShortcuts;
+    std::unordered_map<std::string, std::pair<int, int>> uniqueShortcuts;
     for ( auto shortcutRow = 0; shortcutRow < shortcutsTable->rowCount(); ++shortcutRow ) {
 
         auto check = [ &uniqueShortcuts, shortcutRow, this ]( int ncol ) {
@@ -432,7 +432,8 @@ void OptionsDialog::checkShortcutsOnDuplicate() const
                                    ->keySequence();
 
             if ( !keySequence.isEmpty() ) {
-                if ( auto it = uniqueShortcuts.find( keySequence ); it != uniqueShortcuts.end() ) {
+                if ( auto it = uniqueShortcuts.find( keySequence.toStdString() );
+                     it != uniqueShortcuts.end() ) {
 
                     shortcutsTable->item( it->second.first, it->second.second )
                         ->setBackground( Qt::red );
@@ -444,8 +445,8 @@ void OptionsDialog::checkShortcutsOnDuplicate() const
                     return true;
                 }
 
-                uniqueShortcuts.insert(
-                    std::make_pair( keySequence, std::make_pair( shortcutRow, ncol ) ) );
+                uniqueShortcuts.try_emplace( keySequence.toStdString(),
+                                             std::make_pair( shortcutRow, ncol ) );
             }
 
             return false;
