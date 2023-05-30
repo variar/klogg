@@ -46,15 +46,27 @@ endfunction()
 function(ADD_QT_TRANSLATIONS_RESOURCE res_file)
     set(_languages ${ARGN})
     set(_res_file ${CMAKE_CURRENT_BINARY_DIR}/qt_translations.qrc)
-    set(_patterns qtbase qtmultimedia qtscript qtxmlpatterns)
-    get_filename_component(_srcdir "${Qt${QT_VERSION_MAJOR}_DIR}/../../../translations" ABSOLUTE)
+    set(_patterns qtbase qtmultimedia qtscript qtxmlpatterns qt)
+    # get qt translation dir
+    get_target_property (QT_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+    execute_process(COMMAND ${QT_QMAKE_EXECUTABLE} -query "QT_INSTALL_TRANSLATIONS"
+            TIMEOUT 3
+            OUTPUT_VARIABLE TRANSLATION_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+    message(WARNING "FINDTRANS, dir:" ${TRANSLATION_DIR})
+
+    get_filename_component(_srcdir "${TRANSLATION_DIR}" ABSOLUTE)
     set(_outfiles)
     foreach(_lang ${_languages})
         set(_infiles)
         set(_out qt_${_lang}.qm)
         foreach(_pat ${_patterns})
             set(_file "${_srcdir}/${_pat}_${_lang}.qm")
+            message(WARNING "FINDTRANS, file:" ${_file})
+
             if (EXISTS ${_file})
+                message(WARNING "FINDTRANS, exist:" ${_file})
                 list(APPEND _infiles ${_file})
             endif()
         endforeach()
@@ -69,6 +81,7 @@ function(ADD_QT_TRANSLATIONS_RESOURCE res_file)
     file(WRITE ${_res_file} "<!DOCTYPE RCC><RCC version=\"1.0\">\n <qresource prefix=\"/i18n/\">\n")
     foreach(_file ${_outfiles})
         get_filename_component(_filename ${_file} NAME)
+        message(WARNING "FINDTRANS, write:" ${_filename})
         file(APPEND ${_res_file} "  <file>${_filename}</file>\n")
     endforeach()
     file(APPEND ${_res_file} " </qresource>\n</RCC>\n")
