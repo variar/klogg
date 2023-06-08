@@ -107,7 +107,7 @@ class OptionsDialog : public QDialog, public Ui::OptionsDialog {
 
     int updateTranslate();
 
-    void buildShortcutsTable();
+    void buildShortcutsTable(bool useDefaultsOnly);
 
     int getRegexpTypeIndex( SearchRegexpType syntax ) const;
     SearchRegexpType getRegexpTypeFromIndex( int index ) const;

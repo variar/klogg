@@ -87,6 +87,9 @@ OptionsDialog::OptionsDialog( QWidget* parent )
     connect( mainSearchColorButton, &QPushButton::clicked, this, &OptionsDialog::changeMainColor );
     connect( quickFindColorButton, &QPushButton::clicked, this, &OptionsDialog::changeQfColor );
 
+    connect( restoreShortcutsDefaults, &QPushButton::clicked, this,
+             [ this ]() { buildShortcutsTable( true ); } );
+
     updateDialogFromConfig();
 
     setupPolling();
@@ -364,7 +367,7 @@ void OptionsDialog::updateDialogFromConfig()
     const auto encodingIndex = encodingComboBox->findData( config.defaultEncodingMib() );
     encodingComboBox->setCurrentIndex( encodingIndex < 0 ? 0 : encodingIndex );
 
-    buildShortcutsTable();
+    buildShortcutsTable( false );
 
     const auto& savedSearches = SavedSearches::get();
     searchHistorySpinBox->setValue( savedSearches.historySize() );
@@ -644,38 +647,38 @@ void KeySequencePresenter::showEditor()
     }
 }
 
-void OptionsDialog::buildShortcutsTable()
+void OptionsDialog::buildShortcutsTable( bool useDefaultsOnly )
 {
+    shortcutsTable->setRowCount(0);
+
     const auto& config = Configuration::get();
 
     auto shortcuts = config.shortcuts();
 
     const auto& defaultShortcuts = ShortcutAction::defaultShortcuts();
 
-    for ( const auto& defaultMapping : defaultShortcuts ) {
-        if ( shortcuts.count( defaultMapping.first ) == 0 ) {
-            shortcuts.emplace( defaultMapping.first, defaultMapping.second );
+    for ( const auto& [ action, keys ] : defaultShortcuts ) {
+        if ( useDefaultsOnly || shortcuts.count( action ) == 0 ) {
+            shortcuts[ action ] = keys;
         }
     }
 
-    for ( const auto& mapping : shortcuts ) {
+    for ( const auto& [ action, keys ] : shortcuts ) {
         auto currentRow = shortcutsTable->rowCount();
         shortcutsTable->insertRow( currentRow );
 
-        auto keyItem = new QTableWidgetItem( ShortcutAction::actionName( mapping.first ) );
+        auto keyItem = new QTableWidgetItem( ShortcutAction::actionName( action ) );
         keyItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable );
-        keyItem->setData( Qt::UserRole, QString::fromStdString( mapping.first ) );
+        keyItem->setData( Qt::UserRole, QString::fromStdString( action ) );
         shortcutsTable->setItem( currentRow, 0, keyItem );
 
-        auto primaryKeySequence
-            = new KeySequencePresenter( mapping.second.size() > 0 ? mapping.second[ 0 ] : "" );
+        auto primaryKeySequence = new KeySequencePresenter( keys.size() > 0 ? keys[ 0 ] : "" );
         shortcutsTable->setItem( currentRow, 1, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 1, primaryKeySequence );
         connect( primaryKeySequence, &KeySequencePresenter::edited, this,
                  &OptionsDialog::checkShortcutsOnDuplicate );
 
-        auto secondaryKeySequence
-            = new KeySequencePresenter( mapping.second.size() > 1 ? mapping.second[ 1 ] : "" );
+        auto secondaryKeySequence = new KeySequencePresenter( keys.size() > 1 ? keys[ 1 ] : "" );
         shortcutsTable->setItem( currentRow, 2, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 2, secondaryKeySequence );
         connect( secondaryKeySequence, &KeySequencePresenter::edited, this,
