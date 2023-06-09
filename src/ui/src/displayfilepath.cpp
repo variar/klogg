@@ -24,20 +24,25 @@
 constexpr const int MaxPathLength = 128;
 namespace {
 // inspired by http://chadkuehn.com/shrink-file-paths-with-an-ellipsis-in-c/
-QString shrinkPath( QString fullPath, int limit, QString delimiter = "…" )
+template <int limit>
+QString shrinkPath( const QString& fullPath )
 {
     if ( fullPath.isEmpty() ) {
         return fullPath;
     }
 
+    constexpr const auto delimiter = "…";
+    constexpr auto delimiterLen =
+        static_cast<qsizetype>( std::char_traits<char>::length( delimiter ) );
+
     const auto fileInfo = QFileInfo( fullPath );
     const auto fileName = fileInfo.fileName();
     const auto absoluteNativePath = QDir::toNativeSeparators( fileInfo.absolutePath() );
 
-    const auto idealMinLength = fileName.length() + delimiter.length();
+    const auto idealMinLength = fileName.length() + delimiterLen;
 
     // less than the minimum amt
-    if ( limit < ( ( 2 * delimiter.length() ) + 1 ) ) {
+    if constexpr ( limit < ( ( 2 * delimiterLen ) + 1 ) ) {
         return "";
     }
 
@@ -48,7 +53,8 @@ QString shrinkPath( QString fullPath, int limit, QString delimiter = "…" )
 
     // file name condensing
     if ( limit < idealMinLength ) {
-        return delimiter + fileName.mid( 0, ( limit - ( 2 * delimiter.length() ) ) ) + delimiter;
+        constexpr auto n = ( limit - ( 2 * delimiterLen ) );
+        return delimiter + fileName.mid( 0, n ) + delimiter;
     }
 
     // whole name only, no folder structure shown
@@ -56,7 +62,7 @@ QString shrinkPath( QString fullPath, int limit, QString delimiter = "…" )
         return delimiter + fileName;
     }
 
-    return absoluteNativePath.mid( 0, ( limit - ( idealMinLength + 1 ) ) ) + delimiter
+    return absoluteNativePath.mid( 0, ( static_cast<qsizetype>( limit ) - ( idealMinLength + 1 ) ) ) + delimiter
            + QDir::separator() + fileName;
 }
 
@@ -65,7 +71,7 @@ QString shrinkPath( QString fullPath, int limit, QString delimiter = "…" )
 DisplayFilePath::DisplayFilePath( const QString& fullPath )
     : fullPath_( fullPath )
     , nativeFullPath_( QDir::toNativeSeparators( fullPath ) )
-    , displayName_( shrinkPath( fullPath, MaxPathLength ) )
+    , displayName_( shrinkPath<MaxPathLength>( fullPath ) )
 {
 }
 

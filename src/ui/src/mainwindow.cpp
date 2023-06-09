@@ -1113,28 +1113,31 @@ void MainWindow::openInEditor()
     openFileInDefaultApplication( session_.getFilename( currentCrawlerWidget() ) );
 }
 
-void MainWindow::tryOpenClipboard( int tryTimes )
+template <int tryTimes>
+void MainWindow::tryOpenClipboard()
 {
     auto clipboard = QGuiApplication::clipboard();
     auto text = clipboard->text();
 
-    if ( text.isEmpty() && tryTimes > 0 ) {
-        QTimer::singleShot( 50, [ tryTimes, this ]() { tryOpenClipboard( tryTimes - 1 ); } );
-    }
-    else {
-        auto tempFile = new QTemporaryFile( tempDir_.filePath( "klogg_clipboard" ), this );
-        if ( tempFile->open() ) {
-            tempFile->write( text.toUtf8() );
-            tempFile->flush();
+    if constexpr ( tryTimes > 0 ) {
+        if ( text.isEmpty() ) {
+            QTimer::singleShot( 50, [ this ]() { tryOpenClipboard< tryTimes - 1 >(); } );
+        }
+        else {
+            auto tempFile = new QTemporaryFile( tempDir_.filePath( "klogg_clipboard" ), this );
+            if ( tempFile->open() ) {
+                tempFile->write( text.toUtf8() );
+                tempFile->flush();
 
-            loadFile( tempFile->fileName() );
+                loadFile( tempFile->fileName() );
+            }
         }
     }
 }
 
 void MainWindow::openClipboard()
 {
-    tryOpenClipboard( ClipboardMaxTry );
+    tryOpenClipboard< ClipboardMaxTry >();
 }
 
 void MainWindow::openUrl()
