@@ -87,8 +87,13 @@ OptionsDialog::OptionsDialog( QWidget* parent )
     connect( mainSearchColorButton, &QPushButton::clicked, this, &OptionsDialog::changeMainColor );
     connect( quickFindColorButton, &QPushButton::clicked, this, &OptionsDialog::changeQfColor );
 
-    connect( restoreShortcutsDefaults, &QPushButton::clicked, this,
-             [ this ]() { buildShortcutsTable( true ); } );
+    connect( restoreShortcutsDefaults, &QPushButton::clicked, this, [ this ]() {
+        auto ret = QMessageBox::question(
+            this, "Restore Default Shortcuts", "Do you want to restore default shortcuts?",
+            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel );
+        if ( ret == QMessageBox::Yes )
+            buildShortcutsTable( true );
+    } );
 
     updateDialogFromConfig();
 
@@ -649,7 +654,7 @@ void KeySequencePresenter::showEditor()
 
 void OptionsDialog::buildShortcutsTable( bool useDefaultsOnly )
 {
-    shortcutsTable->setRowCount(0);
+    shortcutsTable->setRowCount( 0 );
 
     const auto& config = Configuration::get();
 
@@ -691,6 +696,10 @@ void OptionsDialog::buildShortcutsTable( bool useDefaultsOnly )
     shortcutsTable->setHorizontalHeaderItem( 1, new QTableWidgetItem( tr( "Primary shortcut" ) ) );
     shortcutsTable->setHorizontalHeaderItem( 2,
                                              new QTableWidgetItem( tr( "Secondary shortcut" ) ) );
+    
+    // in case if user set duplicate keys and after restores defaults
+    // it is need to enable back standard buttons
+    checkShortcutsOnDuplicate();
 
     shortcutsTable->sortItems( 0 );
 }
