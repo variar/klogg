@@ -1,32 +1,34 @@
 <RCC>
 <qresource>
-    <file>images/hicolor/16x16/klogg.png</file>
-    <file>images/hicolor/32x32/klogg.png</file>
-    <file>images/hicolor/48x48/klogg.png</file>
+    <file>i18n/Languages.xml</file>
     <file>images/arrowdown.png</file>
     <file>images/arrowup.png</file>
     <file>images/darkclosebutton.png</file>
+    <file>images/hicolor/16x16/klogg.png</file>
+    <file>images/hicolor/32x32/klogg.png</file>
+    <file>images/hicolor/48x48/klogg.png</file>
     <file>images/icons8-add-file-16.png</file>
     <file>images/icons8-cancel-16.png</file>
+    <file>images/icons8-close-window-16.png</file>
+    <file>images/icons8-close-window-16_inverse.png</file>
+    <file>images/icons8-close-window-hover-16.png</file>
+    <file>images/icons8-close-window-hover-16_inverse.png</file>
     <file>images/icons8-create-16.png</file>
     <file>images/icons8-delete-16.png</file>
+    <file>images/icons8-down-arrow-16.png</file>
+    <file>images/icons8-fast-forward-16.png</file>
     <file>images/icons8-font-size-16.png</file>
+    <file>images/icons8-lock-16.png</file>
+    <file>images/icons8-minus-16.png</file>
+    <file>images/icons8-not-equal-16.png</file>
+    <file>images/icons8-plus-16.png</file>
     <file>images/icons8-restore-page-16.png</file>
     <file>images/icons8-search-16.png</file>
     <file>images/icons8-search-refresh-16.png</file>
     <file>images/icons8-star-16.png</file>
     <file>images/icons8-star-filled-16.png</file>
     <file>images/icons8-up-16.png</file>
-    <file>images/icons8-plus-16.png</file>
-    <file>images/icons8-minus-16.png</file>
-    <file>images/icons8-down-arrow-16.png</file>
-    <file>images/icons8-fast-forward-16.png</file>
-    <file>images/icons8-not-equal-16.png</file>
     <file>images/icons8-venn-diagram-16.png</file>
-    <file>images/icons8-close-window-16.png</file>
-    <file>images/icons8-close-window-hover-16.png</file>
-    <file>images/icons8-close-window-16_inverse.png</file>
-    <file>images/icons8-close-window-hover-16_inverse.png</file>
     <file>images/newdata_icon.png</file>
     <file>images/newdata_icon@2x.png</file>
     <file>images/newfiltered_icon.png</file>
@@ -34,7 +36,6 @@
     <file>images/olddata_icon.png</file>
     <file>images/olddata_icon@2x.png</file>
     <file>images/regex.png</file>
-    <file>i18n/Languages.xml</file>
 
 
     <file>fonts/DejaVuSansMono.ttf</file>
