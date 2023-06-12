@@ -337,6 +337,12 @@ class CrawlerWidget : public QSplitter,
 
     void updateColorLabels( const ColorLabelsManager::QuickHighlightersCollection& labels );
 
+    void connectAllFilteredViewSlots( FilteredView* view);
+
+    void saveSplitterSizes() const;
+
+    void changeFontSize( bool increase );
+
     // Palette for error notification (yellow background)
     static const QPalette ErrorPalette;
 
@@ -354,6 +360,8 @@ class CrawlerWidget : public QSplitter,
 
     LogMainView* logMainView_;
     FilteredView* filteredView_;
+    std::unordered_map<FilteredView*, std::shared_ptr<LogFilteredData>> filteredViewsData_;
+    QTabWidget* tabbedFilteredView_;
 
     OverviewWidget* overviewWidget_;
 

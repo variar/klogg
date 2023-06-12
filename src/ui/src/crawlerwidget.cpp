@@ -377,9 +377,27 @@ std::shared_ptr<const ViewContextInterface> CrawlerWidget::doGetViewContext() co
 
 void CrawlerWidget::startNewSearch()
 {
+    if ( keepSearchResultsButton_->isChecked() ) {
+        keepSearchResultsButton_->setChecked( false );
+
+        logFilteredData_ = std::make_shared<LogFilteredData>( logData_.get() );
+        filteredView_ = new FilteredView( logFilteredData_.get(), quickFindPattern_.get() );
+        filteredViewsData_[ filteredView_ ] = logFilteredData_;
+        connectAllFilteredViewSlots( filteredView_ );
+        auto index = tabbedFilteredView_->addTab( filteredView_, "" );
+        tabbedFilteredView_->setCurrentIndex( index );
+        connect( logFilteredData_.get(), &LogFilteredData::searchProgressed, this,
+                 &CrawlerWidget::updateFilteredView, Qt::QueuedConnection );
+        logMainView_->useNewFiltering( logFilteredData_.get() );
+        applyConfiguration();
+    }
+
+    tabbedFilteredView_->setTabText( tabbedFilteredView_->currentIndex(),
+                                     "Find \"" + searchLineEdit_->currentText() + "\"" );
+
     // Record the search line in the recent list
     // (reload the list first in case another glogg changed it)
-    auto& searches = SavedSearches::getSynced();
+    const auto& searches = SavedSearches::getSynced();
     savedSearches_->addRecent( searchLineEdit_->currentText() );
     searches.save();
 
@@ -617,20 +635,21 @@ void CrawlerWidget::applyConfiguration()
     }
 
     logMainView_->setLineNumbersVisible( config.mainLineNumbersVisible() );
-    filteredView_->setLineNumbersVisible( config.filteredLineNumbersVisible() );
 
     const auto isFollowModeAllowed = config.anyFileWatchEnabled();
     logMainView_->allowFollowMode( isFollowModeAllowed );
-    filteredView_->allowFollowMode( isFollowModeAllowed );
-
     overview_.setVisible( config.isOverviewVisible() );
     logMainView_->refreshOverview();
-
     logMainView_->updateFont( font );
-    filteredView_->updateFont( font );
+    logMainView_->textWrapSet( config.useTextWrap() );
 
-    logMainView_->textWrapSet(config.useTextWrap());
-    filteredView_->textWrapSet(config.useTextWrap());
+    for ( auto i = 0; i < tabbedFilteredView_->count(); ++i ) {
+        auto fv = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( i ) );
+        fv->setLineNumbersVisible( config.filteredLineNumbersVisible() );
+        fv->allowFollowMode( isFollowModeAllowed );
+        fv->updateFont( font );
+        fv->textWrapSet( config.useTextWrap() );
+    }
 
     // Update the SearchLine (history)
     updateSearchCombo();
@@ -949,6 +968,7 @@ void CrawlerWidget::setup()
     logMainView_->setContentsMargins( 2, 0, 2, 0 );
 
     filteredView_ = new FilteredView( logFilteredData_.get(), quickFindPattern_.get() );
+    filteredViewsData_[ filteredView_ ] = logFilteredData_;
     filteredView_->setContentsMargins( 2, 0, 2, 0 );
 
     overviewWidget_->setOverview( &overview_ );
@@ -1117,9 +1137,15 @@ void CrawlerWidget::setup()
     searchLineLayout->addWidget( searchInfoLine_ );
 
     // Construct the bottom window
+    tabbedFilteredView_ = new QTabWidget;
+    tabbedFilteredView_->setTabsClosable( true );
+    tabbedFilteredView_->addTab( filteredView_, "" );
+    tabbedFilteredView_->setDocumentMode( true );
+    tabbedFilteredView_->setTabBarAutoHide( true );
+
     auto* bottomMainLayout = new QVBoxLayout;
     bottomMainLayout->addLayout( searchLineLayout );
-    bottomMainLayout->addWidget( filteredView_ );
+    bottomMainLayout->addWidget( tabbedFilteredView_ );
     bottomMainLayout->setContentsMargins( 2, 2, 2, 2 );
     bottomWindow->setLayout( bottomMainLayout );
 
@@ -1173,98 +1199,60 @@ void CrawlerWidget::setup()
 
     connect( logMainView_, &LogMainView::newSelection,
              [ this ]( auto ) { logMainView_->update(); } );
-    connect( filteredView_, &FilteredView::newSelection,
-             [ this ]( auto ) { filteredView_->update(); } );
-
-    connect( filteredView_, &FilteredView::newSelection, this, &CrawlerWidget::jumpToMatchingLine );
 
     connect( logMainView_, &LogMainView::newSelection, this,
              &CrawlerWidget::updateLineNumberHandler );
 
     connect( logMainView_, &LogMainView::markLines, this, &CrawlerWidget::markLinesFromMain );
-    connect( filteredView_, &FilteredView::markLines, this, &CrawlerWidget::markLinesFromFiltered );
 
     connect( logMainView_, QOverload<const QString&>::of( &LogMainView::addToSearch ), this,
-             &CrawlerWidget::addToSearch );
-    connect( filteredView_, QOverload<const QString&>::of( &FilteredView::addToSearch ), this,
              &CrawlerWidget::addToSearch );
 
     connect( logMainView_, QOverload<const QString&>::of( &LogMainView::excludeFromSearch ), this,
              &CrawlerWidget::excludeFromSearch );
-    connect( filteredView_, QOverload<const QString&>::of( &FilteredView::excludeFromSearch ), this,
-             &CrawlerWidget::excludeFromSearch );
 
     connect( logMainView_, QOverload<const QString&>::of( &LogMainView::replaceSearch ), this,
              &CrawlerWidget::replaceSearch );
-    connect( filteredView_, QOverload<const QString&>::of( &FilteredView::replaceSearch ), this,
-             &CrawlerWidget::replaceSearch );
-
-    connect( filteredView_, &FilteredView::mouseHoveredOverLine, this,
-             &CrawlerWidget::mouseHoveredOverMatch );
-    connect( filteredView_, &FilteredView::mouseLeftHoveringZone, overviewWidget_,
-             &OverviewWidget::removeHighlight );
 
     // Follow option (up and down)
     connect( this, &CrawlerWidget::followSet, logMainView_, &LogMainView::followSet );
-    connect( this, &CrawlerWidget::followSet, filteredView_, &FilteredView::followSet );
     connect( logMainView_, &LogMainView::followModeChanged, this,
-             &CrawlerWidget::followModeChanged );
-    connect( filteredView_, &FilteredView::followModeChanged, this,
              &CrawlerWidget::followModeChanged );
 
     connect( this, &CrawlerWidget::textWrapSet, logMainView_, &LogMainView::textWrapSet );
-    connect( this, &CrawlerWidget::textWrapSet, filteredView_, &FilteredView::textWrapSet );
 
     // Detect activity in the views
     connect( logMainView_, &LogMainView::activity, this, &CrawlerWidget::activityDetected );
-    connect( filteredView_, &FilteredView::activity, this, &CrawlerWidget::activityDetected );
 
     connect( logMainView_, &LogMainView::changeSearchLimits, this,
-             &CrawlerWidget::setSearchLimits );
-    connect( filteredView_, &FilteredView::changeSearchLimits, this,
              &CrawlerWidget::setSearchLimits );
 
     connect( logMainView_, &LogMainView::clearSearchLimits, this,
              &CrawlerWidget::clearSearchLimits );
-    connect( filteredView_, &FilteredView::clearSearchLimits, this,
-             &CrawlerWidget::clearSearchLimits );
 
-    auto saveSplitterSizes = [ this ]() {
-        LOG_INFO << "Saving default splitter size";
-        auto& splitterConfig = Configuration::get();
-        splitterConfig.setSplitterSizes( this->sizes() );
-        splitterConfig.save();
-    };
+    connect( tabbedFilteredView_, &QTabWidget::currentChanged, [ this ]( int index ) {
+        filteredView_ = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( index ) );
+        logFilteredData_ = filteredViewsData_[ filteredView_ ];
+    } );
 
-    connect( logMainView_, &LogMainView::saveDefaultSplitterSizes, this, saveSplitterSizes );
-    connect( filteredView_, &FilteredView::saveDefaultSplitterSizes, this, saveSplitterSizes );
-
-    auto changeFontSize = [ this ]( bool increase ) {
-        auto& fontConfig = Configuration::get();
-
-        QFontInfo fontInfo = QFontInfo( fontConfig.mainFont() );
-        const auto availableSizes = FontUtils::availableFontSizes( fontInfo.family() );
-
-        auto currentSize
-            = std::find( availableSizes.cbegin(), availableSizes.cend(), fontInfo.pointSize() );
-        if ( increase && currentSize != std::prev( availableSizes.cend() ) ) {
-            currentSize = std::next( currentSize );
-        }
-        else if ( !increase && currentSize != availableSizes.begin() ) {
-            currentSize = std::prev( currentSize );
+    connect( tabbedFilteredView_, &QTabWidget::tabCloseRequested, [ this ]( int index ) {
+        auto* tmp = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( index ) );
+        if ( tmp == filteredView_ ) {
+            auto newCurIndex = index + 1 < tabbedFilteredView_->count() ? index + 1 : index - 1;
+            filteredView_
+                = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( newCurIndex ) );
+            logFilteredData_ = filteredViewsData_[ filteredView_ ];
+            logMainView_->useNewFiltering( logFilteredData_.get() );
         }
 
-        if ( currentSize != availableSizes.cend() ) {
-            QFont newFont{ fontInfo.family(), *currentSize };
+        filteredViewsData_.erase( tmp );
+        tabbedFilteredView_->removeTab( index );
+    } );
 
-            fontConfig.setMainFont( newFont );
-            logMainView_->updateFont( newFont );
-            filteredView_->updateFont( newFont );
-        }
-    };
+    connect( logMainView_, &LogMainView::saveDefaultSplitterSizes, this,
+             &CrawlerWidget::saveSplitterSizes );
 
-    connect( logMainView_, &LogMainView::changeFontSize, this, changeFontSize );
-    connect( filteredView_, &FilteredView::changeFontSize, this, changeFontSize );
+    connect( logMainView_, &LogMainView::changeFontSize, this, &CrawlerWidget::changeFontSize );
 
     connect( logFilteredData_.get(), &LogFilteredData::searchProgressed, this,
              &CrawlerWidget::updateFilteredView, Qt::QueuedConnection );
@@ -1295,36 +1283,116 @@ void CrawlerWidget::setup()
     connect( matchCaseButton_, &QPushButton::toggled, this, &CrawlerWidget::matchCaseChanged );
 
     // Switch between views
-    connect( logMainView_, &LogMainView::exitView, filteredView_,
-             QOverload<>::of( &FilteredView::setFocus ) );
-    connect( filteredView_, &FilteredView::exitView, logMainView_,
-             QOverload<>::of( &LogMainView::setFocus ) );
-
     connect( logMainView_, &AbstractLogView::clearColorLabels, this,
-             &CrawlerWidget::clearColorLabels );
-    connect( filteredView_, &AbstractLogView::clearColorLabels, this,
              &CrawlerWidget::clearColorLabels );
 
     connect( logMainView_, &AbstractLogView::addColorLabel, this,
              &CrawlerWidget::addColorLabelToSelection );
-    connect( filteredView_, &AbstractLogView::addColorLabel, this,
-             &CrawlerWidget::addColorLabelToSelection );
 
     connect( logMainView_, &AbstractLogView::sendSelectionToScratchpad, this,
              [ this ]() { Q_EMIT sendToScratchpad( logMainView_->getSelection() ); } );
-    connect( filteredView_, &AbstractLogView::sendSelectionToScratchpad, this,
-             [ this ]() { Q_EMIT sendToScratchpad( filteredView_->getSelection() ); } );
 
     connect( logMainView_, &AbstractLogView::replaceScratchpadWithSelection, this,
              [ this ]() { Q_EMIT replaceDataInScratchpad( logMainView_->getSelection() ); } );
-    connect( filteredView_, &AbstractLogView::replaceScratchpadWithSelection, this,
-             [ this ]() { Q_EMIT replaceDataInScratchpad( filteredView_->getSelection() ); } );
+
+    connectAllFilteredViewSlots( filteredView_ );
 
     const auto defaultEncodingMib = config.defaultEncodingMib();
     if ( defaultEncodingMib >= 0 ) {
         encodingMib_ = defaultEncodingMib;
     }
     updatePredefinedFiltersWidget();
+}
+
+void CrawlerWidget::saveSplitterSizes() const
+{
+    LOG_INFO << "Saving default splitter size";
+    auto& splitterConfig = Configuration::get();
+    splitterConfig.setSplitterSizes( sizes() );
+    splitterConfig.save();
+};
+
+void CrawlerWidget::changeFontSize( bool increase )
+{
+    auto& fontConfig = Configuration::get();
+
+    auto fontInfo = QFontInfo( fontConfig.mainFont() );
+    const auto availableSizes = FontUtils::availableFontSizes( fontInfo.family() );
+
+    auto currentSize
+        = std::find( availableSizes.cbegin(), availableSizes.cend(), fontInfo.pointSize() );
+    if ( increase && currentSize != std::prev( availableSizes.cend() ) ) {
+        currentSize = std::next( currentSize );
+    }
+    else if ( !increase && currentSize != availableSizes.begin() ) {
+        currentSize = std::prev( currentSize );
+    }
+
+    if ( currentSize != availableSizes.cend() ) {
+        QFont newFont{ fontInfo.family(), *currentSize };
+
+        fontConfig.setMainFont( newFont );
+        logMainView_->updateFont( newFont );
+        filteredView_->updateFont( newFont );
+    }
+}
+
+void CrawlerWidget::connectAllFilteredViewSlots( FilteredView* view )
+{
+    connect( view, &FilteredView::newSelection, [ view, this ]( auto ) { view->update(); } );
+
+    connect( view, &FilteredView::newSelection, this, &CrawlerWidget::jumpToMatchingLine );
+
+    connect( view, &FilteredView::markLines, this, &CrawlerWidget::markLinesFromFiltered );
+
+    connect( view, QOverload<const QString&>::of( &FilteredView::addToSearch ), this,
+             &CrawlerWidget::addToSearch );
+
+    connect( view, QOverload<const QString&>::of( &FilteredView::excludeFromSearch ), this,
+             &CrawlerWidget::excludeFromSearch );
+
+    connect( view, QOverload<const QString&>::of( &FilteredView::replaceSearch ), this,
+             &CrawlerWidget::replaceSearch );
+
+    connect( view, &FilteredView::mouseHoveredOverLine, this,
+             &CrawlerWidget::mouseHoveredOverMatch );
+
+    connect( view, &FilteredView::mouseLeftHoveringZone, overviewWidget_,
+             &OverviewWidget::removeHighlight );
+
+    connect( this, &CrawlerWidget::followSet, view, &FilteredView::followSet );
+
+    connect( view, &FilteredView::followModeChanged, this, &CrawlerWidget::followModeChanged );
+
+    connect( this, &CrawlerWidget::textWrapSet, view, &FilteredView::textWrapSet );
+
+    connect( view, &FilteredView::activity, this, &CrawlerWidget::activityDetected );
+
+    connect( view, &FilteredView::changeSearchLimits, this, &CrawlerWidget::setSearchLimits );
+
+    connect( view, &FilteredView::saveDefaultSplitterSizes, this,
+             &CrawlerWidget::saveSplitterSizes );
+
+    connect( view, &FilteredView::changeFontSize, this, &CrawlerWidget::changeFontSize );
+
+    connect( view, &FilteredView::clearSearchLimits, this, &CrawlerWidget::clearSearchLimits );
+
+    connect( view, &AbstractLogView::addColorLabel, this,
+             &CrawlerWidget::addColorLabelToSelection );
+
+    connect( view, &AbstractLogView::sendSelectionToScratchpad, this,
+             [ view, this ]() { Q_EMIT sendToScratchpad( view->getSelection() ); } );
+
+    connect( view, &AbstractLogView::replaceScratchpadWithSelection, this,
+             [ view, this ]() { Q_EMIT replaceDataInScratchpad( view->getSelection() ); } );
+
+    connect( view, &FilteredView::exitView, logMainView_,
+             QOverload<>::of( &LogMainView::setFocus ) );
+
+    connect( view, &AbstractLogView::clearColorLabels, this, &CrawlerWidget::clearColorLabels );
+
+    connect( logMainView_, &LogMainView::exitView, view,
+             QOverload<>::of( &FilteredView::setFocus ) );
 }
 
 void CrawlerWidget::registerShortcuts()
