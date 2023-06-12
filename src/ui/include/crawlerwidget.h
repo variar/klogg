@@ -370,6 +370,7 @@ class CrawlerWidget : public QSplitter,
 
     QToolButton* clearButton_;
     QToolButton* searchButton_;
+    QToolButton* keepSearchResultsButton_;
     QToolButton* stopButton_;
 
     QToolButton* matchCaseButton_;

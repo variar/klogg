@@ -1084,6 +1084,13 @@ void CrawlerWidget::setup()
     searchButton_->setAutoRaise( true );
     searchButton_->setContentsMargins( 2, 2, 2, 2 );
 
+    keepSearchResultsButton_ = new QToolButton();
+    keepSearchResultsButton_->setText( tr( "Keep Results" ) );
+    keepSearchResultsButton_->setToolTip(
+        tr( "Keep these results and show subsequent results in a new window" ) );
+    keepSearchResultsButton_->setCheckable( true );
+    keepSearchResultsButton_->setContentsMargins( 2, 2, 2, 2 );
+
     stopButton_ = new QToolButton();
     stopButton_->setAutoRaise( true );
     stopButton_->setEnabled( false );
@@ -1105,6 +1112,7 @@ void CrawlerWidget::setup()
     searchLineLayout->addWidget( searchLineEdit_ );
     searchLineLayout->addWidget( clearButton_ );
     searchLineLayout->addWidget( searchButton_ );
+    searchLineLayout->addWidget( keepSearchResultsButton_ );
     searchLineLayout->addWidget( stopButton_ );
     searchLineLayout->addWidget( searchInfoLine_ );
 
@@ -1390,6 +1398,7 @@ void CrawlerWidget::loadIcons()
     booleanButton_->setIcon( iconLoader_.load( "icons8-venn-diagram" ) );
     clearButton_->setIcon( iconLoader_.load( "icons8-delete" ) );
     searchButton_->setIcon( iconLoader_.load( "icons8-search" ) );
+    keepSearchResultsButton_->setIcon( iconLoader_.load( "icons8-lock" ) );
     matchCaseButton_->setIcon( iconLoader_.load( "icons8-font-size" ) );
     stopButton_->setIcon( iconLoader_.load( "icons8-close-window" ) );
 }
