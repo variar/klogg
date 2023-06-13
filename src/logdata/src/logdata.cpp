@@ -39,11 +39,6 @@
 // This file implements LogData, the content of a log file.
 
 #include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <cstdint>
-#include <iostream>
-#include <iterator>
 #include <limits>
 #include <numeric>
 #include <qregularexpression.h>
@@ -53,7 +48,6 @@
 #include <vector>
 
 #include <QFileInfo>
-#include <QIODevice>
 
 #include <simdutf.h>
 

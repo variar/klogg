@@ -19,9 +19,6 @@
 
 #include "booleanevaluator.h"
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdint>
 #include <string>
 
 #include "log.h"

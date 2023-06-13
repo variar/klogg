@@ -20,7 +20,6 @@
 #include "colorlabelsmanager.h"
 #include "highlighterset.h"
 #include <algorithm>
-#include <cstddef>
 #include <vector>
 
 ColorLabelsManager::QuickHighlightersCollection ColorLabelsManager::colorLabels() const

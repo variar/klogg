@@ -21,10 +21,8 @@
 
 #include "log.h"
 
-#include <QFileInfo>
 #include <algorithm>
 #include <cassert>
-#include <cstdint>
 
 #include "logdata.h"
 #include "logfiltereddata.h"

@@ -42,7 +42,6 @@
 // Search is started just after the selection and the selection is updated
 // if a match is found.
 
-#include <QApplication>
 #include <QtConcurrent>
 
 #include "abstractlogdata.h"

@@ -38,13 +38,10 @@
 
 #include <QtEndian>
 #include <cassert>
-#include <cstdint>
-#include <cstdlib>
 #include <limits>
 #include <stdexcept>
 
 #include "compressedlinestorage.h"
-#include "configuration.h"
 #include "linetypes.h"
 #include "log.h"
 

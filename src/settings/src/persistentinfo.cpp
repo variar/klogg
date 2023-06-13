@@ -42,7 +42,6 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QFileInfo>
-#include <QStringList>
 
 #include <whereami.h>
 

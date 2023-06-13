@@ -22,9 +22,6 @@
 #include <numeric>
 #include <qregularexpression.h>
 #include <string_view>
-#include <vector>
-
-#include <QRegularExpression>
 
 #ifdef KLOGG_HAS_HS
 #include "hsregularexpression.h"

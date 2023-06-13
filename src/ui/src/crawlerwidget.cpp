@@ -48,14 +48,10 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <iterator>
 
 #include <QAction>
 #include <QApplication>
 #include <QCompleter>
-#include <QFile>
-#include <QFileInfo>
-#include <QHeaderView>
 #include <QInputDialog>
 #include <QJsonDocument>
 #include <QKeySequence>
@@ -75,9 +71,7 @@
 #include "dispatch_to.h"
 #include "fontutils.h"
 #include "infoline.h"
-#include "overview.h"
 #include "quickfindpattern.h"
-#include "quickfindwidget.h"
 #include "savedsearches.h"
 #include "shortcuts.h"
 

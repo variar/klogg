@@ -17,7 +17,6 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <functional>
 
 #include <QApplication>

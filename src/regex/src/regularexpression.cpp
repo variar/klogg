@@ -25,7 +25,6 @@
 
 #include "configuration.h"
 #include "log.h"
-#include "overload_visitor.h"
 #include "uuid.h"
 
 #include "booleanevaluator.h"

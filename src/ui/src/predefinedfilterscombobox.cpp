@@ -38,7 +38,6 @@
 
 #include "predefinedfilterscombobox.h"
 
-#include <QListView>
 #include <QStandardItemModel>
 #include <QStyledItemDelegate>
 #include <qabstractitemview.h>

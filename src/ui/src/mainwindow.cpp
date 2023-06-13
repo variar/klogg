@@ -47,7 +47,6 @@
 #include <cassert>
 #include <exception>
 
-#include <cmath>
 #include <iterator>
 #include <qaction.h>
 #include <qapplication.h>
@@ -57,7 +56,6 @@
 #include <windows.h>
 #endif // Q_OS_WIN
 
-#include <QAction>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QDialogButtonBox>
@@ -97,7 +95,6 @@
 #include "mainwindowtext.h"
 #include "openfilehelper.h"
 #include "optionsdialog.h"
-#include "predefinedfilters.h"
 #include "predefinedfiltersdialog.h"
 #include "progress.h"
 #include "readablesize.h"

@@ -43,12 +43,10 @@
 #include <QKeySequence>
 #include <qcolor.h>
 #include <qglobal.h>
-#include <qmap.h>
 #include <qvariant.h>
 
 #include "configuration.h"
 #include "log.h"
-#include "shortcuts.h"
 #include "styles.h"
 
 namespace {

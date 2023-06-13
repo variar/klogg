@@ -46,14 +46,10 @@
 #include <QString>
 #include <QTimer>
 
-#include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <functional>
-#include <limits>
 #include <numeric>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "logdata.h"

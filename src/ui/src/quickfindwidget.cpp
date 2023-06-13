@@ -38,15 +38,12 @@
 
 #include "log.h"
 
-#include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QLineEdit>
 #include <QToolButton>
 #include <qcheckbox.h>
 #include <qkeysequence.h>
 #include <qlineedit.h>
-#include <qpushbutton.h>
 #include <qregularexpression.h>
 
 #include "configuration.h"

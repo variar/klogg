@@ -36,7 +36,6 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "log.h"
 #include "containers.h"
 
 #include "infoline.h"

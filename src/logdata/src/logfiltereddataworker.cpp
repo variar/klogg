@@ -38,25 +38,18 @@
 
 #include <chrono>
 #include <cmath>
-#include <cstdint>
 #include <exception>
 #include <qsemaphore.h>
-#include <qthreadpool.h>
-#include <stdexcept>
 #include <utility>
 
-#include <QThreadPool>
-
-#include <tbb/flow_graph.h>
-#include <tbb/info.h>
-#include <vector>
 #include <robin_hood.h>
+#include <tbb/flow_graph.h>
+#include <vector>
 
 #include "configuration.h"
 #include "dispatch_to.h"
 #include "issuereporter.h"
 #include "log.h"
-#include "overload_visitor.h"
 #include "progress.h"
 #include "runnable_lambda.h"
 

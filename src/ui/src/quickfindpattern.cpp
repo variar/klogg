@@ -41,7 +41,6 @@
 // current search pattern, once it has been confirmed (return pressed),
 // it can be asked to return the matches in a specific string.
 
-#include <iostream>
 #include <qregularexpression.h>
 
 #include "linetypes.h"

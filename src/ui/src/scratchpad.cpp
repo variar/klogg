@@ -28,7 +28,6 @@
 #include <QDateTime>
 #include <QDomDocument>
 #include <QFormLayout>
-#include <QHBoxLayout>
 #include <QJsonDocument>
 #include <QLineEdit>
 #include <QPlainTextEdit>
@@ -36,7 +35,6 @@
 #include <QToolBar>
 #include <QUrl>
 #include <QVBoxLayout>
-#include <qchar.h>
 
 #include "crc32.h"
 

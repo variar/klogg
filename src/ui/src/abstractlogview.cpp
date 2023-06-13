@@ -47,25 +47,16 @@
 #include <cassert>
 #include <cmath>
 #include <complex>
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <iostream>
-#include <iterator>
 #include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
 #include <qcolor.h>
-#include <string_view>
 #include <utility>
 #include <vector>
 
-#include <QAction>
-#include <QActionGroup>
 #include <QApplication>
 #include <QClipboard>
-#include <QFile>
 #include <QFileDialog>
 #include <QFontMetrics>
 #include <QGestureEvent>

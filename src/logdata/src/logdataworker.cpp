@@ -36,16 +36,11 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <chrono>
-#include <cmath>
-#include <cstddef>
 #include <exception>
 #include <functional>
 #include <qglobal.h>
-#include <qrunnable.h>
 #include <qthread.h>
-#include <qthreadpool.h>
 #include <string_view>
 #include <thread>
 
@@ -53,11 +48,9 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QSemaphore>
-#include <QThreadPool>
 #include <tuple>
 
 #include "configuration.h"
-#include "containers.h"
 #include "dispatch_to.h"
 #include "encodingdetector.h"
 #include "issuereporter.h"
@@ -70,7 +63,6 @@
 #include "runnable_lambda.h"
 
 #include "logdataworker.h"
-#include "synchronization.h"
 
 constexpr int IndexingBlockSize = 1 * 1024 * 1024;
 

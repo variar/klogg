@@ -14,7 +14,6 @@
 #include <QApplication>
 #include <QFile>
 #include <QPainter>
-#include <QPalette>
 #include <QPixmap>
 #include <QStyleOption>
 #include <QWidget>

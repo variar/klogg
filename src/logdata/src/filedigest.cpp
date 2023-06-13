@@ -19,7 +19,6 @@
 
 #include "filedigest.h"
 #include "xxhash.h"
-#include <QCryptographicHash>
 
 class DigestInternalState {
   public:

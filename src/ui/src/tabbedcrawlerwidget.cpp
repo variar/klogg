@@ -25,7 +25,6 @@
 #include <QFileInfo>
 #include <QInputDialog>
 #include <QKeyEvent>
-#include <QLabel>
 #include <QMenu>
 
 #include "crawlerwidget.h"

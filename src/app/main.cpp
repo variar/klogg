@@ -37,7 +37,6 @@
  */
 
 #include "log.h"
-#include <QMessageBox>
 #include <QtGlobal>
 #include <qapplication.h>
 #include <qthreadpool.h>
@@ -57,7 +56,6 @@
 #include "tbb/global_control.h"
 
 #include "configuration.h"
-#include "cpu_info.h"
 #include "logger.h"
 #include "mainwindow.h"
 #include "styles.h"
