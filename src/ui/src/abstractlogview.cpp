@@ -91,7 +91,6 @@
 #include "highlighterset.h"
 #include "highlightersmenu.h"
 #include "log.h"
-#include "logmainview.h"
 #include "overview.h"
 #include "quickfind.h"
 #include "quickfindpattern.h"
@@ -1533,12 +1532,10 @@ void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
 
     auto lineWriter = tbb::flow::function_node<LinesData, tbb::flow::continue_msg>(
         saveFileGraph, 1,
-        [ &interruptRequest, &codec, &saveFile, &progressDialog,
-          linesCount = 0u ]( const LinesData& lines ) mutable {
+        [ &interruptRequest, &codec, &saveFile, &progressDialog ]( const LinesData& lines ) mutable {
             if ( !lines.second ) {
                 if ( !interruptRequest ) {
                     saveFile.commit();
-                    linesCount++;
                 }
 
                 progressDialog.finished( 0 );
@@ -1555,8 +1552,6 @@ void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
                     interruptRequest.set();
                     return tbb::flow::continue_msg{};
                 }
-
-                linesCount++;
             }
             return tbb::flow::continue_msg{};
         } );
@@ -2425,7 +2420,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             const auto lengthDelta
                 = static_cast<LineLength::UnderlyingType>( expandedMatchLength - matchPart.size() );
 
-            return HighlightedMatch{ match.startColumn() + startDelta, match.size() + lengthDelta,
+            return HighlightedMatch{ static_cast<int>(match.startColumn() + startDelta), match.size() + lengthDelta,
                                      match.foreColor(), match.backColor() };
         };
 
