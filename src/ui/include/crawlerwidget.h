@@ -52,6 +52,7 @@
 #include <QSplitter>
 #include <QToolButton>
 #include <QVBoxLayout>
+#include <QTabBar>
 
 #include "colorlabelsmanager.h"
 #include "filteredview.h"
@@ -226,7 +227,7 @@ class CrawlerWidget : public QSplitter,
     // Called when the text on the search line is modified
     void searchTextChangeHandler( QString );
 
-    // Called when the user change the visibility combobox
+    // Called when the user change the visibility tabbar
     void changeFilteredViewVisibility( int index );
 
     // Called when the user add the string to the search
@@ -357,8 +358,7 @@ class CrawlerWidget : public QSplitter,
 
     OverviewWidget* overviewWidget_;
 
-    QComboBox* visibilityBox_;
-    QStandardItemModel* visibilityModel_;
+    QTabBar* visibilityBar_;
 
     PredefinedFiltersComboBox* predefinedFilters_;
 

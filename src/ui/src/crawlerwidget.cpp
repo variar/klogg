@@ -76,7 +76,6 @@
 #include "infoline.h"
 #include "overview.h"
 #include "quickfindpattern.h"
-#include "quickfindwidget.h"
 #include "savedsearches.h"
 #include "shortcuts.h"
 
@@ -802,8 +801,7 @@ void CrawlerWidget::searchTextChangeHandler( QString )
 
 void CrawlerWidget::changeFilteredViewVisibility( int index )
 {
-    QStandardItem* item = visibilityModel_->item( index );
-    auto visibility = item->data().value<FilteredView::Visibility>();
+    auto visibility = visibilityBar_->tabData(index).value<FilteredView::Visibility>();
 
     filteredView_->setVisibility( visibility );
 
@@ -955,54 +953,17 @@ void CrawlerWidget::setup()
     logMainView_->useNewFiltering( logFilteredData_.get() );
 
     // Construct the visibility button
+    visibilityBar_ = new QTabBar();
     using VisibilityFlags = LogFilteredData::VisibilityFlags;
-    visibilityModel_ = new QStandardItemModel( this );
-
-    QStandardItem* marksAndMatchesItem = new QStandardItem( tr( "Marks and matches" ) );
-    marksAndMatchesItem->setData(
-        QVariant::fromValue( VisibilityFlags::Marks | VisibilityFlags::Matches ) );
-    visibilityModel_->appendRow( marksAndMatchesItem );
-
-    QStandardItem* marksItem = new QStandardItem( tr( "Marks" ) );
-    marksItem->setData( QVariant::fromValue<FilteredView::Visibility>( VisibilityFlags::Marks ) );
-    visibilityModel_->appendRow( marksItem );
-
-    QStandardItem* matchesItem = new QStandardItem( tr( "Matches" ) );
-    matchesItem->setData(
-        QVariant::fromValue<FilteredView::Visibility>( VisibilityFlags::Matches ) );
-    visibilityModel_->appendRow( matchesItem );
-
-    auto* visibilityView = new QListView( this );
-    visibilityView->setMovement( QListView::Static );
-    // visibilityView->setMinimumWidth( 170 ); // Only needed with custom style-sheet
-
-    visibilityBox_ = new QComboBox();
-    visibilityBox_->setModel( visibilityModel_ );
-    visibilityBox_->setView( visibilityView );
+    visibilityBar_->addTab(tr( "Marks and matches" ));
+    visibilityBar_->setTabData(0, QVariant::fromValue( VisibilityFlags::Marks | VisibilityFlags::Matches ));
+    visibilityBar_->addTab(tr( "Marks" ));
+    visibilityBar_->setTabData(1, QVariant::fromValue( VisibilityFlags::Marks ));
+    visibilityBar_->addTab(tr( "Matches" ));
+    visibilityBar_->setTabData(2, QVariant::fromValue( VisibilityFlags::Matches ));
 
     // Select "Marks and matches" by default (same default as the filtered view)
-    visibilityBox_->setCurrentIndex( 0 );
-    visibilityBox_->setContentsMargins( 2, 2, 2, 2 );
-
-    // TODO: Maybe there is some way to set the popup width to be
-    // sized-to-content (as it is when the stylesheet is not overriden) in the
-    // stylesheet as opposed to setting a hard min-width on the view above.
-    /*visibilityBox_->setStyleSheet( " \
-        QComboBox:on {\
-            padding: 1px 2px 1px 6px;\
-            width: 19px;\
-        } \
-        QComboBox:!on {\
-            padding: 1px 2px 1px 7px;\
-            width: 19px;\
-            height: 16px;\
-            border: 1px solid gray;\
-        } \
-        QComboBox::drop-down::down-arrow {\
-            width: 0px;\
-            border-width: 0px;\
-        } \
-" );*/
+    visibilityBar_->setCurrentIndex(0);
 
     // Construct the Search Info line
     searchInfoLine_ = new InfoLine();
@@ -1092,7 +1053,7 @@ void CrawlerWidget::setup()
     auto* searchLineLayout = new QHBoxLayout;
     searchLineLayout->setContentsMargins( 2, 2, 2, 2 );
 
-    searchLineLayout->addWidget( visibilityBox_ );
+    searchLineLayout->addWidget( visibilityBar_ );
     searchLineLayout->addWidget( matchCaseButton_ );
     searchLineLayout->addWidget( useRegexpButton_ );
     searchLineLayout->addWidget( inverseButton_ );
@@ -1157,8 +1118,7 @@ void CrawlerWidget::setup()
     connect( stopButton_, &QToolButton::clicked, this, &CrawlerWidget::stopSearch );
     connect( clearButton_, &QToolButton::clicked, searchLineEdit_, &QComboBox::clearEditText );
 
-    connect( visibilityBox_, QOverload<int>::of( &QComboBox::currentIndexChanged ), this,
-             &CrawlerWidget::changeFilteredViewVisibility );
+    connect( visibilityBar_, &QTabBar::currentChanged, this, &CrawlerWidget::changeFilteredViewVisibility );
 
     connect( logMainView_, &LogMainView::newSelection,
              [ this ]( auto ) { logMainView_->update(); } );
@@ -1332,8 +1292,8 @@ void CrawlerWidget::registerShortcuts()
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
         ShortcutAction::CrawlerChangeVisibility, [ this ]() {
-            visibilityBox_->setCurrentIndex( ( visibilityBox_->currentIndex() + 1 )
-                                             % visibilityBox_->count() );
+            visibilityBar_->setCurrentIndex( ( visibilityBar_->currentIndex() + 1 )
+                                             % visibilityBar_->count() );
         } );
 
     ShortcutAction::registerShortcut(
