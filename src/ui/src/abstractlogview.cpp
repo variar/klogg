@@ -2415,12 +2415,12 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             const auto matchPart = QStringView{ logLine }.mid( match.startColumn(), match.size() );
 #endif
             const auto expandedMatchLength
-                = untabify( matchPart.toString(), static_cast<int>(expandedPrefixLength) ).size();
+                = untabify( matchPart.toString(), static_cast<LineLength::UnderlyingType>( expandedPrefixLength ) ).size();
 
             const auto lengthDelta
                 = static_cast<LineLength::UnderlyingType>( expandedMatchLength - matchPart.size() );
 
-            return HighlightedMatch{ static_cast<int>(match.startColumn() + startDelta), match.size() + lengthDelta,
+            return HighlightedMatch{ static_cast<int>( match.startColumn() + startDelta ), match.size() + lengthDelta,
                                      match.foreColor(), match.backColor() };
         };
 
