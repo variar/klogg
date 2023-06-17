@@ -278,7 +278,7 @@ LineLength LogData::doGetLineLength( LineNumber line ) const
         return 0_length; /* exception? */
     }
 
-    return LineLength( doGetExpandedLineString( line ).size() );
+    return LineLength( static_cast<int>(doGetExpandedLineString( line ).size()) );
 }
 
 void LogData::doSetDisplayEncoding( const char* encoding )
