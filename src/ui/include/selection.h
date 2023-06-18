@@ -183,10 +183,9 @@ class Selection {
 
         LinesCount size() const
         {
-            if (startLine)
-            {
+            if ( startLine.has_value() )
                 return LinesCount{ endLine.get() - startLine->get() + 1 };
-            }
+
             return LinesCount{ 1 };
         }
     };
