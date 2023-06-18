@@ -183,10 +183,7 @@ class Selection {
 
         LinesCount size() const
         {
-            if ( startLine.has_value() )
-                return LinesCount{ endLine.get() - startLine->get() + 1 };
-
-            return LinesCount{ 1 };
+            return LinesCount{ endLine.get() - startLine->get() + 1 };
         }
     };
     struct SelectedPartial selectedPartial_;

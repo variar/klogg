@@ -152,7 +152,14 @@ klogg::vector<LineNumber> Selection::getLines() const
 
 uint64_t Selection::getSelectedLinesCount() const
 {
-    return selectedRange_.size().get();
+    if ( selectedRange_.startLine.has_value() ) {
+        return selectedRange_.size().get();
+    }
+    else if ( selectedLine_.has_value() ) {
+        return 1;
+    }
+
+    return 0;
 }
 
 // The tab behaviour is a bit odd at the moment, full lines are not expanded
