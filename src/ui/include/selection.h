@@ -187,7 +187,7 @@ class Selection {
             {
                 return LinesCount{ endLine.get() - startLine->get() + 1 };
             }
-            return LinesCount{ 0 };
+            return LinesCount{ 1 };
         }
     };
     struct SelectedPartial selectedPartial_;
