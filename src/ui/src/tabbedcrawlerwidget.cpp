@@ -140,6 +140,8 @@ void TabbedCrawlerWidget::addTabBarItem( int index, const QString& fileName )
 
     myTabBar_.setTabData( index, tabData );
 
+    setCurrentIndex(index);
+
     if ( count() > 1 )
         myTabBar_.show();
 }
