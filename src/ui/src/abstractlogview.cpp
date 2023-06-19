@@ -1195,7 +1195,8 @@ void AbstractLogView::paintEvent( QPaintEvent* paintEvent )
     // This is to cover the special case where there is less than a screenful
     // worth of data, we want to see the document from the top, rather than
     // pushing the first couple of lines above the viewport.
-    if ( followElasticHook_.isHooked() && ( logData_->getNbLine() < getNbVisibleLines() ) ) {
+    if ( followElasticHook_.isHooked()
+         && ( logData_->getNbLine() + LinesCount( 1 ) < getNbVisibleLines() ) ) {
         drawingTopOffset_ = 0;
         drawingTopPosition += ( wholeHeight - viewport()->height() ) + PullToFollowHookedHeight;
         drawingPullToFollowTopPosition
