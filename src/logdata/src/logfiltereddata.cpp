@@ -343,6 +343,11 @@ void LogFilteredData::setVisibility( Visibility visi )
     visibility_ = visi;
 }
 
+LogFilteredData::Visibility LogFilteredData::visibility() const
+{
+    return visibility_;
+}
+
 void LogFilteredData::updateSearchResultsCache()
 {
     const auto& config = Configuration::get();

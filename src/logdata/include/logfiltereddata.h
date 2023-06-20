@@ -134,6 +134,7 @@ class LogFilteredData : public AbstractLogData {
     Q_ENUM( VisibilityFlags );
     Q_DECLARE_FLAGS( Visibility, VisibilityFlags )
     void setVisibility( Visibility visibility );
+    Visibility visibility() const;
 
     void iterateOverLines( const std::function<void( LineNumber )>& callback ) const;
   Q_SIGNALS:

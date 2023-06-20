@@ -62,6 +62,13 @@ void FilteredView::setVisibility( Visibility visi )
     updateData();
 }
 
+FilteredView::Visibility FilteredView::visibility() const
+{
+    assert( logFilteredData_ );
+
+    return logFilteredData_->visibility();
+}
+
 // For the filtered view, a line is always matching!
 AbstractLogData::LineType FilteredView::lineType( LineNumber lineNumber ) const
 {

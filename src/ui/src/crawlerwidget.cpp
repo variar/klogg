@@ -1405,6 +1405,13 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
 
     nbMatches_ = 0_lcount;
 
+    // Switch to "Marks and matches" view when in "Marks" view
+    using VisibilityFlags = LogFilteredData::VisibilityFlags;
+    if (!filteredView_->visibility().testFlag(VisibilityFlags::Matches))
+    {
+        visibilityBox_->setCurrentIndex( 0 );
+    }
+
     // Clear and recompute the content of the filtered window.
     logFilteredData_->clearSearch();
     filteredView_->updateData();
