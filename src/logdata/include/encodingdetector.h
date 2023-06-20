@@ -20,6 +20,7 @@
 #ifndef ENCODINGDETECTOR_H
 #define ENCODINGDETECTOR_H
 
+#include "containers.h"
 #include "synchronization.h"
 
 #include <QByteArray>
@@ -72,7 +73,7 @@ class EncodingDetector {
     EncodingDetector( const EncodingDetector&& ) = delete;
     EncodingDetector& operator=( const EncodingDetector&& ) = delete;
 
-    QTextCodec* detectEncoding( const QByteArray& block ) const;
+    QTextCodec* detectEncoding( const klogg::vector<char>& block ) const;
 
   private:
     EncodingDetector() = default;

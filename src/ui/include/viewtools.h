@@ -68,7 +68,7 @@ class ElasticHook : public QObject {
     }
 
     // Return the "length" of the elastic hook.
-    int length() const
+    int size() const
     {
         return position_;
     }

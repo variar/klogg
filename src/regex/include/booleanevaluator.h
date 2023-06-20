@@ -20,12 +20,14 @@
 #include <exprtk.hpp>
 #include <string_view>
 
+#include "containers.h"
+
 #include "regularexpressionpattern.h"
 
 class BooleanExpressionEvaluator {
   public:
     BooleanExpressionEvaluator( const std::string& expression,
-                                const std::vector<RegularExpressionPattern>& patterns );
+                                const klogg::vector<RegularExpressionPattern>& patterns );
 
     bool isValid() const
     {
@@ -49,7 +51,7 @@ class BooleanExpressionEvaluator {
     exprtk::expression<double> expression_;
     exprtk::parser<double> parser_;
 
-    std::vector<double*> variables_;
+    klogg::vector<double*> variables_;
 
     double precomputedResults_[16];
 };

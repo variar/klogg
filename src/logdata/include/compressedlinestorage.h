@@ -161,7 +161,7 @@ class CompressedLinePositionStorage {
     OffsetInFile at( LineNumber i, Cache* lastPosition = nullptr ) const;
 
     // Add one list to the other
-    void append_list( const std::vector<OffsetInFile>& positions );
+    void append_list( const klogg::vector<OffsetInFile>& positions );
 
     // Pop the last element of the storage
     void pop_back();

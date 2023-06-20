@@ -150,9 +150,9 @@ class LogFilteredData : public AbstractLogData {
     // Implementation of virtual functions
     QString doGetLineString( LineNumber line ) const override;
     QString doGetExpandedLineString( LineNumber line ) const override;
-    std::vector<QString> doGetLines( LineNumber first, LinesCount number ) const override;
-    std::vector<QString> doGetExpandedLines( LineNumber first, LinesCount number ) const override;
-    std::vector<QString> doGetLines( LineNumber first, LinesCount number,
+    klogg::vector<QString> doGetLines( LineNumber first, LinesCount number ) const override;
+    klogg::vector<QString> doGetExpandedLines( LineNumber first, LinesCount number ) const override;
+    klogg::vector<QString> doGetLines( LineNumber first, LinesCount number,
                                      const std::function<QString( LineNumber )>& lineGetter ) const;
     LineNumber doGetLineNumber( LineNumber index ) const override;
     LinesCount doGetNbLine() const override;

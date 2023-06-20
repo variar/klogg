@@ -26,39 +26,40 @@
 #include <numeric>
 
 #include "abstractlogdata.h"
+#include "containers.h"
 #include "linetypes.h"
 #include "log.h"
 #include "selection.h"
 
 Selection::Selection()
 {
-    selectedPartial_.startColumn = 0;
-    selectedPartial_.endColumn = 0;
+    selectedPartial_.startColumn = 0_lcol;
+    selectedPartial_.endColumn = 0_lcol;
 
     selectedRange_.endLine = 0_lnum;
 }
 
-void Selection::selectPortion( LineNumber line, int start_column, int end_column )
+void Selection::selectPortion( LineNumber line, LineColumn startColumn, LineColumn endColumn )
 {
     // First unselect any whole line or range
     selectedLine_ = {};
     selectedRange_.startLine = {};
 
     selectedPartial_.line = line;
-    selectedPartial_.startColumn = qMin( start_column, end_column );
-    selectedPartial_.endColumn = qMax( start_column, end_column );
+    selectedPartial_.startColumn = std::min( startColumn, endColumn );
+    selectedPartial_.endColumn = std::max( startColumn, endColumn );
 }
 
-void Selection::selectRange( LineNumber start_line, LineNumber end_line )
+void Selection::selectRange( LineNumber startLine, LineNumber endLine )
 {
     // First unselect any whole line and portion
     selectedLine_ = {};
     selectedPartial_.line = {};
 
-    selectedRange_.startLine = qMin( start_line, end_line );
-    selectedRange_.endLine = qMax( start_line, end_line );
+    selectedRange_.startLine = std::min( startLine, endLine );
+    selectedRange_.endLine = std::max( startLine, endLine );
 
-    selectedRange_.firstLine = start_line;
+    selectedRange_.firstLine = startLine;
 }
 
 void Selection::selectRangeFromPrevious( LineNumber line )
@@ -112,7 +113,8 @@ bool Selection::isLineSelected( LineNumber line ) const
         return false;
 }
 
-bool Selection::isPortionSelected( LineNumber line, int startColumn, int endColumn ) const
+bool Selection::isPortionSelected( LineNumber line, LineColumn startColumn,
+                                   LineColumn endColumn ) const
 {
     if ( isLineSelected( line ) ) {
         return true;
@@ -131,9 +133,9 @@ OptionalLineNumber Selection::selectedLine() const
     return selectedLine_;
 }
 
-std::vector<LineNumber> Selection::getLines() const
+klogg::vector<LineNumber> Selection::getLines() const
 {
-    std::vector<LineNumber> selection;
+    klogg::vector<LineNumber> selection;
 
     if ( selectedLine_.has_value() ) {
         selection.push_back( *selectedLine_ );
@@ -149,7 +151,10 @@ std::vector<LineNumber> Selection::getLines() const
     return selection;
 }
 
-uint64_t Selection::getSelectedLinesCount() const { return selectedRange_.size().get(); }
+LinesCount Selection::getSelectedLinesCount() const
+{
+    return selectedRange_.size();
+}
 
 // The tab behaviour is a bit odd at the moment, full lines are not expanded
 // but partials (part of line) are, they probably should not ideally.
@@ -160,7 +165,7 @@ QString Selection::getSelectedText( const AbstractLogData* logData, bool lineNum
     QString text;
 
     const auto selectionSizeEstimate = std::accumulate(
-        selectionData.begin(), selectionData.end(), static_cast<int>( selectionData.size() ),
+        selectionData.begin(), selectionData.end(), klogg::isize( selectionData ),
         []( const auto& acc, const auto& next ) { return acc + next.second.size(); } );
 
     text.reserve( selectionSizeEstimate );
@@ -197,8 +202,8 @@ Selection::getSelectionWithLineNumbers( const AbstractLogData* logData ) const
         selectionData.emplace(
             logData->getLineNumber( selectedPartial_.line.value() ),
             logData->getExpandedLineString( *selectedPartial_.line )
-                .mid( selectedPartial_.startColumn,
-                      ( selectedPartial_.endColumn - selectedPartial_.startColumn ) + 1 ) );
+                .mid( selectedPartial_.startColumn.get(),
+                      selectedPartial_.size().get() ) );
     }
     else if ( selectedRange_.startLine.has_value() ) {
         const auto list = logData->getLines( *selectedRange_.startLine, selectedRange_.size() );
@@ -216,7 +221,7 @@ Selection::getSelectionWithLineNumbers( const AbstractLogData* logData ) const
 FilePosition Selection::getNextPosition() const
 {
     LineNumber line;
-    int column = 0;
+    LineColumn column = 0_lcol;
 
     if ( selectedLine_.has_value() ) {
         line = *selectedLine_ + 1_lcount;
@@ -226,7 +231,7 @@ FilePosition Selection::getNextPosition() const
     }
     else if ( selectedPartial_.line.has_value() ) {
         line = *selectedPartial_.line;
-        column = selectedPartial_.endColumn + 1;
+        column = selectedPartial_.endColumn + 1_length;
     }
 
     return FilePosition( line, column );
@@ -235,7 +240,7 @@ FilePosition Selection::getNextPosition() const
 FilePosition Selection::getPreviousPosition() const
 {
     LineNumber line = 0_lnum;
-    int column = 0;
+    LineColumn column = 0_lcol;
 
     if ( selectedLine_.has_value() ) {
         line = *selectedLine_;
@@ -245,7 +250,7 @@ FilePosition Selection::getPreviousPosition() const
     }
     else if ( selectedPartial_.line.has_value() ) {
         line = *selectedPartial_.line;
-        column = qMax( selectedPartial_.startColumn - 1, 0 );
+        column = selectedPartial_.startColumn - 1_length;
     }
 
     return FilePosition( line, column );

@@ -21,18 +21,6 @@ option(KLOGG_USE_SENTRY "Use Sentry" OFF)
 option(KLOGG_GENERIC_CPU "Build for generic CPU" OFF)
 option(KLOGG_OSX_DEPLOYMENT_TARGET "Override target MacOS version" "")
 
-if(APPLE)
-  option(KLOGG_OVERRIDE_MALLOC "Use malloc global override" OFF)
-else()
-  option(KLOGG_OVERRIDE_MALLOC "Use malloc global override" ON)
-endif()
-
-if(WIN32)
-  option(KLOGG_USE_MIMALLOC "Use mimalloc for malloc override" OFF)
-else()
-  option(KLOGG_USE_MIMALLOC "Use mimalloc for malloc override" ON)
-endif()
-
 if(CMAKE_SIZEOF_VOID_P EQUAL 4)
   set(KLOGG_ARCH 32)
 else()

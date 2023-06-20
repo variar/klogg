@@ -17,11 +17,7 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if defined( KLOGG_USE_TBBMALLOC )
-#include <tbb/tbbmalloc_proxy.h>
-#elif defined( KLOGG_USE_MIMALLOC )
 #include <mimalloc.h>
-#endif
 
 #include "configuration.h"
 #include "logdata.h"

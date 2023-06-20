@@ -46,6 +46,7 @@
 
 #include "highlightedmatch.h"
 #include "persistable.h"
+#include "containers.h"
 
 struct HighlightColor {
     QColor foreColor;
@@ -61,7 +62,7 @@ class Highlighter {
     Highlighter( const QString& pattern, bool ignoreCase, bool onlyMatch, const QColor& foreColor,
                  const QColor& backColor );
 
-    bool matchLine( const QString& line, std::vector<HighlightedMatch>& matches ) const;
+    bool matchLine( const QString& line, klogg::vector<HighlightedMatch>& matches ) const;
 
     // Accessor functions
     QString pattern() const;
@@ -124,7 +125,7 @@ class HighlighterSet {
     // Returns weither the passed line match a filter of the set,
     // if so, it returns the fore/back colors the line should use.
     HighlighterMatchType matchLine( const QString& line,
-                                    std::vector<HighlightedMatch>& matches ) const;
+                                    klogg::vector<HighlightedMatch>& matches ) const;
 
     bool isEmpty() const;
 

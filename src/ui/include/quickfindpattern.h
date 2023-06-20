@@ -46,6 +46,8 @@
 #include <qglobal.h>
 
 #include "highlightedmatch.h"
+#include "containers.h"
+#include "linetypes.h"
 
 class QuickFind;
 
@@ -67,21 +69,21 @@ class QuickFindMatcher {
     // Returns whether there is a match in the passed line, starting at
     // the passed column.
     // Results are stored internally.
-    bool isLineMatching( const QString& line, int column = 0 ) const;
+    bool isLineMatching( const QString& line, LineColumn column = 0_lcol ) const;
 
     // Same as isLineMatching but search backward
-    bool isLineMatchingBackward( const QString& line, int column = -1 ) const;
+    bool isLineMatchingBackward( const QString& line, LineColumn column = LineColumn{-1} ) const;
 
     // Must be called when isLineMatching returns 'true', returns
     // the position of the first match found.
-    void getLastMatch( int* start_col, int* end_col ) const;
+    std::pair<LineColumn, LineColumn> getLastMatch() const;
 
   private:
     bool isActive_ = false;
     QRegularExpression regexp_;
 
-    mutable int lastMatchStart_ = 0;
-    mutable int lastMatchEnd_ = 0;
+    mutable LineColumn lastMatchStart_;
+    mutable LineColumn lastMatchEnd_;
 };
 
 // Represents a search pattern for QuickFind (without its results)
@@ -114,7 +116,7 @@ class QuickFindPattern : public QObject {
     // Returns whether the passed line match the quick find search.
     // If so, it populate the passed list with the list of matches
     // within this particular line.
-    bool matchLine( const QString& line, std::vector<HighlightedMatch>& matches ) const;
+    bool matchLine( const QString& line, klogg::vector<HighlightedMatch>& matches ) const;
 
     QuickFindMatcher getMatcher() const;
 

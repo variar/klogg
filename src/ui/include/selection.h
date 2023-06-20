@@ -37,10 +37,10 @@ class Portion {
     {
     }
 
-    Portion( LineNumber line, int start_column, int end_column )
+    Portion( LineNumber line, LineColumn startColumn, LineColumn endColumn )
         : line_{ line }
-        , startColumn_{ start_column }
-        , endColumn_{ end_column }
+        , startColumn_{ startColumn }
+        , endColumn_{ endColumn }
     {
     }
 
@@ -48,29 +48,29 @@ class Portion {
     {
         return *line_;
     }
-    int startColumn() const
+    LineColumn startColumn() const
     {
         return startColumn_;
     }
-    int endColumn() const
+    LineColumn endColumn() const
     {
         return endColumn_;
     }
 
     bool isValid() const
     {
-        return !!line_ && endColumn_ >= startColumn_ && startColumn_ >= 0;
+        return !!line_ && endColumn_ >= startColumn_ && startColumn_ >= 0_lcol;
     }
 
-    int length() const
+    LineLength size() const
     {
-        return endColumn_ - startColumn_ + 1;
+        return ( endColumn_ - startColumn_ ) + 1_length;
     }
 
   private:
     OptionalLineNumber line_;
-    int startColumn_;
-    int endColumn_;
+    LineColumn startColumn_;
+    LineColumn endColumn_;
 };
 
 // Represents a selection in an AbstractLogView
@@ -94,20 +94,20 @@ class Selection {
         selectedLine_ = line;
     }
     // Select a portion of line (both start and end included)
-    void selectPortion( LineNumber line, int start_column, int end_column );
+    void selectPortion( LineNumber line, LineColumn startColumn, LineColumn endColumn );
     void selectPortion( const Portion& selection )
     {
         selectPortion( selection.line(), selection.startColumn(), selection.endColumn() );
     }
     // Select a range of lines (both start and end included)
-    void selectRange( LineNumber start_line, LineNumber end_line );
+    void selectRange( LineNumber startLine, LineNumber endLine );
 
     // Select a range from the previously selected line or beginning
     // of range (shift+click behaviour)
     void selectRangeFromPrevious( LineNumber line );
 
     // Crop selection so that in fit in the range ending with the line passed.
-    void crop( LineNumber last_line );
+    void crop( LineNumber lastLine );
 
     // Returns whether the selection is empty
     bool isEmpty() const
@@ -137,15 +137,15 @@ class Selection {
     // If so, returns the portion position.
     Portion getPortionForLine( LineNumber line ) const;
     // Get a list of selected line(s), in order.
-    std::vector<LineNumber> getLines() const;
+    klogg::vector<LineNumber> getLines() const;
 
-    uint64_t getSelectedLinesCount() const;
+    LinesCount getSelectedLinesCount() const;
 
     // Returns wether the line passed is selected (entirely).
     bool isLineSelected( LineNumber line ) const;
 
     // Returns wether the line passed is selected in certain range.
-    bool isPortionSelected( LineNumber line, int startColumn, int endColumn ) const;
+    bool isPortionSelected( LineNumber line, LineColumn startColumn, LineColumn endColumn ) const;
 
     // Returns the line selected or -1 if not a single line selection
     OptionalLineNumber selectedLine() const;
@@ -171,8 +171,13 @@ class Selection {
 
     struct SelectedPartial {
         OptionalLineNumber line;
-        int startColumn;
-        int endColumn;
+        LineColumn startColumn;
+        LineColumn endColumn;
+
+        LineLength size() const
+        {
+            return ( endColumn - startColumn ) + 1_length;
+        }
     };
     struct SelectedRange {
         // The limits of the range, sorted
@@ -183,7 +188,7 @@ class Selection {
 
         LinesCount size() const
         {
-            return LinesCount{ endLine.get() - startLine->get() + 1 };
+            return startLine ? ( endLine - startLine.value() ) + 1_lcount : 0_lcount;
         }
     };
     struct SelectedPartial selectedPartial_;

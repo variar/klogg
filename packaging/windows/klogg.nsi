@@ -74,8 +74,6 @@ Section "klogg" klogg
     File release\klogg_crashpad_handler.exe
     File release\klogg_minidump_dump.exe
     File release\tbb12.dll
-    File release\tbbmalloc.dll
-    File release\tbbmalloc_proxy.dll
 
     File COPYING
     File NOTICE

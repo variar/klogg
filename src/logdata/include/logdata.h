@@ -49,6 +49,7 @@
 #include <qregularexpression.h>
 #include <qtextcodec.h>
 #include <string_view>
+#include <vector>
 
 #include "abstractlogdata.h"
 #include "fileholder.h"
@@ -106,19 +107,19 @@ class LogData : public AbstractLogData {
     struct RawLines {
         LineNumber startLine;
 
-        std::vector<char> buffer;
-        std::vector<qint64> endOfLines;
+        klogg::vector<char> buffer;
+        klogg::vector<qint64> endOfLines;
 
         TextDecoder textDecoder;
 
         QRegularExpression prefilterPattern;
 
       public:
-        std::vector<QString> decodeLines() const;
-        std::vector<std::string_view> buildUtf8View() const;
+        klogg::vector<QString> decodeLines() const;
+        klogg::vector<std::string_view> buildUtf8View() const;
 
       private:
-        mutable QByteArray utf8Data_;
+        mutable klogg::vector<char> utf8Data_;
     };
 
     RawLines getLinesRaw( LineNumber first, LinesCount number ) const;
@@ -145,8 +146,8 @@ class LogData : public AbstractLogData {
     // Implementation of virtual functions
     QString doGetLineString( LineNumber line ) const override;
     QString doGetExpandedLineString( LineNumber line ) const override;
-    std::vector<QString> doGetLines( LineNumber first, LinesCount number ) const override;
-    std::vector<QString> doGetExpandedLines( LineNumber first, LinesCount number ) const override;
+    klogg::vector<QString> doGetLines( LineNumber first, LinesCount number ) const override;
+    klogg::vector<QString> doGetExpandedLines( LineNumber first, LinesCount number ) const override;
     LineNumber doGetLineNumber( LineNumber index ) const override;
     LinesCount doGetNbLine() const override;
     LineLength doGetMaxLength() const override;
@@ -158,7 +159,7 @@ class LogData : public AbstractLogData {
 
     void reOpenFile() const;
 
-    std::vector<QString> getLinesFromFile( LineNumber first, LinesCount number,
+    klogg::vector<QString> getLinesFromFile( LineNumber first, LinesCount number,
                                            QString ( *processLine )( QString&& ) ) const;
 
   private:

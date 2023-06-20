@@ -39,6 +39,7 @@
 #ifndef LOGDATAWORKERTHREAD_H
 #define LOGDATAWORKERTHREAD_H
 
+#include "containers.h"
 #include <qthreadpool.h>
 #include <variant>
 
@@ -133,7 +134,7 @@ class IndexingDataAccessor {
 
     // Atomically add to all the existing
     // indexing data.
-    void addAll( const QByteArray& block, LineLength length,
+    void addAll( const klogg::vector<char>& block, LineLength length,
                  const FastLinePositionArray& linePosition, QTextCodec* encoding )
     {
         data_->addAll( block, length, linePosition, encoding );
@@ -208,7 +209,7 @@ class IndexingData {
 
     // Atomically add to all the existing
     // indexing data.
-    void addAll( const QByteArray& block, LineLength length,
+    void addAll( const klogg::vector<char>& block, LineLength length,
                  const FastLinePositionArray& linePosition, QTextCodec* encoding );
 
     // Completely clear the indexing data.
@@ -245,7 +246,7 @@ struct IndexingState {
 
     EncodingParameters encodingParams;
     OffsetInFile::UnderlyingType pos{};
-    int64_t max_length{};
+    LineLength::UnderlyingType max_length{};
     LineLength::UnderlyingType additional_spaces{};
     OffsetInFile::UnderlyingType end{};
     OffsetInFile::UnderlyingType file_size{};
@@ -277,7 +278,8 @@ class IndexOperation : public QObject {
     void fileCheckFinished( MonitoredFileStatus );
 
   protected:
-    using BlockData = std::pair<OffsetInFile::UnderlyingType, QByteArray>;
+    using BlockBuffer = klogg::vector<char>;
+    using BlockData = std::pair<OffsetInFile::UnderlyingType, BlockBuffer*>;
     using BlockPrefetcher = tbb::flow::limiter_node<BlockData>;
 
     // Returns the total size indexed
@@ -290,9 +292,9 @@ class IndexOperation : public QObject {
 
   private:
     FastLinePositionArray parseDataBlock( OffsetInFile::UnderlyingType blockBegining,
-                                          const QByteArray& block, IndexingState& state ) const;
+                                          const BlockBuffer& block, IndexingState& state ) const;
 
-    void guessEncoding( const QByteArray& block, IndexingData::MutateAccessor& scopedAccessor,
+    void guessEncoding( const BlockBuffer& block, IndexingData::MutateAccessor& scopedAccessor,
                         IndexingState& state ) const;
 
     std::chrono::microseconds readFileInBlocks( QFile& file, BlockPrefetcher& blockPrefetcher );

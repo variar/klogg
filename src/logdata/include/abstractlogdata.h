@@ -57,9 +57,9 @@ class AbstractLogData : public QObject {
     // Returns the line passed as a QString, with tabs expanded
     QString getExpandedLineString( LineNumber line ) const;
     // Returns a set of lines as a QStringList
-    std::vector<QString> getLines( LineNumber first_line, LinesCount number ) const;
+    klogg::vector<QString> getLines( LineNumber first_line, LinesCount number ) const;
     // Returns a set of lines with tabs expanded
-    std::vector<QString> getExpandedLines( LineNumber first_line, LinesCount number ) const;
+    klogg::vector<QString> getExpandedLines( LineNumber first_line, LinesCount number ) const;
     // Returns the line numer
     LineNumber getLineNumber( LineNumber index ) const;
     // Returns the total number of lines
@@ -97,9 +97,9 @@ class AbstractLogData : public QObject {
     // Internal function called to get a given line
     virtual QString doGetExpandedLineString( LineNumber line ) const = 0;
     // Internal function called to get a set of lines
-    virtual std::vector<QString> doGetLines( LineNumber first_line, LinesCount number ) const = 0;
+    virtual klogg::vector<QString> doGetLines( LineNumber first_line, LinesCount number ) const = 0;
     // Internal function called to get a set of expanded lines
-    virtual std::vector<QString> doGetExpandedLines( LineNumber first_line,
+    virtual klogg::vector<QString> doGetExpandedLines( LineNumber first_line,
                                                      LinesCount number ) const = 0;
 
     // Internal function called to get the index of given line

@@ -42,19 +42,16 @@
 // It also interacts with the sets of data (full and filtered).
 
 #include "abstractlogview.h"
+#include "linetypes.h"
 #include "log.h"
 
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <iterator>
 
 #include <QAction>
 #include <QApplication>
 #include <QCompleter>
-#include <QFile>
-#include <QFileInfo>
-#include <QHeaderView>
 #include <QInputDialog>
 #include <QJsonDocument>
 #include <QKeySequence>
@@ -74,9 +71,7 @@
 #include "dispatch_to.h"
 #include "fontutils.h"
 #include "infoline.h"
-#include "overview.h"
 #include "quickfindpattern.h"
-#include "quickfindwidget.h"
 #include "savedsearches.h"
 #include "shortcuts.h"
 
@@ -179,9 +174,9 @@ LineNumber CrawlerWidget::getTopLine() const
 QString CrawlerWidget::getSelectedText() const
 {
     if ( filteredView_->hasFocus() )
-        return filteredView_->getSelection();
+        return filteredView_->getSelectedText();
     else
-        return logMainView_->getSelection();
+        return logMainView_->getSelectedText();
 }
 
 bool CrawlerWidget::isPartialSelection() const
@@ -239,7 +234,7 @@ std::vector<QObject*> CrawlerWidget::doGetAllSearchables() const
 // Update the state of the parent
 void CrawlerWidget::doSendAllStateSignals()
 {
-    Q_EMIT newSelection( currentLineNumber_, 0, 0, 0 );
+    Q_EMIT newSelection( currentLineNumber_, 0_lcount, 0_lcol, 0_length );
     if ( !loadingInProgress_ )
         Q_EMIT loadingFinished( LoadingStatus::Successful );
 }
@@ -540,24 +535,24 @@ void CrawlerWidget::updateFilteredView( LinesCount nbMatches, int progress,
     }
 }
 
-void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, uint64_t nLines,
-                                        uint64_t startCol, uint64_t nSymbols )
+void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nLines,
+                                        LineColumn startCol, LineLength nSymbols )
 {
     const auto mainViewLine = logFilteredData_->getMatchingLineNumber( filteredLineNb );
     logMainView_->selectPortionAndDisplayLine( mainViewLine, nLines, startCol,
                                                nSymbols ); // FIXME: should be done with a signal.
 }
 
-void CrawlerWidget::updateLineNumberHandler( LineNumber line, uint64_t nLines, uint64_t startCol,
-                                             uint64_t nSymbols )
+void CrawlerWidget::updateLineNumberHandler( LineNumber line, LinesCount nLines, LineColumn startCol,
+                                             LineLength nSymbols )
 {
     currentLineNumber_ = line;
     Q_EMIT newSelection( line, nLines, startCol, nSymbols );
 }
 
-void CrawlerWidget::markLinesFromMain( const std::vector<LineNumber>& lines )
+void CrawlerWidget::markLinesFromMain( const klogg::vector<LineNumber>& lines )
 {
-    std::vector<LineNumber> alreadyMarkedLines;
+    klogg::vector<LineNumber> alreadyMarkedLines;
     alreadyMarkedLines.reserve( lines.size() );
 
     bool markAdded = false;
@@ -593,9 +588,9 @@ void CrawlerWidget::markLinesFromMain( const std::vector<LineNumber>& lines )
     update();
 }
 
-void CrawlerWidget::markLinesFromFiltered( const std::vector<LineNumber>& lines )
+void CrawlerWidget::markLinesFromFiltered( const klogg::vector<LineNumber>& lines )
 {
-    std::vector<LineNumber> linesInMain( lines.size() );
+    klogg::vector<LineNumber> linesInMain( lines.size() );
     std::transform( lines.cbegin(), lines.cend(), linesInMain.begin(),
                     [ this ]( const auto& filteredLine ) {
                         if ( filteredLine < logData_->getNbLine() ) {
@@ -641,14 +636,12 @@ void CrawlerWidget::applyConfiguration()
     overview_.setVisible( config.isOverviewVisible() );
     logMainView_->refreshOverview();
     logMainView_->updateFont( font );
-    logMainView_->textWrapSet( config.useTextWrap() );
 
     for ( auto i = 0; i < tabbedFilteredView_->count(); ++i ) {
         auto fv = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( i ) );
         fv->setLineNumbersVisible( config.filteredLineNumbersVisible() );
         fv->allowFollowMode( isFollowModeAllowed );
         fv->updateFont( font );
-        fv->textWrapSet( config.useTextWrap() );
     }
 
     // Update the SearchLine (history)
@@ -1290,10 +1283,10 @@ void CrawlerWidget::setup()
              &CrawlerWidget::addColorLabelToSelection );
 
     connect( logMainView_, &AbstractLogView::sendSelectionToScratchpad, this,
-             [ this ]() { Q_EMIT sendToScratchpad( logMainView_->getSelection() ); } );
+             [ this ]() { Q_EMIT sendToScratchpad( logMainView_->getSelectedText() ); } );
 
     connect( logMainView_, &AbstractLogView::replaceScratchpadWithSelection, this,
-             [ this ]() { Q_EMIT replaceDataInScratchpad( logMainView_->getSelection() ); } );
+             [ this ]() { Q_EMIT replaceDataInScratchpad( logMainView_->getSelectedText() ); } );
 
     connectAllFilteredViewSlots( filteredView_ );
 
@@ -1381,11 +1374,11 @@ void CrawlerWidget::connectAllFilteredViewSlots( FilteredView* view )
              &CrawlerWidget::addColorLabelToSelection );
 
     connect( view, &AbstractLogView::sendSelectionToScratchpad, this,
-             [ view, this ]() { Q_EMIT sendToScratchpad( view->getSelection() ); } );
+             [ view, this ]() { Q_EMIT sendToScratchpad( view->getSelectedText() ); } );
 
     connect( view, &AbstractLogView::replaceScratchpadWithSelection, this,
-             [ view, this ]() { Q_EMIT replaceDataInScratchpad( view->getSelection() ); } );
-
+             [ view, this ]() { Q_EMIT replaceDataInScratchpad( view->getSelectedText() ); } );
+    
     connect( view, &FilteredView::exitView, logMainView_,
              QOverload<>::of( &LogMainView::setFocus ) );
 

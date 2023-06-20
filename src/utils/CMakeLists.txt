@@ -29,4 +29,6 @@ target_link_libraries(
          Qt${QT_VERSION_MAJOR}::Network
          Qt${QT_VERSION_MAJOR}::Concurrent
          whereami
+         type_safe
+         klogg_mimalloc_wrapper
 )

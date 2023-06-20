@@ -102,10 +102,10 @@ class Overview {
     void updateView( unsigned height );
     // Returns a list of lines (between 0 and 'height') representing matches.
     // (pointer returned is valid until next call to update*()
-    const std::vector<WeightedLine>* getMatchLines() const;
+    const klogg::vector<WeightedLine>* getMatchLines() const;
     // Returns a list of lines (between 0 and 'height') representing marks.
     // (pointer returned is valid until next call to update*()
-    const std::vector<WeightedLine>* getMarkLines() const;
+    const klogg::vector<WeightedLine>* getMarkLines() const;
     // Return a pair of lines (between 0 and 'height') representing the current view.
     std::pair<int, int> getViewLines() const;
 
@@ -130,8 +130,8 @@ class Overview {
     bool dirty_;
 
     // List of lines representing matches and marks (are shared with the client)
-    std::vector<WeightedLine> matchLines_;
-    std::vector<WeightedLine> markLines_;
+    klogg::vector<WeightedLine> matchLines_;
+    klogg::vector<WeightedLine> markLines_;
 
     void recalculatesLines();
 };

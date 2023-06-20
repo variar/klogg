@@ -56,6 +56,7 @@
 #include "colorlabelsmanager.h"
 #include "filteredview.h"
 #include "iconloader.h"
+#include "linetypes.h"
 #include "loadingstatus.h"
 #include "logdata.h"
 #include "logfiltereddata.h"
@@ -163,8 +164,8 @@ class CrawlerWidget : public QSplitter,
     // Sent up to the MainWindow to enable/disable the follow mode
     void followModeChanged( bool follow );
     // Sent up when the current line number is updated
-    void newSelection( LineNumber startLine, uint64_t nLines, uint64_t startCol,
-                       uint64_t nSymbols );
+    void newSelection( LineNumber startLine, LinesCount nLines, LineColumn startCol,
+                       LineLength nSymbols );
     // Sent up when user wants to save new predefined filter from current search
     void saveCurrentSearchAsPredefinedFilter( QString newFilter );
 
@@ -194,15 +195,15 @@ class CrawlerWidget : public QSplitter,
     void updateFilteredView( LinesCount nbMatches, int progress, LineNumber initialPosition );
     // Called when a new line has been selected in the filtered view,
     // to instruct the main view to jump to the matching line.
-    void jumpToMatchingLine( LineNumber filteredLineNb, uint64_t nLines, uint64_t startCol,
-                             uint64_t nSymbols );
+    void jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nLines, LineColumn startCol,
+                             LineLength nSymbols );
     // Called when the main view is on a new line number
-    void updateLineNumberHandler( LineNumber line, uint64_t nLines, uint64_t startCol,
-                                  uint64_t nSymbols );
+    void updateLineNumberHandler( LineNumber line, LinesCount nLines, LineColumn startCol,
+                                  LineLength nSymbols );
     // Mark a line that has been clicked on the main (top) view.
-    void markLinesFromMain( const std::vector<LineNumber>& lines );
+    void markLinesFromMain( const klogg::vector<LineNumber>& lines );
     // Mark a line that has been clicked on the filtered (bottom) view.
-    void markLinesFromFiltered( const std::vector<LineNumber>& lines );
+    void markLinesFromFiltered( const klogg::vector<LineNumber>& lines );
 
     void loadingFinishedHandler( LoadingStatus status );
     // Manages the info lines to inform the user the file has changed.
@@ -416,7 +417,7 @@ class CrawlerWidget : public QSplitter,
     bool loadingInProgress_ = true;
     bool firstLoadDone_ = false;
 
-    std::vector<LineNumber> savedMarkedLines_;
+    klogg::vector<LineNumber> savedMarkedLines_;
 
     // Current encoding setting;
     std::optional<int> encodingMib_;

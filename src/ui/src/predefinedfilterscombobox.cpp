@@ -38,7 +38,6 @@
 
 #include "predefinedfilterscombobox.h"
 
-#include <QListView>
 #include <QStandardItemModel>
 #include <QStyledItemDelegate>
 #include <qabstractitemview.h>
@@ -133,7 +132,7 @@ void PredefinedFiltersComboBox::showPopup()
     if ( searchPattern_.useLogicalCombining_ ) {
         delimeter = R"(" or ")";
         // Remove " at the beginning and at the end
-        searchPattern = searchPattern.mid(1, searchPattern.length() - 1);
+        searchPattern = searchPattern.mid(1, searchPattern.size() - 1);
     }
 
     QStringList list = searchPattern.split( QRegularExpression( delimeter ) );

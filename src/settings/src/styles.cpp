@@ -18,7 +18,6 @@
  */
 
 #include <QApplication>
-#include <QColor>
 #include <QPalette>
 #include <QStyleFactory>
 #include <qcolor.h>

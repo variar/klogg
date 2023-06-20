@@ -20,9 +20,10 @@
 #ifndef BLOCKPOOL_H
 #define BLOCKPOOL_H
 
-#include <vector>
 #include <cstddef>
 #include <cstdint>
+
+#include <containers.h>
 
 class BlockPoolBase
 {
@@ -54,14 +55,14 @@ protected:
     size_t lastBlockSize() const;
 
 private:
-  std::vector<uint8_t> pool_;
+  klogg::vector<uint8_t> pool_;
 
   size_t elementSize_;
   size_t alignment_;
 
   size_t allocationSize_;
 
-  std::vector<size_t> blockIndex_;
+  klogg::vector<size_t> blockIndex_;
 };
 
 template<typename ElementType>

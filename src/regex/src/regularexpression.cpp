@@ -25,21 +25,20 @@
 
 #include "configuration.h"
 #include "log.h"
-#include "overload_visitor.h"
 #include "uuid.h"
 
 #include "booleanevaluator.h"
 #include "regularexpression.h"
 
 namespace {
-std::vector<RegularExpressionPattern>
+klogg::vector<RegularExpressionPattern>
 parseBooleanExpressions( QString& pattern, bool isCaseSensitive, bool isPlainText )
 {
     if ( !pattern.contains( '"' ) ) {
         throw std::runtime_error( "Patterns must be enclosed in quotes" );
     }
 
-    std::vector<RegularExpressionPattern> subPatterns;
+    klogg::vector<RegularExpressionPattern> subPatterns;
     subPatterns.reserve( static_cast<size_t>( pattern.size() ) );
 
     int currentIndex = 0;
@@ -47,7 +46,7 @@ parseBooleanExpressions( QString& pattern, bool isCaseSensitive, bool isPlainTex
     int rightQuote = -1;
 
     while ( currentIndex < pattern.size() ) {
-        leftQuote = static_cast<int>( pattern.indexOf( QChar( '"' ), currentIndex ) );
+        leftQuote = type_safe::narrow_cast<int>( pattern.indexOf( QChar( '"' ), currentIndex ) );
         if ( leftQuote < 0 ) {
             break;
         }
@@ -59,7 +58,7 @@ parseBooleanExpressions( QString& pattern, bool isCaseSensitive, bool isPlainTex
         }
 
         while ( currentIndex < pattern.size() ) {
-            rightQuote = static_cast<int>( pattern.indexOf( QChar( '"' ), currentIndex ) );
+            rightQuote = type_safe::narrow_cast<int>( pattern.indexOf( QChar( '"' ), currentIndex ) );
             if ( rightQuote < 0 ) {
                 break;
             }

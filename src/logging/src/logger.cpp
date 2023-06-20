@@ -21,7 +21,6 @@
 #include "log.h"
 
 #include <atomic>
-#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <mutex>

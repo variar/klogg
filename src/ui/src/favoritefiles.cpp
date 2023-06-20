@@ -17,10 +17,6 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <cmath>
-
-#include <QDir>
-#include <QFileInfo>
 #include <QSettings>
 
 #include "favoritefiles.h"

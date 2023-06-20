@@ -26,7 +26,10 @@
 
 #include <QString>
 
+#include "containers.h"
+
 #include "hsregularexpression.h"
+
 
 class PatternMatcher;
 class BooleanExpressionEvaluator;
@@ -45,7 +48,7 @@ class RegularExpression {
     bool isBooleanCombination_ = false;
 
     QString expression_;
-    std::vector<RegularExpressionPattern> subPatterns_;
+    klogg::vector<RegularExpressionPattern> subPatterns_;
 
     bool isValid_ = false;
     QString errorString_;

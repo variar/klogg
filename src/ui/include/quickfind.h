@@ -46,6 +46,7 @@
 #include <QTime>
 
 #include "atomicflag.h"
+#include "linetypes.h"
 #include "qfnotifications.h"
 #include "quickfindpattern.h"
 #include "selection.h"
@@ -151,23 +152,23 @@ class QuickFind : public QObject {
 
     class LastMatchPosition {
       public:
-        void set( LineNumber line, int column );
+        void set( LineNumber line, LineColumn column );
         void set( const FilePosition& position );
         void reset()
         {
             line_ = {};
-            column_ = -1;
+            column_ = LineColumn{-1};
         }
         // Does the passed position come after the recorded one
-        bool isLater( OptionalLineNumber line, int column ) const;
+        bool isLater( OptionalLineNumber line, LineColumn column ) const;
         bool isLater( const FilePosition& position ) const;
         // Does the passed position come before the recorded one
-        bool isSooner( OptionalLineNumber line, int column ) const;
+        bool isSooner( OptionalLineNumber line, LineColumn column ) const;
         bool isSooner( const FilePosition& position ) const;
 
       private:
         OptionalLineNumber line_;
-        int column_{ -1 };
+        LineColumn column_{ -1 };
     };
 
     class IncrementalSearchStatus {

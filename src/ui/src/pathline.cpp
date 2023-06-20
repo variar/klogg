@@ -25,6 +25,7 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 
+#include "containers.h"
 #include "openfilehelper.h"
 
 void PathLine::setPath( const QString& path )
@@ -59,7 +60,7 @@ void PathLine::contextMenuEvent( QContextMenuEvent* event )
              [ this ]( auto ) { QApplication::clipboard()->setText( this->selectedText() ); } );
 
     connect( selectAll, &QAction::triggered, this,
-             [ this ]( auto ) { setSelection( 0, static_cast<int>( this->text().length() ) ); } );
+             [ this ]( auto ) { setSelection( 0, klogg::isize( this->text() ) ); } );
 
     menu.exec( event->globalPos() );
 }

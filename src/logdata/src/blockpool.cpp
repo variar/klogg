@@ -99,7 +99,7 @@ size_t BlockPoolBase::getPaddedElementSize() const
 
 uint32_t BlockPoolBase::currentBlock() const
 {
-    return static_cast<uint32_t>( blockIndex_.size() - 1 );
+    return blockIndex_.empty() ? 0 : type_safe::narrow_cast<uint32_t>( blockIndex_.size() - 1 );
 }
 
 uint8_t* BlockPoolBase::getBlock( size_t elementsCount )

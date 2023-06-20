@@ -41,7 +41,6 @@
 
 #include <qcheckbox.h>
 #include <qcolor.h>
-#include <qlabel.h>
 #include <qlineedit.h>
 #include <qnamespace.h>
 #include <qpushbutton.h>

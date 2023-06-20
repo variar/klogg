@@ -98,12 +98,12 @@ struct CrawlerWidget::access_by<CrawlerWidgetPrivate> {
 
     QString mainViewSelectedText()
     {
-        return crawler->logMainView_->getSelection();
+        return crawler->logMainView_->getSelectedText();
     }
 
     QString filteredViewSelectedText()
     {
-        return crawler->filteredView_->getSelection();
+        return crawler->filteredView_->getSelectedText();
     }
 
     void setSearchPattern( const QString& pattern )

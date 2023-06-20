@@ -46,14 +46,10 @@
 #include <QString>
 #include <QTimer>
 
-#include <algorithm>
 #include <cassert>
-#include <cstdint>
 #include <functional>
-#include <limits>
 #include <numeric>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 #include "logdata.h"
@@ -495,28 +491,28 @@ QString LogFilteredData::doGetExpandedLineString( LineNumber index ) const
 }
 
 // Implementation of the virtual function.
-std::vector<QString> LogFilteredData::doGetLines( LineNumber first_line, LinesCount number ) const
+klogg::vector<QString> LogFilteredData::doGetLines( LineNumber first_line, LinesCount number ) const
 {
     return doGetLines( first_line, number,
                        [ this ]( const auto& line ) { return doGetLineString( line ); } );
 }
 
 // Implementation of the virtual function.
-std::vector<QString> LogFilteredData::doGetExpandedLines( LineNumber first_line,
+klogg::vector<QString> LogFilteredData::doGetExpandedLines( LineNumber first_line,
                                                           LinesCount number ) const
 {
     return doGetLines( first_line, number,
                        [ this ]( const auto& line ) { return doGetExpandedLineString( line ); } );
 }
 
-std::vector<QString>
+klogg::vector<QString>
 LogFilteredData::doGetLines( LineNumber first_line, LinesCount number,
                              const std::function<QString( LineNumber )>& lineGetter ) const
 {
-    std::vector<LineNumber::UnderlyingType> lineNumbers( number.get() );
+    klogg::vector<LineNumber::UnderlyingType> lineNumbers( number.get() );
     std::iota( lineNumbers.begin(), lineNumbers.end(), first_line.get() );
 
-    std::vector<QString> lines( number.get() );
+    klogg::vector<QString> lines( number.get() );
     std::transform(
         lineNumbers.cbegin(), lineNumbers.cend(), lines.begin(),
         [ &lineGetter ]( const auto& line ) { return lineGetter( LineNumber( line ) ); } );

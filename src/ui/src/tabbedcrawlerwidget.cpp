@@ -25,7 +25,6 @@
 #include <QFileInfo>
 #include <QInputDialog>
 #include <QKeyEvent>
-#include <QLabel>
 #include <QMenu>
 
 #include "crawlerwidget.h"
@@ -139,6 +138,8 @@ void TabbedCrawlerWidget::addTabBarItem( int index, const QString& fileName )
     tabData[ StatusKey ] = static_cast<int>( DataStatus::OLD_DATA );
 
     myTabBar_.setTabData( index, tabData );
+
+    setCurrentIndex(index);
 
     if ( count() > 1 )
         myTabBar_.show();

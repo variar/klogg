@@ -38,15 +38,12 @@
 
 #include "log.h"
 
-#include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QLineEdit>
 #include <QToolButton>
 #include <qcheckbox.h>
 #include <qkeysequence.h>
 #include <qlineedit.h>
-#include <qpushbutton.h>
 #include <qregularexpression.h>
 
 #include "configuration.h"
@@ -226,7 +223,7 @@ QToolButton* QuickFindWidget::setupToolButton( const QString& text, const QStrin
     toolButton->setAutoRaise( true );
     toolButton->setIcon( QIcon( icon ) );
 
-    if ( text.length() > 0 ) {
+    if ( text.size() > 0 ) {
         toolButton->setText( text );
         toolButton->setToolButtonStyle( Qt::ToolButtonTextBesideIcon );
     }

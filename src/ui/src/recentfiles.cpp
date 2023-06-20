@@ -22,6 +22,7 @@
 #include <algorithm>
 
 #include "configuration.h"
+#include "containers.h"
 #include "log.h"
 #include "recentfiles.h"
 
@@ -58,7 +59,7 @@ void RecentFiles::addRecent( const QString& text )
 
 int RecentFiles::getNumberItemsToShow() const
 {
-    return std::min( static_cast<int>( recentFiles_.size() ), filesHistoryMaxItemsToShow_ );
+    return std::min( klogg::isize( recentFiles_ ), filesHistoryMaxItemsToShow_ );
 }
 
 int RecentFiles::filesHistoryMaxItems() const

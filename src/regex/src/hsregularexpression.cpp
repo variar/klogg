@@ -22,9 +22,6 @@
 #include <numeric>
 #include <qregularexpression.h>
 #include <string_view>
-#include <vector>
-
-#include <QRegularExpression>
 
 #ifdef KLOGG_HAS_HS
 #include "hsregularexpression.h"
@@ -118,11 +115,11 @@ MatchedPatterns HsNoopMatcher::match( const std::string_view& ) const
 }
 
 HsRegularExpression::HsRegularExpression( const RegularExpressionPattern& pattern )
-    : HsRegularExpression( std::vector<RegularExpressionPattern>{ pattern } )
+    : HsRegularExpression( klogg::vector<RegularExpressionPattern>{ pattern } )
 {
 }
 
-HsRegularExpression::HsRegularExpression( const std::vector<RegularExpressionPattern>& patterns )
+HsRegularExpression::HsRegularExpression( const klogg::vector<RegularExpressionPattern>& patterns )
     : patterns_( patterns )
 {
     auto requiredInstructuins = CpuInstructions::SSE2;
@@ -130,12 +127,12 @@ HsRegularExpression::HsRegularExpression( const std::vector<RegularExpressionPat
 
     if ( hasRequiredInstructions( supportedCpuInstructions(), requiredInstructuins ) ) {
         database_ = HsDatabase{ makeUniqueResource<hs_database_t, hs_free_database>(
-            []( const std::vector<RegularExpressionPattern>& expressions,
+            []( const klogg::vector<RegularExpressionPattern>& expressions,
                 QString& errorMessage ) -> hs_database_t* {
                 hs_database_t* db = nullptr;
                 hs_compile_error_t* error = nullptr;
 
-                std::vector<unsigned> flags( expressions.size() );
+                klogg::vector<unsigned> flags( expressions.size() );
                 std::transform( expressions.cbegin(), expressions.cend(), flags.begin(),
                                 []( const auto& expression ) {
                                     auto expressionFlags
@@ -146,7 +143,7 @@ HsRegularExpression::HsRegularExpression( const std::vector<RegularExpressionPat
                                     return expressionFlags;
                                 } );
 
-                std::vector<QByteArray> utf8Patterns( expressions.size() );
+                klogg::vector<QByteArray> utf8Patterns( expressions.size() );
                 std::transform( expressions.cbegin(), expressions.cend(), utf8Patterns.begin(),
                                 []( const auto& expression ) {
                                     auto p = expression.pattern;
@@ -156,11 +153,11 @@ HsRegularExpression::HsRegularExpression( const std::vector<RegularExpressionPat
                                     return p.toUtf8();
                                 } );
 
-                std::vector<const char*> patternPointers( utf8Patterns.size() );
+                klogg::vector<const char*> patternPointers( utf8Patterns.size() );
                 std::transform( utf8Patterns.cbegin(), utf8Patterns.cend(), patternPointers.begin(),
                                 []( const auto& utf8Pattern ) { return utf8Pattern.data(); } );
 
-                std::vector<unsigned> expressionIds( expressions.size() );
+                klogg::vector<unsigned> expressionIds( expressions.size() );
                 std::iota( expressionIds.begin(), expressionIds.end(), 0u );
 
                 const auto compileResult

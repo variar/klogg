@@ -104,13 +104,13 @@ class SimpleLinePositionStorage {
         storage_.pop_back();
     }
 
-    operator const std::vector<OffsetInFile>&() const
+    operator const klogg::vector<OffsetInFile>&() const
     {
         return storage_;
     }
 
   private:
-    std::vector<OffsetInFile> storage_;
+    klogg::vector<OffsetInFile> storage_;
 };
 
 // This class is a list of end of lines position,

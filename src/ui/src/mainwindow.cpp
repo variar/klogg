@@ -41,12 +41,12 @@
 // load/save the settings on opening/closing of the app
 
 #include "configuration.h"
+#include "containers.h"
 #include "log.h"
 #include <QNetworkReply>
 #include <cassert>
 #include <exception>
 
-#include <cmath>
 #include <iterator>
 #include <qaction.h>
 #include <qapplication.h>
@@ -56,7 +56,6 @@
 #include <windows.h>
 #endif // Q_OS_WIN
 
-#include <QAction>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QDialogButtonBox>
@@ -96,7 +95,6 @@
 #include "mainwindowtext.h"
 #include "openfilehelper.h"
 #include "optionsdialog.h"
-#include "predefinedfilters.h"
 #include "predefinedfiltersdialog.h"
 #include "progress.h"
 #include "readablesize.h"
@@ -163,8 +161,8 @@ MainWindow::MainWindow( WindowSession session )
     // Actions from the CrawlerWidget
     signalMux_.connect( SIGNAL( followModeChanged( bool ) ), this,
                         SLOT( changeFollowMode( bool ) ) );
-    signalMux_.connect( SIGNAL( newSelection( LineNumber, uint64_t, uint64_t, uint64_t ) ), this,
-                        SLOT( lineNumberHandler( LineNumber, uint64_t, uint64_t, uint64_t ) ) );
+    signalMux_.connect( SIGNAL( newSelection( LineNumber, LinesCount, LineColumn, LineLength ) ), this,
+                        SLOT( lineNumberHandler( LineNumber, LinesCount, LineColumn, LineLength ) ) );
     signalMux_.connect( SIGNAL( saveCurrentSearchAsPredefinedFilter( QString ) ), this,
                         SLOT( newPredefinedFilterHandler( QString ) ) );
 
@@ -1050,7 +1048,7 @@ void MainWindow::closeAll( ActionInitiator initiator )
 void MainWindow::selectAll()
 {
     if ( infoLine->hasFocus() ) {
-        infoLine->setSelection( 0, static_cast<int>( infoLine->text().length() ) );
+        infoLine->setSelection( 0, klogg::isize( infoLine->text() ) );
     }
     else if ( auto current = currentCrawlerWidget(); current != nullptr ) {
         current->selectAll();
@@ -1188,8 +1186,6 @@ void MainWindow::options()
 
         newWindowAction->setVisible( config.allowMultipleWindows() );
         followAction->setEnabled( config.anyFileWatchEnabled() );
-
-        textWrapAction->setChecked( config.useTextWrap() );
 
         updateShortcuts();
         updateRecentFileActions();

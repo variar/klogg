@@ -42,13 +42,10 @@
 #include <QFileDialog>
 #include <QTimer>
 #include <QToolButton>
-#include <qabstractitemmodel.h>
 #include <qboxlayout.h>
 #include <qcheckbox.h>
 #include <qglobal.h>
 #include <qwidget.h>
-#include <tuple>
-#include <vector>
 
 #include "dispatch_to.h"
 #include "iconloader.h"

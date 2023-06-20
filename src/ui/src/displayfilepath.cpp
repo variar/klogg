@@ -34,21 +34,21 @@ QString shrinkPath( QString fullPath, int limit, QString delimiter = "…" )
     const auto fileName = fileInfo.fileName();
     const auto absoluteNativePath = QDir::toNativeSeparators( fileInfo.absolutePath() );
 
-    const auto idealMinLength = fileName.length() + delimiter.length();
+    const auto idealMinLength = fileName.size() + delimiter.size();
 
     // less than the minimum amt
-    if ( limit < ( ( 2 * delimiter.length() ) + 1 ) ) {
+    if ( limit < ( ( 2 * delimiter.size() ) + 1 ) ) {
         return "";
     }
 
     // fullpath
-    if ( limit >= fullPath.length() ) {
+    if ( limit >= fullPath.size() ) {
         return QDir::toNativeSeparators( fullPath );
     }
 
     // file name condensing
     if ( limit < idealMinLength ) {
-        return delimiter + fileName.mid( 0, ( limit - ( 2 * delimiter.length() ) ) ) + delimiter;
+        return delimiter + fileName.mid( 0, ( limit - ( 2 * delimiter.size() ) ) ) + delimiter;
     }
 
     // whole name only, no folder structure shown

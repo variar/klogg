@@ -37,7 +37,6 @@
  */
 
 #include "log.h"
-#include <QMessageBox>
 #include <QtGlobal>
 #include <qapplication.h>
 #include <qthreadpool.h>
@@ -45,21 +44,18 @@
 #ifdef Q_OS_WIN
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#if defined( KLOGG_USE_MIMALLOC )
-#include <mimalloc-new-delete.h>
-#endif
 #endif // _WIN32
 
-#if defined( KLOGG_USE_TBBMALLOC )
-#include <tbb/tbbmalloc_proxy.h>
-#elif defined( KLOGG_USE_MIMALLOC )
 #include <mimalloc.h>
+#include <roaring.hh>
+
+#ifdef KLOGG_HAS_HS
+#include <hs.h>
 #endif
 
 #include "tbb/global_control.h"
 
 #include "configuration.h"
-#include "cpu_info.h"
 #include "logger.h"
 #include "mainwindow.h"
 #include "styles.h"
@@ -143,13 +139,22 @@ int main( int argc, char* argv[] )
         = tbb::global_control::active_value( tbb::global_control::max_allowed_parallelism );
 
     LOG_INFO << "Klogg instance"
-#ifdef KLOGG_USE_MIMALLOC
              << ", mimalloc v" << mi_version()
-#endif
-#ifdef KLOGG_USE_TBBMALLOC
-             << ", tbbmalloc " << TBB_runtime_version()
-#endif
              << ", default concurrency " << maxConcurrency;
+
+
+    roaring_memory_t roaring_memory_allocators;
+    roaring_memory_allocators.malloc = mi_malloc;
+    roaring_memory_allocators.realloc = mi_realloc;
+    roaring_memory_allocators.calloc = mi_calloc;
+    roaring_memory_allocators.free = mi_free;
+    roaring_memory_allocators.aligned_malloc = mi_aligned_alloc;
+    roaring_memory_allocators.aligned_free = mi_free;
+    roaring_init_memory_hook(roaring_memory_allocators);
+
+#ifdef KLOGG_HAS_HS
+    hs_set_allocator(mi_malloc, mi_free);
+#endif
 
     if ( maxConcurrency < 2 ) {
         maxConcurrency = 2;

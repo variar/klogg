@@ -61,13 +61,6 @@ set(MAIN_LIBS
     kdsingleapp
 )
 
-if(KLOGG_OVERRIDE_MALLOC)
-  list(PREPEND MAIN_LIBS klogg_malloc_proxy)
-  if(KLOGG_USE_MIMALLOC AND NOT WIN32)
-    list(PREPEND MAIN_SOURCES $<TARGET_OBJECTS:mimalloc-obj>)
-  endif()
-endif()
-
 add_executable(klogg ${OS_BUNDLE} ${MAIN_SOURCES} ${KLOGG_UI_SOURCES})
 add_executable(klogg_portable ${OS_BUNDLE} ${MAIN_SOURCES} ${KLOGG_UI_SOURCES})
 add_executable(klogg_grep ${MAIN_SOURCES} ${KLOGG_GREP_SOURCES})

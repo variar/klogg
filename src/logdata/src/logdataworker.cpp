@@ -36,14 +36,11 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <algorithm>
 #include <chrono>
-#include <cmath>
 #include <exception>
 #include <functional>
-#include <qrunnable.h>
+#include <qglobal.h>
 #include <qthread.h>
-#include <qthreadpool.h>
 #include <string_view>
 #include <thread>
 
@@ -51,7 +48,6 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QSemaphore>
-#include <QThreadPool>
 #include <tuple>
 
 #include "configuration.h"
@@ -67,7 +63,6 @@
 #include "runnable_lambda.h"
 
 #include "logdataworker.h"
-#include "synchronization.h"
 
 constexpr int IndexingBlockSize = 1 * 1024 * 1024;
 
@@ -116,18 +111,18 @@ QTextCodec* IndexingData::getForcedEncoding() const
     return encodingForced_;
 }
 
-void IndexingData::addAll( const QByteArray& block, LineLength length,
+void IndexingData::addAll( const klogg::vector<char>& block, LineLength length,
                            const FastLinePositionArray& linePosition, QTextCodec* encoding )
 
 {
-    maxLength_ = qMax( maxLength_, length );
+    maxLength_ = std::max( maxLength_, length );
     linePosition_.append_list( linePosition );
 
-    if ( !block.isEmpty() ) {
-        hash_.size += block.size();
+    if ( !block.empty() ) {
+        hash_.size += klogg::ssize( block );
 
         if ( !useFastModificationDetection_ ) {
-            hashBuilder_.addData( block.data(), static_cast<size_t>( block.size() ) );
+            hashBuilder_.addData( block.data(), block.size() );
             hash_.fullDigest = hashBuilder_.digest();
         }
     }
@@ -349,7 +344,7 @@ std::string_view::size_type findNextSingleByteDelimeter( EncodingParameters, std
 int charOffsetWithinBlock( const char* blockStart, const char* pointer,
                            const EncodingParameters& encodingParams )
 {
-    return static_cast<int>( std::distance( blockStart, pointer ) )
+    return type_safe::narrow_cast<int>( std::distance( blockStart, pointer ) )
            - encodingParams.getBeforeCrOffset();
 }
 
@@ -357,8 +352,9 @@ using FindDelimeter = std::string_view::size_type ( * )( EncodingParameters enco
                                                          std::string_view, char );
 
 LineLength::UnderlyingType
-expandTabsInLine( const QByteArray& block, std::string_view blockToExpand, int posWithinBlock,
-                  EncodingParameters encodingParams, FindDelimeter findNextDelimeter,
+expandTabsInLine( const klogg::vector<char>& block, std::string_view blockToExpand,
+                  int posWithinBlock, EncodingParameters encodingParams,
+                  FindDelimeter findNextDelimeter,
                   LineLength::UnderlyingType initialAdditionalSpaces = 0 )
 {
     auto additionalSpaces = initialAdditionalSpaces;
@@ -387,11 +383,11 @@ expandTabsInLine( const QByteArray& block, std::string_view blockToExpand, int p
 }
 
 std::tuple<bool, int, LineLength::UnderlyingType>
-findNextLineFeed( const QByteArray& block, int posWithinBlock, const IndexingState& state,
+findNextLineFeed( const klogg::vector<char>& block, int posWithinBlock, const IndexingState& state,
                   FindDelimeter findNextDelimeter )
 {
     const auto searchStart = block.data() + posWithinBlock;
-    const auto searchLineSize = static_cast<size_t>( block.size() - posWithinBlock );
+    const auto searchLineSize = static_cast<size_t>( klogg::ssize( block ) - posWithinBlock );
 
     const auto blockView = std::string_view( searchStart, searchLineSize );
     const auto nextLineFeed = findNextDelimeter( state.encodingParams, blockView, '\n' );
@@ -411,7 +407,7 @@ findNextLineFeed( const QByteArray& block, int posWithinBlock, const IndexingSta
 } // namespace parse_data_block
 
 FastLinePositionArray IndexOperation::parseDataBlock( OffsetInFile::UnderlyingType blockBeginning,
-                                                      const QByteArray& block,
+                                                      const klogg::vector<char>& block,
                                                       IndexingState& state ) const
 {
     using namespace parse_data_block;
@@ -428,16 +424,16 @@ FastLinePositionArray IndexOperation::parseDataBlock( OffsetInFile::UnderlyingTy
     FastLinePositionArray linePositions;
 
     while ( !isEndOfBlock ) {
-        if ( state.pos > blockBeginning + block.size() ) {
+        if ( state.pos > blockBeginning + klogg::ssize( block ) ) {
             LOG_ERROR << "Trying to parse out of block: " << state.pos << " " << blockBeginning
                       << " " << block.size();
             break;
         }
 
         auto posWithinBlock
-            = static_cast<int>( state.pos >= blockBeginning ? ( state.pos - blockBeginning ) : 0u );
+            = type_safe::narrow_cast<int>( state.pos >= blockBeginning ? ( state.pos - blockBeginning ) : 0 );
 
-        isEndOfBlock = posWithinBlock == block.size();
+        isEndOfBlock = posWithinBlock == klogg::ssize( block );
 
         if ( !isEndOfBlock ) {
             std::tie( isEndOfBlock, posWithinBlock, state.additional_spaces )
@@ -446,7 +442,7 @@ FastLinePositionArray IndexOperation::parseDataBlock( OffsetInFile::UnderlyingTy
 
         const auto currentDataEnd = posWithinBlock + blockBeginning;
 
-        const auto length = ( currentDataEnd - state.pos ) / state.encodingParams.lineFeedWidth
+        const auto length = type_safe::narrow_cast<LineLength::UnderlyingType>( currentDataEnd - state.pos ) / state.encodingParams.lineFeedWidth
                             + state.additional_spaces;
 
         state.max_length = std::max( state.max_length, length );
@@ -462,7 +458,7 @@ FastLinePositionArray IndexOperation::parseDataBlock( OffsetInFile::UnderlyingTy
     return linePositions;
 }
 
-void IndexOperation::guessEncoding( const QByteArray& block,
+void IndexOperation::guessEncoding( const klogg::vector<char>& block,
                                     IndexingData::MutateAccessor& scopedAccessor,
                                     IndexingState& state ) const
 {
@@ -504,33 +500,33 @@ std::chrono::microseconds IndexOperation::readFileInBlocks( QFile& file,
             break;
         }
 
-        BlockData blockData{ file.pos(), QByteArray{ IndexingBlockSize, Qt::Uninitialized } };
+        BlockData blockData{ file.pos(), new klogg::vector<char>( IndexingBlockSize ) };
 
         clock::time_point ioT1 = clock::now();
         const auto readBytes
-            = static_cast<int>( file.read( blockData.second.data(), blockData.second.size() ) );
+            = file.read( blockData.second->data(), klogg::ssize( *blockData.second ) );
 
         if ( readBytes < 0 ) {
             LOG_ERROR << "Reading past the end of file";
             break;
         }
 
-        if ( readBytes < blockData.second.size() ) {
-            blockData.second.resize( readBytes );
+        if ( readBytes < klogg::ssize( *blockData.second ) ) {
+            blockData.second->resize( static_cast<size_t>( readBytes ) );
         }
 
         clock::time_point ioT2 = clock::now();
 
         ioDuration += duration_cast<microseconds>( ioT2 - ioT1 );
 
-        LOG_DEBUG << "Sending block " << blockData.first << " size " << blockData.second.size();
+        LOG_DEBUG << "Sending block " << blockData.first << " size " << blockData.second->size();
 
-        while ( !blockPrefetcher.try_put( blockData ) && !interruptRequest_ ) {
+        while ( !blockPrefetcher.try_put( std::move( blockData ) ) && !interruptRequest_ ) {
             std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
         }
     }
 
-    auto lastBlock = std::make_pair( -1, QByteArray{} );
+    auto lastBlock = std::make_pair( -1, new klogg::vector<char>{} );
     while ( !blockPrefetcher.try_put( lastBlock ) && !interruptRequest_ ) {
         std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
     }
@@ -542,7 +538,7 @@ std::chrono::microseconds IndexOperation::readFileInBlocks( QFile& file,
 void IndexOperation::indexNextBlock( IndexingState& state, const BlockData& blockData )
 {
     const auto& blockBeginning = blockData.first;
-    const auto& block = blockData.second;
+    const auto& block = *blockData.second;
 
     LOG_DEBUG << "Indexing block " << blockBeginning << " start";
 
@@ -554,7 +550,7 @@ void IndexOperation::indexNextBlock( IndexingState& state, const BlockData& bloc
 
     guessEncoding( block, scopedAccessor, state );
 
-    if ( !block.isEmpty() ) {
+    if ( !block.empty() ) {
         const auto linePositions = parseDataBlock( blockBeginning, block, state );
         auto maxLength = state.max_length;
         if ( maxLength > std::numeric_limits<LineLength::UnderlyingType>::max() ) {
@@ -563,7 +559,7 @@ void IndexOperation::indexNextBlock( IndexingState& state, const BlockData& bloc
         }
 
         scopedAccessor.addAll( block,
-                               LineLength( static_cast<LineLength::UnderlyingType>( maxLength ) ),
+                               LineLength( type_safe::narrow_cast<LineLength::UnderlyingType>( maxLength ) ),
                                linePositions, state.encodingGuess );
 
         // Update the caller for progress indication
@@ -638,6 +634,7 @@ void IndexOperation::doIndex( OffsetInFile initialPosition )
     auto blockParser = tbb::flow::function_node<BlockData, tbb::flow::continue_msg>(
         indexingGraph, tbb::flow::serial, [ this, &state ]( const BlockData& blockData ) {
             indexNextBlock( state, blockData );
+            delete blockData.second;
             return tbb::flow::continue_msg{};
         } );
 

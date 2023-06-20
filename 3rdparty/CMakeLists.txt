@@ -2,6 +2,8 @@ set(QAPPLICATION_CLASS QApplication)
 
 include(CPM)
 
+set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
+
 cpmaddpackage("gh:simdutf/simdutf@3.2.13")
 cpmaddpackage("gh:foonathan/type_safe@0.2.2")
 
@@ -27,7 +29,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   variar/CRoaring
   GIT_TAG
-  0e4e32b7ceb3d6d63535d8b7195d3142647ea5af
+  80a8dcf4f683f00cc9be180f8b18de13491b7e27
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
@@ -103,17 +105,16 @@ cpmaddpackage(
 )
 if(Uchardet_ADDED)
   message("Adding alias for uchardet")
-  add_library(uchardet_wrapper INTERFACE)
-  target_link_libraries(uchardet_wrapper INTERFACE libuchardet)
-  target_include_directories(uchardet_wrapper INTERFACE ${Uchardet_SOURCE_DIR}/src)
+  add_library(klogg_uchardet_wrapper INTERFACE)
+  target_link_libraries(klogg_uchardet_wrapper INTERFACE libuchardet)
+  target_include_directories(klogg_uchardet_wrapper INTERFACE ${Uchardet_SOURCE_DIR}/src)
 else()
-  add_library(uchardet_wrapper INTERFACE)
-  target_link_libraries(uchardet_wrapper INTERFACE ${UCHARDET_LIBRARY})
-  target_include_directories(uchardet_wrapper INTERFACE ${UCHARDET_INCLUDE_DIR})
+  add_library(klogg_uchardet_wrapper INTERFACE)
+  target_link_libraries(klogg_uchardet_wrapper INTERFACE ${UCHARDET_LIBRARY})
+  target_include_directories(klogg_uchardet_wrapper INTERFACE ${UCHARDET_INCLUDE_DIR})
 endif()
 
 if(${QT_VERSION_MAJOR} EQUAL 6) 
-set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
 set(CPM_USE_LOCAL_PACKAGES OFF)
 endif()
 
@@ -225,7 +226,6 @@ cpmaddpackage(
 )
 if(whereami_ADDED)
   add_library(whereami STATIC ${whereami_SOURCE_DIR}/src/whereami.h ${whereami_SOURCE_DIR}/src/whereami.c)
-
   target_include_directories(whereami PUBLIC ${whereami_SOURCE_DIR}/src)
 endif()
 
@@ -315,13 +315,36 @@ if(WIN32)
   set(BUILD_SHARED_LIBS OFF)
 endif()
 
-if(TARGET tbbmalloc_proxy)
-  add_library(tbbmalloc_proxy_wrapper ALIAS tbbmalloc_proxy)
+set(CPM_USE_LOCAL_PACKAGES OFF)
+cpmaddpackage(
+  NAME
+  mimalloc
+  GITHUB_REPOSITORY
+  microsoft/mimalloc
+  VERSION
+  2.1.2
+  EXCLUDE_FROM_ALL
+  YES
+  OPTIONS
+  "MI_BUILD_TESTS OFF"
+  "MI_SECURE OFF"
+  "MI_BUILD_SHARED OFF"
+  "MI_BUILD_STATIC ON"
+  "MI_BUILD_OBJECT OFF"
+  "MI_OVERRIDE OFF"
+)
+if(mimalloc_ADDED)
+  message("Adding alias for mimalloc")
+  add_library(klogg_mimalloc_wrapper INTERFACE)
+  target_link_libraries(klogg_mimalloc_wrapper INTERFACE mimalloc-static)
+  target_include_directories(klogg_mimalloc_wrapper INTERFACE ${mimalloc_SOURCE_DIR}/include)
 else()
-  add_library(tbbmalloc_proxy_wrapper INTERFACE)
-  find_package(tbbmalloc_proxy)
-  target_link_libraries(tbbmalloc_proxy_wrapper INTERFACE ${TBB_MALLOC_PROXY_LIBRARIES})
+  add_library(klogg_mimalloc_wrapper INTERFACE)
+  target_link_libraries(klogg_mimalloc_wrapper INTERFACE ${MIMALLOC_LIBRARY})
+  target_include_directories(klogg_mimalloc_wrapper INTERFACE ${MIMALLOC_INCLUDE_DIR})
 endif()
+
+set(CPM_USE_LOCAL_PACKAGES ${_TMP_CPM_USE_LOCAL_PACKAGES})
 
 set(klogg_cpm_targets
     xxhash
@@ -337,7 +360,8 @@ set(klogg_cpm_targets
     hs
     tbb
     exprtk,
-    type_safe
+    type_safe,
+    mimalloc-static
 )
 foreach(target ${klogg_cpm_targets})
   if(TARGET ${target})
@@ -346,41 +370,10 @@ foreach(target ${klogg_cpm_targets})
       TARGET ${target}
       PROPERTY INTERFACE_INCLUDE_DIRECTORIES
     )
+    #message("Marking ${${target}_include_dirs} as system incldue")
     set_property(TARGET ${target} PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${${target}_include_dirs})
   endif()
 endforeach()
-
-if(KLOGG_OVERRIDE_MALLOC)
-  add_library(klogg_malloc_proxy INTERFACE)
-  target_compile_definitions(klogg_malloc_proxy INTERFACE -DKLOGG_OVERRIDE_MALLOC)
-
-  if(NOT WIN32 AND KLOGG_USE_MIMALLOC)
-    target_compile_definitions(klogg_malloc_proxy INTERFACE -DKLOGG_USE_MIMALLOC)
-
-    cpmaddpackage(
-      NAME
-      mimalloc
-      GITHUB_REPOSITORY
-      microsoft/mimalloc
-      VERSION
-      2.0.5
-      EXCLUDE_FROM_ALL
-      YES
-      OPTIONS
-      "MI_BUILD_TESTS OFF"
-      "MI_SECURE ON"
-      "MI_BUILD_SHARED OFF"
-      "MI_BUILD_STATIC OFF"
-      "MI_BUILD_OBJECT ON"
-    )
-    if(mimalloc_ADDED)
-      target_link_libraries(klogg_malloc_proxy INTERFACE mimalloc-obj)
-    endif()
-  else()
-    target_compile_definitions(klogg_malloc_proxy INTERFACE -DKLOGG_USE_TBBMALLOC)
-    target_link_libraries(klogg_malloc_proxy INTERFACE tbbmalloc_proxy_wrapper)
-  endif()
-endif()
 
 if(KLOGG_USE_SENTRY)
   set(SENTRY_BACKEND
