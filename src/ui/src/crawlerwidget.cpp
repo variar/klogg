@@ -375,15 +375,20 @@ void CrawlerWidget::startNewSearch()
     if ( keepSearchResultsButton_->isChecked() ) {
         keepSearchResultsButton_->setChecked( false );
 
-        logFilteredData_ = std::make_shared<LogFilteredData>( logData_.get() );
+        logFilteredData_->interruptSearch();
+        logFilteredData_ = logData_->getNewFilteredData();
+
         filteredView_ = new FilteredView( logFilteredData_.get(), quickFindPattern_.get() );
         filteredViewsData_[ filteredView_ ] = logFilteredData_;
         connectAllFilteredViewSlots( filteredView_ );
         auto index = tabbedFilteredView_->addTab( filteredView_, "" );
         tabbedFilteredView_->setCurrentIndex( index );
+
         connect( logFilteredData_.get(), &LogFilteredData::searchProgressed, this,
                  &CrawlerWidget::updateFilteredView, Qt::QueuedConnection );
+
         logMainView_->useNewFiltering( logFilteredData_.get() );
+
         applyConfiguration();
     }
 
@@ -1224,6 +1229,7 @@ void CrawlerWidget::setup()
              &CrawlerWidget::clearSearchLimits );
 
     connect( tabbedFilteredView_, &QTabWidget::currentChanged, [ this ]( int index ) {
+        logFilteredData_->interruptSearch();
         filteredView_ = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( index ) );
         logFilteredData_ = filteredViewsData_[ filteredView_ ];
     } );
