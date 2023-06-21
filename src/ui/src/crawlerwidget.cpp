@@ -548,8 +548,8 @@ void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nL
                                                nSymbols ); // FIXME: should be done with a signal.
 }
 
-void CrawlerWidget::updateLineNumberHandler( LineNumber line, LinesCount nLines, LineColumn startCol,
-                                             LineLength nSymbols )
+void CrawlerWidget::updateLineNumberHandler( LineNumber line, LinesCount nLines,
+                                             LineColumn startCol, LineLength nSymbols )
 {
     currentLineNumber_ = line;
     Q_EMIT newSelection( line, nLines, startCol, nSymbols );
@@ -1309,7 +1309,7 @@ void CrawlerWidget::saveSplitterSizes() const
     auto& splitterConfig = Configuration::get();
     splitterConfig.setSplitterSizes( sizes() );
     splitterConfig.save();
-};
+}
 
 void CrawlerWidget::changeFontSize( bool increase )
 {
@@ -1338,7 +1338,7 @@ void CrawlerWidget::changeFontSize( bool increase )
 
 void CrawlerWidget::connectAllFilteredViewSlots( FilteredView* view )
 {
-    connect( view, &FilteredView::newSelection, [ view, this ]( auto ) { view->update(); } );
+    connect( view, &FilteredView::newSelection, [ view ]( auto ) { view->update(); } );
 
     connect( view, &FilteredView::newSelection, this, &CrawlerWidget::jumpToMatchingLine );
 
@@ -1384,7 +1384,7 @@ void CrawlerWidget::connectAllFilteredViewSlots( FilteredView* view )
 
     connect( view, &AbstractLogView::replaceScratchpadWithSelection, this,
              [ view, this ]() { Q_EMIT replaceDataInScratchpad( view->getSelectedText() ); } );
-    
+
     connect( view, &FilteredView::exitView, logMainView_,
              QOverload<>::of( &LogMainView::setFocus ) );
 
