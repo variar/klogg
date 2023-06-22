@@ -98,7 +98,7 @@ PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     palette.setColor( QPalette::Base, palette.color( QPalette::Window ) );
     view()->setPalette( palette );
 
-    view()->setFixedWidth(200);
+    view()->setFixedWidth( 200 );
 }
 
 void PredefinedFiltersComboBox::populatePredefinedFilters()
