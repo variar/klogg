@@ -71,8 +71,12 @@ const std::map<std::string, QStringList>& ShortcutAction::defaultShortcuts()
         shortcuts.emplace( MainWindowScratchpad, QStringList() );
         shortcuts.emplace( MainWindowSelectOpenFile, QStringList() << "Ctrl+Shift+O" );
 
-        shortcuts.emplace( CrawlerChangeVisibility, QStringList()
+        shortcuts.emplace( CrawlerChangeVisibilityForward, QStringList()
+                                                        << QKeySequence( Qt::Key_QuoteLeft ).toString()
                                                         << QKeySequence( Qt::Key_V ).toString() );
+        shortcuts.emplace( CrawlerChangeVisibilityBackward, QStringList()
+                                                        << "Shift+`"
+                                                        << "Shift+V" );
         shortcuts.emplace( CrawlerIncreseTopViewSize,
                            QStringList() << QKeySequence( Qt::Key_Plus ).toString() );
         shortcuts.emplace( CrawlerDecreaseTopViewSize,
@@ -200,8 +204,10 @@ QString ShortcutAction::actionName( const std::string& action )
         shortcuts.emplace( MainWindowScratchpad, QApplication::tr( "Open scratchpad" ) );
         shortcuts.emplace( MainWindowSelectOpenFile, QApplication::tr( "Switch to file" ) );
 
-        shortcuts.emplace( CrawlerChangeVisibility,
-                           QApplication::tr( "Change filtered lines visibility" ) );
+        shortcuts.emplace( CrawlerChangeVisibilityForward,
+                           QApplication::tr( "Change filtered lines visibility forward" ) );
+        shortcuts.emplace( CrawlerChangeVisibilityBackward,
+                           QApplication::tr( "Change filtered lines visibility backward" ) );
         shortcuts.emplace( CrawlerIncreseTopViewSize, QApplication::tr( "Increase main view" ) );
         shortcuts.emplace( CrawlerDecreaseTopViewSize, QApplication::tr( "Decrease main view" ) );
 
