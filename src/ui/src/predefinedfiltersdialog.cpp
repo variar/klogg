@@ -223,6 +223,8 @@ void PredefinedFiltersDialog::addFilterRow( const QString& newFilter )
     filtersTableWidget->scrollToItem( filtersTableWidget->item( newRow, 0 ) );
     filtersTableWidget->setCurrentCell( newRow, 0 );
     filtersTableWidget->editItem( filtersTableWidget->item( newRow, 0 ) );
+
+    filtersTableWidget->resizeRowToContents( newRow );
 }
 
 void PredefinedFiltersDialog::removeFilter()
