@@ -288,7 +288,7 @@ QString ShortcutAction::actionName( const std::string& action )
 
     const auto name = actionNames.find( action );
 
-    return name != actionNames.end() ? name->second : QString::fromStdString( action );
+    return name != actionNames.end() ? name->second : "";
 }
 
 void ShortcutAction::registerShortcut( const ConfiguredShortcuts& configuredShortcuts,
