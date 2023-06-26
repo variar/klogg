@@ -1343,6 +1343,30 @@ void CrawlerWidget::registerShortcuts()
 
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerChangeVisibilityToMarksAndMatches, [ this ]() {
+            if ( visibilityBox_->count() > 0 ) {
+                visibilityBox_->setCurrentIndex( 0 );
+            }
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerChangeVisibilityToMarks, [ this ]() {
+            if ( visibilityBox_->count() > 1 ) {
+                visibilityBox_->setCurrentIndex( 1 );
+            }
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerChangeVisibilityToMatches, [ this ]() {
+            if ( visibilityBox_->count() > 2 ) {
+                visibilityBox_->setCurrentIndex( 2 );
+            }
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
         ShortcutAction::CrawlerIncreseTopViewSize, [ this ]() { changeTopViewSize( 1 ); } );
 
     ShortcutAction::registerShortcut(

@@ -77,6 +77,12 @@ const std::map<std::string, QStringList>& ShortcutAction::defaultShortcuts()
         shortcuts.emplace( CrawlerChangeVisibilityBackward, QStringList()
                                                         << "Shift+`"
                                                         << "Shift+V" );
+        shortcuts.emplace( CrawlerChangeVisibilityToMarksAndMatches,
+                          QStringList() << QKeySequence( Qt::Key_1 ).toString() );
+        shortcuts.emplace( CrawlerChangeVisibilityToMarks,
+                          QStringList() << QKeySequence( Qt::Key_2 ).toString() );
+        shortcuts.emplace( CrawlerChangeVisibilityToMatches,
+                          QStringList() << QKeySequence( Qt::Key_3 ).toString() );
         shortcuts.emplace( CrawlerIncreseTopViewSize,
                            QStringList() << QKeySequence( Qt::Key_Plus ).toString() );
         shortcuts.emplace( CrawlerDecreaseTopViewSize,
@@ -208,6 +214,12 @@ QString ShortcutAction::actionName( const std::string& action )
                            QApplication::tr( "Change filtered lines visibility forward" ) );
         shortcuts.emplace( CrawlerChangeVisibilityBackward,
                            QApplication::tr( "Change filtered lines visibility backward" ) );
+        shortcuts.emplace( CrawlerChangeVisibilityToMarksAndMatches,
+                          QApplication::tr( "Change filtered lines visibility to marks and matches" ) );
+        shortcuts.emplace( CrawlerChangeVisibilityToMarks,
+                          QApplication::tr( "Change filtered lines visibility to marks" ) );
+        shortcuts.emplace( CrawlerChangeVisibilityToMatches,
+                          QApplication::tr( "Change filtered lines visibility to matches" ) );
         shortcuts.emplace( CrawlerIncreseTopViewSize, QApplication::tr( "Increase main view" ) );
         shortcuts.emplace( CrawlerDecreaseTopViewSize, QApplication::tr( "Decrease main view" ) );
 

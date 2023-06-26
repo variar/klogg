@@ -30,8 +30,11 @@ class QWidget;
 class QShortcut;
 
 struct ShortcutAction {
-    static constexpr auto CrawlerChangeVisibilityForward = "crawler.change_visibility_type_forward";
+    static constexpr auto CrawlerChangeVisibilityForward = "crawler.change_visibility_type";
     static constexpr auto CrawlerChangeVisibilityBackward = "crawler.change_visibility_type_backward";
+    static constexpr auto CrawlerChangeVisibilityToMarksAndMatches = "crawler.change_visibility_type_marks_and_matches";
+    static constexpr auto CrawlerChangeVisibilityToMarks = "crawler.change_visibility_type_marks";
+    static constexpr auto CrawlerChangeVisibilityToMatches = "crawler.change_visibility_type_matches";
     static constexpr auto CrawlerIncreseTopViewSize = "crawler.increase_top_view_size";
     static constexpr auto CrawlerDecreaseTopViewSize = "crawler.decrease_top_view_size";
 
