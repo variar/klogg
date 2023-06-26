@@ -98,6 +98,7 @@ PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     palette.setColor( QPalette::Base, palette.color( QPalette::Window ) );
     view()->setPalette( palette );
 
+    view()->setTextElideMode( Qt::ElideNone );
     setSizeAdjustPolicy( QComboBox::AdjustToContents );
 }
 
