@@ -78,11 +78,11 @@ const std::map<std::string, QStringList>& ShortcutAction::defaultShortcuts()
                                                         << "Shift+`"
                                                         << "Shift+V" );
         shortcuts.emplace( CrawlerChangeVisibilityToMarksAndMatches,
-                          QStringList() << QKeySequence( Qt::Key_1 ).toString() );
+                           QStringList() << QKeySequence( Qt::Key_1 ).toString() );
         shortcuts.emplace( CrawlerChangeVisibilityToMarks,
-                          QStringList() << QKeySequence( Qt::Key_2 ).toString() );
+                           QStringList() << QKeySequence( Qt::Key_2 ).toString() );
         shortcuts.emplace( CrawlerChangeVisibilityToMatches,
-                          QStringList() << QKeySequence( Qt::Key_3 ).toString() );
+                           QStringList() << QKeySequence( Qt::Key_3 ).toString() );
         shortcuts.emplace( CrawlerIncreseTopViewSize,
                            QStringList() << QKeySequence( Qt::Key_Plus ).toString() );
         shortcuts.emplace( CrawlerDecreaseTopViewSize,
