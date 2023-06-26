@@ -665,15 +665,10 @@ void OptionsDialog::buildShortcutsTable( bool useDefaultsOnly )
     }
 
     for ( const auto& [ action, keys ] : shortcuts ) {
-        auto shortcutActionName = ShortcutAction::actionName( action );
-        if ( shortcutActionName.isEmpty() ) {
-            continue;
-        }
-
         auto currentRow = shortcutsTable->rowCount();
         shortcutsTable->insertRow( currentRow );
 
-        auto keyItem = new QTableWidgetItem( shortcutActionName );
+        auto keyItem = new QTableWidgetItem( ShortcutAction::actionName( action ) );
         keyItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable );
         keyItem->setData( Qt::UserRole, QString::fromStdString( action ) );
         shortcutsTable->setItem( currentRow, 0, keyItem );
