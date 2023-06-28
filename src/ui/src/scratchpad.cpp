@@ -320,7 +320,7 @@ void ScratchPad::hexToDec()
 void ScratchPad::formatJson()
 {
     transformTextInPlace( []( QString text ) {
-        const auto start = text.indexOf( '{' );
+        const auto start = std::min(text.indexOf( '{' ), text.indexOf('['));
 
         QJsonParseError parseError;
         auto json = QJsonDocument::fromJson( text.mid( start ).toUtf8(), &parseError );
