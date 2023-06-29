@@ -1246,6 +1246,7 @@ void CrawlerWidget::setup()
 
         filteredViewsData_.erase( tmp );
         tabbedFilteredView_->removeTab( index );
+        tmp->deleteLater();
     } );
 
     connect( logMainView_, &LogMainView::saveDefaultSplitterSizes, this,
