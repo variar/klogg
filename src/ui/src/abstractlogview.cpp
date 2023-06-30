@@ -740,14 +740,15 @@ void AbstractLogView::mouseMoveEvent( QMouseEvent* mouseEvent )
                 update();
             }
             selectionCurrentEndPos_ = thisEndPos;
-
-            // Do we need to scroll while extending the selection?
-            QRect visible = viewport()->rect();
-            if ( visible.contains( mouseEvent->pos() ) )
-                autoScrollTimer_.stop();
-            else if ( !autoScrollTimer_.isActive() )
-                autoScrollTimer_.start( 100, this );
         }
+
+        // Do we need to scroll while extending the selection?
+        QRect visible = viewport()->rect();
+        visible.setLeft( leftMarginPx_ );
+        if ( visible.contains( mouseEvent->pos() ) )
+            autoScrollTimer_.stop();
+        else if ( !autoScrollTimer_.isActive() )
+            autoScrollTimer_.start( 100, this );
     }
     else {
         considerMouseHovering( mouseEvent->pos().x(), mouseEvent->pos().y() );
@@ -791,6 +792,7 @@ void AbstractLogView::timerEvent( QTimerEvent* timerEvent )
 {
     if ( timerEvent->timerId() == autoScrollTimer_.timerId() ) {
         QRect visible = viewport()->rect();
+        visible.setLeft( leftMarginPx_ );
         const QPoint globalPos = QCursor::pos();
         const QPoint pos = viewport()->mapFromGlobal( globalPos );
         QMouseEvent ev( QEvent::MouseMove, pos, globalPos, Qt::LeftButton, Qt::LeftButton,
