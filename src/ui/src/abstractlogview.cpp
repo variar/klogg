@@ -253,18 +253,22 @@ class WrappedLinesView {
 
     klogg::vector<WrappedString> mid( LineColumn start, LineLength length ) const
     {
+        auto getLength = []( const auto& view ) -> LineLength::UnderlyingType {
+            return type_safe::narrow_cast<LineLength::UnderlyingType>( view.size() );
+        };
+
         klogg::vector<WrappedString> resultChunks;
         if ( wrappedLines_.size() == 1 ) {
-            resultChunks.push_back( wrappedLines_.front().mid( start.get(), length.get() ) );
+            auto& wrappedLine = wrappedLines_.front();
+            resultChunks.push_back( wrappedLine.mid(
+                start.get(), std::min( length.get(), getLength( wrappedLine ) ) ) );
             return resultChunks;
         }
 
         size_t wrappedLineIndex = 0;
         auto positionInWrappedLine = start.get();
-        while ( positionInWrappedLine > type_safe::narrow_cast<LineLength::UnderlyingType>(
-                    wrappedLines_[ wrappedLineIndex ].size() ) ) {
-            positionInWrappedLine -= type_safe::narrow_cast<LineLength::UnderlyingType>(
-                wrappedLines_[ wrappedLineIndex ].size() );
+        while ( positionInWrappedLine > getLength( wrappedLines_[ wrappedLineIndex ] ) ) {
+            positionInWrappedLine -= getLength( wrappedLines_[ wrappedLineIndex ] );
             wrappedLineIndex++;
             if ( wrappedLineIndex >= wrappedLines_.size() ) {
                 return resultChunks;
@@ -273,21 +277,21 @@ class WrappedLinesView {
 
         auto chunkLength = length.get();
         while ( positionInWrappedLine + chunkLength
-                > type_safe::narrow_cast<LineLength::UnderlyingType>(
-                    wrappedLines_[ wrappedLineIndex ].size() ) ) {
+                > getLength( wrappedLines_[ wrappedLineIndex ] ) ) {
             resultChunks.push_back(
                 wrappedLines_[ wrappedLineIndex ].mid( positionInWrappedLine ) );
             wrappedLineIndex++;
             positionInWrappedLine = 0;
-            chunkLength -= type_safe::narrow_cast<LineLength::UnderlyingType>( resultChunks.back().size() );
+            chunkLength -= getLength( resultChunks.back() );
             if ( wrappedLineIndex >= wrappedLines_.size() ) {
                 return resultChunks;
             }
         }
 
         if ( chunkLength > 0 ) {
-            resultChunks.push_back(
-                wrappedLines_[ wrappedLineIndex ].mid( positionInWrappedLine, chunkLength ) );
+            auto& wrappedLine = wrappedLines_[ wrappedLineIndex ];
+            resultChunks.push_back( wrappedLine.mid(
+                positionInWrappedLine, std::min( chunkLength, getLength( wrappedLine ) ) ) );
         }
 
         return resultChunks;

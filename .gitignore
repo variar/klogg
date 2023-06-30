@@ -54,6 +54,7 @@ website/public
 .idea/
 cmake-build-debug/
 cmake-build-release/
+cmake-build-relwithdebinfo/
 
 #website
 website/hugo
