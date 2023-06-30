@@ -22,13 +22,13 @@
     <message>
         <location filename="../../ui/src/abstractlogview.cpp" line="573"/>
         <source>Copy this line with line number</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">拷贝当前行并附加行号</translation>
     </message>
     <message>
         <location filename="../../ui/src/abstractlogview.cpp" line="585"/>
         <location filename="../../ui/src/abstractlogview.cpp" line="2020"/>
         <source>Copy with line numbers</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">拷贝并附加行号</translation>
     </message>
     <message>
         <location filename="../../ui/src/abstractlogview.cpp" line="629"/>
@@ -777,17 +777,17 @@
     <message>
         <location filename="../../ui/include/optionsdialog.ui" line="230"/>
         <source>Text</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">文本</translation>
     </message>
     <message>
         <location filename="../../ui/include/optionsdialog.ui" line="238"/>
         <source>Font family: </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">字体: </translation>
     </message>
     <message>
         <location filename="../../ui/include/optionsdialog.ui" line="255"/>
         <source>Font size: </source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">大小: </translation>
     </message>
     <message>
         <location filename="../../ui/include/optionsdialog.ui" line="276"/>
@@ -797,7 +797,7 @@
     <message>
         <location filename="../../ui/include/optionsdialog.ui" line="283"/>
         <source>Wrap text</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">文本换行</translation>
     </message>
     <message>
         <location filename="../../ui/include/optionsdialog.ui" line="297"/>
@@ -1274,7 +1274,7 @@
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="198"/>
         <source>Toggle text wrap</source>
-        <translation type="unfinished"></translation>
+        <translation>切换自动换行</translation>
     </message>
     <message>
         <location filename="../../settings/src/shortcuts.cpp" line="199"/>
@@ -1823,7 +1823,7 @@
     <message>
         <location filename="../../ui/src/mainwindowtext.cpp" line="68"/>
         <source>&amp;Wrap text</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">文本换行(&amp;W)</translation>
     </message>
     <message>
         <location filename="../../ui/src/mainwindowtext.cpp" line="69"/>
@@ -1918,12 +1918,12 @@
     <message>
         <location filename="../../ui/src/mainwindowtext.cpp" line="89"/>
         <source>Generate crash dump</source>
-        <translation>生产崩溃报告</translation>
+        <translation>生成崩溃报告</translation>
     </message>
     <message>
         <location filename="../../ui/src/mainwindowtext.cpp" line="90"/>
         <source>Generate diagnostic crash dump</source>
-        <translation>生产崩溃诊断报告</translation>
+        <translation>生成崩溃诊断报告</translation>
     </message>
     <message>
         <location filename="../../ui/src/mainwindowtext.cpp" line="91"/>
