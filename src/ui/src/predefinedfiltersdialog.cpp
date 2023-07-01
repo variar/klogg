@@ -169,7 +169,10 @@ void PredefinedFiltersDialog::populateFiltersTable(
         filterIndex++;
     }
 
+    filtersTableWidget->horizontalHeader()->setSectionResizeMode( 0, QHeaderView::ResizeToContents );
     filtersTableWidget->horizontalHeader()->setSectionResizeMode( 1, QHeaderView::Stretch );
+    filtersTableWidget->verticalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents );
+    filtersTableWidget->setWordWrap( false );
 
     updateButtons();
 }
