@@ -72,11 +72,9 @@ const std::map<std::string, QStringList>& ShortcutAction::defaultShortcuts()
         shortcuts.emplace( MainWindowSelectOpenFile, QStringList() << "Ctrl+Shift+O" );
 
         shortcuts.emplace( CrawlerChangeVisibilityForward, QStringList()
-                                                        << QKeySequence( Qt::Key_QuoteLeft ).toString()
-                                                        << QKeySequence( Qt::Key_V ).toString() );
+                                                               << QKeySequence( Qt::Key_V ).toString() );
         shortcuts.emplace( CrawlerChangeVisibilityBackward, QStringList()
-                                                        << "Shift+`"
-                                                        << "Shift+V" );
+                                                               << "Shift+V" );
         shortcuts.emplace( CrawlerChangeVisibilityToMarksAndMatches,
                            QStringList() << QKeySequence( Qt::Key_1 ).toString() );
         shortcuts.emplace( CrawlerChangeVisibilityToMarks,
