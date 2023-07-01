@@ -611,6 +611,18 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             setSelectionEndAction_->setEnabled( false );
         }
 
+        bool hasUnmarkedLines = false;
+        auto lines = selection_.getLines();
+        for ( auto i = 0u; i < lines.size(); ++i ) {
+            using LineTypeFlags = AbstractLogData::LineTypeFlags;
+            const auto currentLineType = lineType( lines[ i ] );
+            if ( !currentLineType.testFlag( LineTypeFlags::Mark ) ) {
+                hasUnmarkedLines = true;
+                break;
+            }
+        }
+        markAction_->setText( hasUnmarkedLines ? tr( "&Mark" ) : tr( "Unmark" ) );
+
         if ( selection_.isPortion() ) {
             findNextAction_->setEnabled( true );
             findPreviousAction_->setEnabled( true );
