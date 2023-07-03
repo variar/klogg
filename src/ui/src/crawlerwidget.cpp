@@ -1239,6 +1239,7 @@ void CrawlerWidget::setup()
         logFilteredData_->interruptSearch();
         if ( index >= 0 ) {
             filteredView_ = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( index ) );
+            changeFilteredViewVisibility( visibilityBox_->currentIndex() );
             logFilteredData_ = filteredViewsData_.at( filteredView_ );
             logMainView_->useNewFiltering( logFilteredData_.get() );
         }
