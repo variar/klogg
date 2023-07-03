@@ -385,7 +385,7 @@ void CrawlerWidget::startNewSearch()
 
         connect( filteredView_, &QObject::destroyed, this, [ this ]( QObject* view ) {
             filteredViewsData_.erase( qobject_cast<FilteredView*>( view ) );
-        } );
+            }, Qt::QueuedConnection );
 
         connectAllFilteredViewSlots( filteredView_ );
 
