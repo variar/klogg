@@ -262,8 +262,8 @@ class WrappedLinesView {
         klogg::vector<WrappedString> resultChunks;
         if ( wrappedLines_.size() == 1 ) {
             auto& wrappedLine = wrappedLines_.front();
-            resultChunks.push_back( wrappedLine.mid(
-                start.get(), std::min( length.get(), getLength( wrappedLine ) ) ) );
+            auto len = std::min( length.get(), getLength( wrappedLine ) - start.get() );
+            resultChunks.push_back( wrappedLine.mid( start.get(), ( len > 0 ? len : 0 ) ) );
             return resultChunks;
         }
 
@@ -292,8 +292,9 @@ class WrappedLinesView {
 
         if ( chunkLength > 0 ) {
             auto& wrappedLine = wrappedLines_[ wrappedLineIndex ];
-            resultChunks.push_back( wrappedLine.mid(
-                positionInWrappedLine, std::min( chunkLength, getLength( wrappedLine ) ) ) );
+            auto len = std::min( chunkLength, getLength( wrappedLine ) - positionInWrappedLine );
+            resultChunks.push_back(
+                wrappedLine.mid( positionInWrappedLine, ( len > 0 ? len : 0 ) ) );
         }
 
         return resultChunks;
