@@ -383,10 +383,6 @@ void CrawlerWidget::startNewSearch()
         filteredView_ = new FilteredView( logFilteredData_.get(), quickFindPattern_.get() );
         filteredViewsData_[ filteredView_ ] = logFilteredData_;
 
-        connect( filteredView_, &QObject::destroyed, this, [ this ]( QObject* view ) {
-            filteredViewsData_.erase( qobject_cast<FilteredView*>( view ) );
-        } );
-
         connectAllFilteredViewSlots( filteredView_ );
 
         auto index = tabbedFilteredView_->addTab( filteredView_, "" );
@@ -1254,6 +1250,7 @@ void CrawlerWidget::setup()
         }
 
         tabbedFilteredView_->removeTab( index );
+        filteredViewsData_.erase( qobject_cast<FilteredView*>( tmp ) );
         tmp->deleteLater();
     } );
 
