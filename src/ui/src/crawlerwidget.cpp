@@ -169,7 +169,7 @@ CrawlerWidget::CrawlerWidget( QWidget* parent )
 CrawlerWidget::~CrawlerWidget()
 {
     for ( const auto& [ view, data ] : filteredViewsData_ ) {
-        view->disconnect( SIGNAL(destroyed()) );
+        view->disconnect( SIGNAL( destroyed() ) );
     }
 }
 
