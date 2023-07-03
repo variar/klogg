@@ -84,6 +84,7 @@ class CrawlerWidget : public QSplitter,
 
   public:
     CrawlerWidget( QWidget* parent = nullptr );
+    ~CrawlerWidget();
 
     // Get the line number of the first line displayed.
     LineNumber getTopLine() const;

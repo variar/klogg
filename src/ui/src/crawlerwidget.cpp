@@ -166,6 +166,13 @@ CrawlerWidget::CrawlerWidget( QWidget* parent )
 {
 }
 
+CrawlerWidget::~CrawlerWidget()
+{
+    for ( const auto& [ view, data ] : filteredViewsData_ ) {
+        view->disconnect( SIGNAL(destroyed()) );
+    }
+}
+
 // The top line is first one on the main display
 LineNumber CrawlerWidget::getTopLine() const
 {
