@@ -161,8 +161,9 @@ MainWindow::MainWindow( WindowSession session )
     // Actions from the CrawlerWidget
     signalMux_.connect( SIGNAL( followModeChanged( bool ) ), this,
                         SLOT( changeFollowMode( bool ) ) );
-    signalMux_.connect( SIGNAL( newSelection( LineNumber, LinesCount, LineColumn, LineLength ) ), this,
-                        SLOT( lineNumberHandler( LineNumber, LinesCount, LineColumn, LineLength ) ) );
+    signalMux_.connect(
+        SIGNAL( newSelection( LineNumber, LinesCount, LineColumn, LineLength ) ), this,
+        SLOT( lineNumberHandler( LineNumber, LinesCount, LineColumn, LineLength ) ) );
     signalMux_.connect( SIGNAL( saveCurrentSearchAsPredefinedFilter( QString ) ), this,
                         SLOT( newPredefinedFilterHandler( QString ) ) );
 
@@ -1309,8 +1310,8 @@ void MainWindow::changeFollowMode( bool follow )
     followAction->setChecked( follow );
 }
 
-void MainWindow::lineNumberHandler( LineNumber startLine, uint64_t nLines, uint64_t startCol,
-                                    uint64_t nSymbols )
+void MainWindow::lineNumberHandler( LineNumber startLine, LinesCount nLines, LineColumn startCol,
+                                    LineLength nSymbols )
 {
     // The line number received is the internal (starts at 0)
     uint64_t fileSize{};
@@ -1320,26 +1321,26 @@ void MainWindow::lineNumberHandler( LineNumber startLine, uint64_t nLines, uint6
     session_.getFileInfo( currentCrawlerWidget(), &fileSize, &fileNbLine, &lastModified );
 
     if ( fileNbLine != 0 ) {
-        if ( nSymbols == 0 ) {
+        if ( nSymbols.get() == 0 ) {
             lineNbField->setText( tr( "Ln:%1/%2" ).arg( startLine.get() + 1 ).arg( fileNbLine ) );
         }
         else {
-            if ( nLines == 1 ) {
+            if ( nLines.get() == 1 ) {
                 // portion selection on one line
                 lineNbField->setText( tr( "Ln:%1/%2 Col:%3 Sel:%4|%5" )
                                           .arg( startLine.get() + 1 )
                                           .arg( fileNbLine )
-                                          .arg( startCol )
-                                          .arg( nSymbols )
-                                          .arg( nLines ) );
+                                          .arg( startCol.get() )
+                                          .arg( nSymbols.get() )
+                                          .arg( nLines.get() ) );
             }
             else {
                 // multiple lines selection
                 lineNbField->setText( tr( "Ln:%1/%2 Sel:%4|%5" )
                                           .arg( startLine.get() + 1 )
                                           .arg( fileNbLine )
-                                          .arg( nSymbols )
-                                          .arg( nLines ) );
+                                          .arg( nSymbols.get() )
+                                          .arg( nLines.get() ) );
             }
         }
     }
@@ -1388,7 +1389,7 @@ void MainWindow::handleLoadingFinished( LoadingStatus status )
         stopAction->setEnabled( false );
         reloadAction->setEnabled( true );
 
-        lineNumberHandler( 0_lnum, 0, 0, 0 );
+        lineNumberHandler( 0_lnum, LinesCount( 0 ), LineColumn( 0 ), LineLength( 0 ) );
 
         // Now everything is ready, we can finally show the file!
         currentCrawlerWidget()->show();
