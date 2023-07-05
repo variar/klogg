@@ -1236,6 +1236,7 @@ void CrawlerWidget::setup()
         logFilteredData_->interruptSearch();
         if ( index >= 0 ) {
             filteredView_ = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( index ) );
+            Q_EMIT filteredViewChanged();
             logFilteredData_ = filteredViewsData_.at( filteredView_ );
             logMainView_->useNewFiltering( logFilteredData_.get() );
             changeFilteredViewVisibility( visibilityBox_->currentIndex() );
@@ -1250,7 +1251,7 @@ void CrawlerWidget::setup()
         }
 
         tabbedFilteredView_->removeTab( index );
-        filteredViewsData_.erase( qobject_cast<FilteredView*>( tmp ) );
+        filteredViewsData_.erase( tmp );
         tmp->deleteLater();
     } );
 

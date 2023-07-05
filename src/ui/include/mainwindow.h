@@ -164,6 +164,9 @@ class MainWindow : public QMainWindow {
     void handleSearchRefreshChanged( bool isRefreshing );
     void handleMatchCaseChanged( bool matchCase );
 
+    // Update quick find searchable
+    void handleFilteredViewChanged();
+
     // Close the tab with the passed index
     void closeTab( int index, ActionInitiator initiator );
     // Setup the tab with current index for view

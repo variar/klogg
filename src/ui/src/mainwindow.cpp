@@ -185,6 +185,9 @@ MainWindow::MainWindow( WindowSession session )
     signalMux_.connect( SIGNAL( matchCaseChanged( bool ) ), this,
                         SLOT( handleMatchCaseChanged( bool ) ) );
 
+    signalMux_.connect( SIGNAL( filteredViewChanged() ), this,
+                       SLOT( handleFilteredViewChanged() ) );
+
     // Configure the main tabbed widget
     mainTabWidget_.setDocumentMode( true );
     mainTabWidget_.setMovable( true );
@@ -1423,6 +1426,16 @@ void MainWindow::handleMatchCaseChanged( bool matchCase )
     auto& config = Configuration::get();
     config.setSearchIgnoreCaseDefault( !matchCase );
     config.save();
+}
+
+void MainWindow::handleFilteredViewChanged()
+{
+    int currentIndex = mainTabWidget_.currentIndex();
+    if ( currentIndex >= 0 )
+    {
+        auto* crawler_widget = static_cast<CrawlerWidget*>( mainTabWidget_.widget( currentIndex ) );
+        quickFindMux_.registerSelector( crawler_widget );
+    }
 }
 
 void MainWindow::closeTab( int index, ActionInitiator initiator )

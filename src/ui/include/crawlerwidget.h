@@ -181,6 +181,9 @@ class CrawlerWidget : public QSplitter,
     // available) has changed
     void dataStatusChanged( DataStatus status );
 
+    // Sent up when the current filtered view has been changed
+    void filteredViewChanged();
+
   private Q_SLOTS:
     // Instructs the widget to start a search using the current search line.
     void startNewSearch();
