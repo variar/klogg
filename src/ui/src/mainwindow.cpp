@@ -1431,8 +1431,7 @@ void MainWindow::handleMatchCaseChanged( bool matchCase )
 void MainWindow::handleFilteredViewChanged()
 {
     int currentIndex = mainTabWidget_.currentIndex();
-    if ( currentIndex >= 0 )
-    {
+    if ( currentIndex >= 0 ) {
         auto* crawler_widget = static_cast<CrawlerWidget*>( mainTabWidget_.widget( currentIndex ) );
         quickFindMux_.registerSelector( crawler_widget );
     }
