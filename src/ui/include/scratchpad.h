@@ -29,6 +29,10 @@ class QPlainTextEdit;
 class QStatusBar;
 class QLineEdit;
 
+namespace klogg {
+class DateTimeBox;
+} // namespace klogg
+
 class ScratchPad : public QWidget {
     Q_OBJECT
   public:
@@ -48,7 +52,6 @@ class ScratchPad : public QWidget {
   private Q_SLOTS:
     void crc32Hex();
     void crc32Dec();
-    void unixTime();
     void fileTime();
     void decToHex();
     void hexToDec();
@@ -75,10 +78,10 @@ class ScratchPad : public QWidget {
 
     QLineEdit* crc32HexBox_;
     QLineEdit* crc32DecBox_;
-    QLineEdit* unixTimeBox_;
     QLineEdit* fileTimeBox_;
     QLineEdit* decToHexBox_;
     QLineEdit* hexToDecBox_;
+    klogg::DateTimeBox* timeBox_;
 };
 
 #endif // SCRATCHPAD_H
