@@ -1,0 +1,19 @@
+Origin: klogg.filimonov.dev/deb/bionic
+Label: klogg.filimonov.dev/deb/bionic
+Codename: bionic
+Date: Sat, 15 Jul 2023 16:12:45 UTC
+Architectures: amd64
+Components: utils
+Description: Klogg repository
+MD5Sum:
+ ff9e5b3bd91a59ee684107e5faa8c39f 985 utils/binary-amd64/Packages
+ beff90eebd1a12258c89b232952ad03d 633 utils/binary-amd64/Packages.gz
+ edb8bfc5ba3d5f9e33eb654cf8d1c081 144 utils/binary-amd64/Release
+SHA1:
+ 2ee4d9fe79652935638038fd2e4089184c411e3f 985 utils/binary-amd64/Packages
+ 19cf283be494d099f159e6e1799b8acf61688004 633 utils/binary-amd64/Packages.gz
+ 2d9dc5b2f59b633a9ff6ddbd962b7dbc3defd267 144 utils/binary-amd64/Release
+SHA256:
+ 96e8a7e13d769a5bc96ec9552b1aec63d4b8e7f42ae3a07b0104d9de8565f987 985 utils/binary-amd64/Packages
+ 51db4a42da05ea0e0776fe05831e0fbc2c7e8c252b33d537db4e2ebb05fd6bb2 633 utils/binary-amd64/Packages.gz
+ 90a3661f23c90ce581690e232862960b712eb5c17c998bbf717374e8a7e95238 144 utils/binary-amd64/Release

@@ -1,0 +1,21 @@
+Package: klogg
+Architecture: amd64
+Depends: libc6 (>= 2.18), libgcc1 (>= 1:4.2), libqt5core5a (>= 5.9.0~beta), libqt5gui5 (>= 5.8.0), libqt5network5 (>= 5.9.0~beta), libqt5widgets5 (>= 5.6.0~beta), libqt5xml5 (>= 5.0.2), libssl1.1 (>= 1.1.0), libstdc++6 (>= 5.2), zlib1g (>= 1:1.1.4)
+Priority: optional
+Section: utils
+Filename: pool/utils/k/klogg/klogg_22.06.0.1289_amd64.deb
+Size: 12643020
+SHA256: 62474e4b6280e7c5b4f80868dfaa58b24ff572742736e4f8e2ce6117df23d055
+SHA1: 40367d5450c75fa6e3c803aa797bbc77b4115540
+MD5sum: 878459dcdac6a573096f3c1472fa9e1a
+Description: klogg log viewer
+ Klogg is a multi-platform GUI application that helps browse and search
+ through long and complex log files. It is designed with programmers and
+ system administrators in mind and can be seen as a graphical, interactive
+ combination of grep, less, and tail.
+ .
+Homepage: http://github.com/variar/klogg
+Maintainer: Anton Filimonov <anton.filimonov@gmail.com>
+Version: 22.06.0.1289
+Installed-Size: 37483
+

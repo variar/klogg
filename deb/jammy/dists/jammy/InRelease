@@ -1,0 +1,38 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: klogg.filimonov.dev/deb/jammy
+Label: klogg.filimonov.dev/deb/jammy
+Codename: jammy
+Date: Sat, 15 Jul 2023 16:12:24 UTC
+Architectures: amd64
+Components: utils
+Description: Klogg repository
+MD5Sum:
+ 70ae51f18d98bcaf2e0b6851db3a8427 1013 utils/binary-amd64/Packages
+ 0cc3090f48c21f1318035c7ba8326deb 647 utils/binary-amd64/Packages.gz
+ c002ba1f810fefa789f651586037c700 142 utils/binary-amd64/Release
+SHA1:
+ c6c124dc0fd9d69c5136e94b535670756ef95795 1013 utils/binary-amd64/Packages
+ 9999c5278b5c7710209a0561ef4102e85571617e 647 utils/binary-amd64/Packages.gz
+ 267d0d1b967e38522fdbb9667b0586f870ddcec2 142 utils/binary-amd64/Release
+SHA256:
+ 46f2c386ae44f0dcd95a21fce4765795c5082de8bb55e34ccdf52b730aa2c812 1013 utils/binary-amd64/Packages
+ bc3eef4ae3edac5b9f7b825a1ce33792282e868c955d25af812685d3f3367436 647 utils/binary-amd64/Packages.gz
+ 401521baf59b3de82c7f2a853faa0160aa84dfae3ac426a7d5454c8186ce0269 142 utils/binary-amd64/Release
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEed57eGBjZGNvG/dh/jntpLijRXEFAmSyxWgACgkQ/jntpLij
+RXH7uQ//X1CrHgv7JlaZgUguquPtKutMoJOWkDRgq3hKvd+SSa883WrRm9UiYBC2
+lOcDPm3Lhy6KChLh5shNzdMvKX3X3nRRXbeRsg61q2u/pBC9rXRjOXL8ZetbyAc+
+bX+xYX8E6nXNE/gpMTX9cWCmg9mcQo04aO+53CGPg1KjlhxJwLJDhWyNYbQsg7Q/
++J7BFqS7gXp/iYow9AeQWKJ8gImrfpf/L8YHfjlw3F56RrV4Mjmqbc4k1eRS1rpT
+iKqzPv2VcRaiQ1L5kzN97Pasij8qPPSakMS2X+4WTPQhDMQ0FQiC5KD0G/3gfJ0s
+nvxf7n1W43MQC7kF263ZQ+UMsznToIN2AeTp55k4FQhWFr8CIUVirtBzdsAsiiDp
+Jg9hAVHsC6HjXewRPG485QrhNLyLW6N3TOAMsQfWEqve9pZXylGz0BERZY3GOXgp
+b+nSga4kvapwWV4YYy9W6FJbSKfVmUQwUbh4aZfvfoFkZMGgimFOldCwmmRLaeut
+E/kWVRPfDOdrXFjfESWRdi9Jez65v6x0mFNeVx1W6WBAkTO3Hg0bEQmHk4fzW7ho
+JL3mxlHOjheQW5/HGMzJKa+ow3SbCwqh9z/af5m1cwh9X4eIXcE67fUCgOsgEB/V
+GLHxIFmQ9e8F/AQ8OFit33vQwE2Ii/mw3PK5yuBdYkUlnN3MT5g=
+=5dNA
+-----END PGP SIGNATURE-----

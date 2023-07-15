@@ -1,0 +1,8 @@
+Origin: klogg.filimonov.dev/deb/jammy
+Label: klogg.filimonov.dev/deb/jammy
+Codename: jammy
+Architectures: amd64
+Components: utils
+Description: Klogg repository
+SignWith: B8A34571
+

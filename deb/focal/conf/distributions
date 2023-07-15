@@ -1,0 +1,8 @@
+Origin: klogg.filimonov.dev/deb/focal
+Label: klogg.filimonov.dev/deb/focal
+Codename: focal
+Architectures: amd64
+Components: utils
+Description: Klogg repository
+SignWith: B8A34571
+

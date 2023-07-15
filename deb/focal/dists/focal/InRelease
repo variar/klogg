@@ -1,0 +1,38 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: klogg.filimonov.dev/deb/focal
+Label: klogg.filimonov.dev/deb/focal
+Codename: focal
+Date: Sat, 15 Jul 2023 16:12:08 UTC
+Architectures: amd64
+Components: utils
+Description: Klogg repository
+MD5Sum:
+ 4a89687f432af1e8ae6a8bde104b5127 1018 utils/binary-amd64/Packages
+ a9bf839bab6896c5edb938b2055c3891 644 utils/binary-amd64/Packages.gz
+ 581ac36b5ff04f9de218041b400b2ac5 142 utils/binary-amd64/Release
+SHA1:
+ 330a067c5da25415a34391b060d29bcbfa2618cf 1018 utils/binary-amd64/Packages
+ 75c3d1dec76004263e5f0fbba5d2b6b391beb27a 644 utils/binary-amd64/Packages.gz
+ 6e4e12b80a00822a5f6c809596c330e8ea9a0492 142 utils/binary-amd64/Release
+SHA256:
+ dc0016e9dd4831c0553c74d30eb379d4def699c3107b7ec21d91763815195f3f 1018 utils/binary-amd64/Packages
+ c5f45516552f45fb6bbecd1a6c16bbf9bb983f438801e0a086ed4172d00e0861 644 utils/binary-amd64/Packages.gz
+ 82369443de5d9ada7dbeffcea7a1291af7d0f46e4eb84d374ca6a187dd811915 142 utils/binary-amd64/Release
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCgAdFiEEed57eGBjZGNvG/dh/jntpLijRXEFAmSyxVgACgkQ/jntpLij
+RXH5EA/+O8CoGa+W5UhkEIbA5+EyfEiHhJf6Tf/5WdlyZCM7f7YzKq2BQsLjzy7I
+s1n7ShYxCnMI6CKBUFN9fe+ExlNbycxzdd6JXoI8kZNZlRFJYj/zxCpA1+CVy04l
+i2ZMiB14NjDL3aJZJ4lwpp+XAJ8FsdwmPAOlMvjxJ6dlgBEwI4vBp8h/lWUuFyao
+fSVNWlEm5UfhV3rv86pkavZ5xiAiChmhPH0vRyjqLReJ7CZZfJYoOF2DT/lEYTki
+WtVHD3s5+9Aw4MGaxV6u+Kg1AcWnRdBuoN1Su+ybO7UEmCtc5PWrBAzzTrCoN4Wc
+g4F5aL9w9DMIQBx7HBE6RQEIHOV6/P8fatkqobj9a5eCgPQETQcVqRZhzC70Ad5p
+yvyIvr1Emhj4/cdGqTNuOBZ7/aipjMLYWSa9pIfVPxTZxH3HOS9ClJqgaOKlqPZc
+PUKNbgWuGsWwnwopZKZSgwEApi0Bi+ItKCoWYyaodeEeXhNv549/3FuWZlfBmMvW
+D7Gy76wDtcxDRpM2RCmrV0ajgZJDy6Y3id6mby6/4Jeetv0HHGGXk62jTjZxAd6C
+fCNbPDcm2G2yn+Pj+EWWuPdqJaFBawImrmGGjDAEbtUEHgkQVHVFxvBOB9dyNMIJ
+xZX7VZM4Rk8vd/uZV1NAWLVxdgX7capeac0ex2MlGXsoMv/QRuM=
+=Dvtz
+-----END PGP SIGNATURE-----

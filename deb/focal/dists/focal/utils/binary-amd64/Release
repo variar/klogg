@@ -1,0 +1,5 @@
+Component: utils
+Origin: klogg.filimonov.dev/deb/focal
+Label: klogg.filimonov.dev/deb/focal
+Architecture: amd64
+Description: Klogg repository

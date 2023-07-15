@@ -1,0 +1,19 @@
+Origin: klogg.filimonov.dev/deb/jammy
+Label: klogg.filimonov.dev/deb/jammy
+Codename: jammy
+Date: Sat, 15 Jul 2023 16:12:24 UTC
+Architectures: amd64
+Components: utils
+Description: Klogg repository
+MD5Sum:
+ 70ae51f18d98bcaf2e0b6851db3a8427 1013 utils/binary-amd64/Packages
+ 0cc3090f48c21f1318035c7ba8326deb 647 utils/binary-amd64/Packages.gz
+ c002ba1f810fefa789f651586037c700 142 utils/binary-amd64/Release
+SHA1:
+ c6c124dc0fd9d69c5136e94b535670756ef95795 1013 utils/binary-amd64/Packages
+ 9999c5278b5c7710209a0561ef4102e85571617e 647 utils/binary-amd64/Packages.gz
+ 267d0d1b967e38522fdbb9667b0586f870ddcec2 142 utils/binary-amd64/Release
+SHA256:
+ 46f2c386ae44f0dcd95a21fce4765795c5082de8bb55e34ccdf52b730aa2c812 1013 utils/binary-amd64/Packages
+ bc3eef4ae3edac5b9f7b825a1ce33792282e868c955d25af812685d3f3367436 647 utils/binary-amd64/Packages.gz
+ 401521baf59b3de82c7f2a853faa0160aa84dfae3ac426a7d5454c8186ce0269 142 utils/binary-amd64/Release
