@@ -1,0 +1,5 @@
+[Klogg]
+name=Klogg
+baseurl=https://klogg.filimonov.dev/rpm/oracle/8/amd64
+gpgkey=https://klogg.filimonov.dev/klogg.gpg.key
+enabled=1

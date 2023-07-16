@@ -1,0 +1,1 @@
+deb [signed-by=/etc/apt/keyrings/klogg.gpg] https://klogg.filimonov.dev/deb/jammy jammy utils
