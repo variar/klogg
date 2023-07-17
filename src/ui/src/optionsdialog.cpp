@@ -601,7 +601,8 @@ void OptionsDialog::onButtonBoxClicked( QAbstractButton* button )
 
 KeySequencePresenter::KeySequencePresenter( const QString& keySequence )
 {
-    keySequenceLabel_ = new QLabel( keySequence );
+    keySequenceLabel_
+        = new QLabel( QKeySequence( keySequence ).toString( QKeySequence::NativeText ) );
 
     auto editButton = new QPushButton();
     editButton->setText( "..." );
