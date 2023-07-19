@@ -2611,13 +2611,11 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
         if ( ( selection_.isLineSelected( lineNumber ) && selection_.isSingleLine() )
              || selection_.getPortionForLine( lineNumber ).isValid() ) {
             auto selectionPen = QPen( palette.color( QPalette::Highlight ) );
-            selectionPen.setWidth( 3 );
+            selectionPen.setWidth( 1 );
             painter->setPen( selectionPen );
             painter->drawLine( xPos - ContentMarginWidth + 1, yPos, viewport()->width(), yPos );
-            selectionPen.setWidth( 5 );
-            painter->setPen( selectionPen );
-            painter->drawLine( xPos - ContentMarginWidth + 2, yPos + finalLineHeight,
-                               viewport()->width(), yPos + finalLineHeight );
+            painter->drawLine( xPos - ContentMarginWidth + 1, yPos + finalLineHeight - 1,
+                               viewport()->width(), yPos + finalLineHeight - 1 );
         }
 
         // Then draw the bullet
