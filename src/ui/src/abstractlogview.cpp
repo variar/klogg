@@ -1047,7 +1047,7 @@ void AbstractLogView::wheelEvent( QWheelEvent* wheelEvent )
             // First see if we need to block the elastic (on Mac)
             if ( wheelEvent->phase() == Qt::ScrollBegin )
                 followElasticHook_.hold();
-            else if ( wheelEvent->phase() == Qt::ScrollEnd )
+            else if ( wheelEvent->phase() == Qt::ScrollEnd || wheelEvent->phase() == Qt::ScrollMomentum )
                 followElasticHook_.release();
 
             followElasticHook_.move( -yDelta );
