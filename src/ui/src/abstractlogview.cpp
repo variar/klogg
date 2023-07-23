@@ -85,6 +85,7 @@
 
 #include "active_screen.h"
 #include "clipboard.h"
+#include "colorfultextparser.h"
 #include "configuration.h"
 #include "highlighterset.h"
 #include "highlightersmenu.h"
@@ -2428,7 +2429,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
     wrappedLinesNumbers_.clear();
     for ( auto currentLine = 0_lcount; currentLine < nbLines; ++currentLine ) {
         const auto lineNumber = firstLine_ + currentLine;
-        const QString logLine = logLines[ lineNumber.get() ].string();
+        const QString logLine = logLines[ currentLine.get() ].string();
 
         const int xPos = contentStartPosX + ContentMarginWidth;
 
@@ -2506,13 +2507,31 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                                      match.foreColor(), match.backColor() };
         };
 
+        // string to print, cut to fit the length and position of the view
         klogg::vector<HighlightedMatch> allHighlights;
-        allHighlights.reserve( highlighterMatches.size() );
+
+        const QString& expandedLine = [ & ]() {
+            if ( !Configuration::get().displayAnsiColorSequences() ) {
+                return logLines[ currentLine.get() ].expandedString();
+            }
+
+            using namespace ANSI;
+            TextAttribute defaultColor{ TextAttribute::State::DEFAULT,
+                                        { toRgb( foreColor ), toRgb( backColor ) } };
+            ColorfulTextParser ansiParser{ defaultColor, defaultColor };
+            return logLines[ currentLine.get() ].process(
+                [ &allHighlights, &ansiParser ]( auto& log ) {
+                    log = untabify( std::move( log ) );
+                    using Mode = ColorfulTextParser::Mode;
+                    auto&& [ text, colors ] = ansiParser.parse( log, Mode::MARKED_TEXT );
+                    log = std::move( text );
+                    allHighlights.reserve( colors.size() );
+                    allHighlights.insert( allHighlights.end(), colors.begin(), colors.end() );
+                } );
+        }();
+        allHighlights.reserve( allHighlights.size() + highlighterMatches.size() );
         std::transform( highlighterMatches.cbegin(), highlighterMatches.cend(),
                         std::back_inserter( allHighlights ), untabifyHighlight );
-
-        // string to print, cut to fit the length and position of the view
-        const QString& expandedLine = logLines[ currentLine.get() ].expandedString();
 
         // Has the line got elements to be highlighted
         klogg::vector<HighlightedMatch> quickFindMatches;

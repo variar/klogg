@@ -631,7 +631,7 @@ void CrawlerWidget::applyConfiguration()
         font.setStyleStrategy( QFont::PreferAntialias );
     }
 
-    if ( config.hideAnsiColorSequences() ) {
+    if ( config.hideAnsiColorSequences() || config.displayAnsiColorSequences() ) {
         logData_->setPrefilter( AnsiColorSequenceRegex );
     }
     else {

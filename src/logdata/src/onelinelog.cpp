@@ -16,7 +16,7 @@ OneLineLog::OneLineLog( const char* data, OneLineLog::Length len, std::shared_pt
 {
 }
 
-QString OneLineLog::string()
+QString OneLineLog::string() const
 {
     if ( empty() ) {
         LOG_WARNING << buffer_.isEmpty() << ",count:" << decoder_.use_count() << ","
@@ -35,7 +35,7 @@ QString OneLineLog::string()
     return log;
 }
 
-QString OneLineLog::expandedString()
+QString OneLineLog::expandedString() const
 {
     if ( empty() ) {
         LOG_INFO << buffer_.isEmpty() << ",count:" << decoder_.use_count() << ","
@@ -51,7 +51,7 @@ QString OneLineLog::expandedString()
     return untabify( std::move( log ) );
 }
 
-QString OneLineLog::process( std::function<void( QString& )> fn )
+QString OneLineLog::process( std::function<void( QString& )> fn ) const
 {
     if ( empty() ) {
         LOG_INFO << buffer_.isEmpty() << ",count:" << decoder_.use_count() << ","

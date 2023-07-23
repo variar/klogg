@@ -26,7 +26,7 @@
       <bool>true</bool>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="general_tab">
       <attribute name="title">
@@ -398,6 +398,13 @@
           <string>Miscellaneous</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_6">
+          <item>
+           <widget class="QCheckBox" name="displayAnsiColorsCheckBox">
+            <property name="text">
+             <string>Display ANSI Colors (search performance will be reduced)</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QCheckBox" name="hideAnsiColorsCheckBox">
             <property name="enabled">

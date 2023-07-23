@@ -261,6 +261,10 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         = settings
               .value( "view.hideAnsiColorSequences", DefaultConfiguration.hideAnsiColorSequences_ )
               .toBool();
+    displayAnsiColorSequences_ = settings
+                                     .value( "view.displayAnsiColorSequences",
+                                             DefaultConfiguration.displayAnsiColorSequences_ )
+                                     .toBool();
 
     useTextWrap_ = settings.value( "view.textWrap", DefaultConfiguration.useTextWrap() ).toBool();
 
@@ -300,7 +304,7 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         const auto mapping = settings.value( "shortcuts.mapping" ).toMap();
         for ( auto keys = mapping.begin(); keys != mapping.end(); ++keys ) {
             auto action = keys.key().toStdString();
-            if (action == ShortcutAction::LogViewJumpToButtom) {
+            if ( action == ShortcutAction::LogViewJumpToButtom ) {
                 action = ShortcutAction::LogViewJumpToBottom;
             }
             shortcuts_.emplace( action, keys.value().toStringList() );
@@ -314,7 +318,7 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         settings.setArrayIndex( static_cast<int>( shortcutIndex ) );
         auto action = settings.value( "action", "" ).toString();
         if ( !action.isEmpty() ) {
-            if (action == ShortcutAction::LogViewJumpToButtom) {
+            if ( action == ShortcutAction::LogViewJumpToButtom ) {
                 action = ShortcutAction::LogViewJumpToBottom;
             }
             const auto keys = settings.value( "keys", QStringList() ).toStringList();
@@ -395,6 +399,7 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "view.scaleFactorRounding", scaleFactorRounding_ );
 
     settings.setValue( "view.hideAnsiColorSequences", hideAnsiColorSequences_ );
+    settings.setValue( "view.displayAnsiColorSequences", displayAnsiColorSequences_ );
 
     settings.setValue( "defaultView.searchAutoRefresh", searchAutoRefresh_ );
     settings.setValue( "defaultView.searchIgnoreCase", searchIgnoreCase_ );

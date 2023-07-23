@@ -29,13 +29,13 @@ class OneLineLog {
     OneLineLog& operator=( OneLineLog&& ) = default;
     OneLineLog( OneLineLog&& ) = default;
 
-    QString string();
+    QString string() const;
 
-    QString expandedString();
+    QString expandedString() const;
 
-    QString process( std::function<void( QString& )> fn );
+    QString process( std::function<void( QString& )> fn ) const;
 
-    inline bool empty()
+    inline bool empty() const
     {
         return buffer_.isEmpty() || !decoder_ || !reg_;
     }
