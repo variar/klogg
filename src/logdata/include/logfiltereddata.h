@@ -149,6 +149,8 @@ class LogFilteredData : public AbstractLogData {
 
   private:
     // Implementation of virtual functions
+    OneLineLog doGetOneLineLog( LineNumber line ) const override;
+    klogg::vector<OneLineLog> doGetOneLineLogs( LineNumber firstLine, LinesCount number ) const override;
     QString doGetLineString( LineNumber line ) const override;
     QString doGetExpandedLineString( LineNumber line ) const override;
     klogg::vector<QString> doGetLines( LineNumber first, LinesCount number ) const override;

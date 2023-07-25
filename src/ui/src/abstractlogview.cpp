@@ -2382,8 +2382,8 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
         return index;
     }();
 
-    // Lines to write
-    const auto expandedLines = logData_->getExpandedLines( firstLine_, nbLines );
+    // get log lines from file
+    auto logLines = logData_->getOneLineLogs( firstLine_, nbLines );
 
     const auto highlightPatternMatches = Configuration::get().mainSearchHighlight();
     const auto variateHighlightPatternMatches = Configuration::get().variateMainSearchHighlight();
@@ -2428,7 +2428,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
     wrappedLinesNumbers_.clear();
     for ( auto currentLine = 0_lcount; currentLine < nbLines; ++currentLine ) {
         const auto lineNumber = firstLine_ + currentLine;
-        const QString logLine = logData_->getLineString( lineNumber );
+        const QString logLine = logLines[ lineNumber.get() ].string();
 
         const int xPos = contentStartPosX + ContentMarginWidth;
 
@@ -2512,7 +2512,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                         std::back_inserter( allHighlights ), untabifyHighlight );
 
         // string to print, cut to fit the length and position of the view
-        const QString& expandedLine = expandedLines[ currentLine.get() ];
+        const QString& expandedLine = logLines[ currentLine.get() ].expandedString();
 
         // Has the line got elements to be highlighted
         klogg::vector<HighlightedMatch> quickFindMatches;
