@@ -19,11 +19,13 @@
 
 #include <QAction>
 #include <QMenu>
+#include <QMouseEvent>
+#include <QRect>
 #include <QTimerEvent>
 #include <QToolTip>
 
 #include "active_screen.h"
-#include "menuactiontooltipbehavior.h"
+#include "menu.h"
 
 // It would be nice to only need action, and have action be the parent,
 // however implementation needs the parent menu (see showToolTip), and
@@ -107,4 +109,36 @@ void MenuActionToolTipBehavior::showToolTip( const QPoint& position )
     QPoint relativePos = parentMenu->mapFromGlobal( position );
     QRect activeRegion( relativePos.x(), relativePos.y(), 1, 1 );
     QToolTip::showText( position, toolTip, parentMenu, activeRegion );
+}
+
+HoverMenu::HoverMenu( const QString& title, QWidget* parent )
+    : QMenu( title, parent )
+    , mouseInMenu_{ false }
+{
+}
+
+void HoverMenu::mouseMoveEvent( QMouseEvent* ev )
+{
+    auto nowMousePosition = mouseInMenu( ev->pos() );
+
+    // hide the menu list if the mouse leaves the menu.
+    if ( mouseInMenu_ && !nowMousePosition ) {
+        this->hide();
+    }
+    mouseInMenu_ = nowMousePosition;
+
+    QMenu::mouseMoveEvent( ev );
+}
+
+void HoverMenu::mouseReleaseEvent( QMouseEvent* ev )
+{
+    auto* action = this->actionAt( ev->pos() );
+
+    // responds to left-click event only
+    if ( action != nullptr && ev->button() == Qt::LeftButton ) {
+        action->activate( QAction::ActionEvent::Trigger );
+    }
+    else {
+        QMenu::mouseReleaseEvent( ev );
+    }
 }

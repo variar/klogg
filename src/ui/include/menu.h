@@ -17,45 +17,61 @@
  * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MANUACTIONTOOLTIPBEHAVIOR_H
-#define MANUACTIONTOOLTIPBEHAVIOR_H
+#ifndef KLOGG_MENU_H
+#define KLOGG_MENU_H
 
+#include <QMenu>
 #include <QObject>
 #include <QPoint>
 
 class QAction;
 class QMenu;
 class QTimerEvent;
-
+class QPoint;
 
 // Provides a behavior to show an action's tooltip after mouse is unmoved for
 // a specified number of 'ms'. E.g. used for tooltips with full-path for recent
 // files in the file menu. Not thread-safe.
-class MenuActionToolTipBehavior : public QObject
-{
+class MenuActionToolTipBehavior : public QObject {
     Q_OBJECT
 
- public:
-    MenuActionToolTipBehavior(QAction *menuAction, QMenu *menuParent,
-                              QObject *parent);
+  public:
+    MenuActionToolTipBehavior( QAction* menuAction, QMenu* menuParent, QObject* parent );
 
     // Time in ms that mouse needs to stay unmoved for tooltip to be shown
     int toolTipDelay(); /* ms */
-    void setToolTipDelay(int ms);
+    void setToolTipDelay( int ms );
 
- private:
-    void timerEvent(QTimerEvent *event) override;
-    void showToolTip(const QPoint &position);
+  private:
+    void timerEvent( QTimerEvent* event ) override;
+    void showToolTip( const QPoint& position );
 
- private Q_SLOTS:
+  private Q_SLOTS:
     void onActionHovered();
 
- private:
-    QAction *action;
-    QMenu *parentMenu;
+  private:
+    QAction* action;
+    QMenu* parentMenu;
     int toolTipDelayMs;
     int timerId;
     QPoint hoverPoint;
 };
 
-#endif
+class HoverMenu : public QMenu {
+  public:
+    explicit HoverMenu( const QString& title, QWidget* parent = nullptr );
+
+    void mouseMoveEvent( QMouseEvent* ) override;
+    void mouseReleaseEvent( QMouseEvent* ) override;
+
+  private:
+    inline bool mouseInMenu( const QPoint& pos )
+    {
+        return this->rect().contains( pos );
+    }
+
+  private:
+    bool mouseInMenu_;
+};
+
+#endif // KLOGG_MENU_H

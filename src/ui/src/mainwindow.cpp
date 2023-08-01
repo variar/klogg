@@ -94,6 +94,7 @@
 #include "klogg_version.h"
 #include "logger.h"
 #include "mainwindowtext.h"
+#include "menu.h"
 #include "openfilehelper.h"
 #include "optionsdialog.h"
 #include "predefinedfiltersdialog.h"
@@ -790,7 +791,8 @@ void MainWindow::createMenus()
 
     toolsMenu = menuBar()->addMenu( tr( menu::toolsTitle ) );
 
-    highlightersMenu = menuBar()->addMenu( tr( menu::highlightersTitle ) );
+    highlightersMenu = new HoverMenu( tr( menu::highlightersTitle ), menuBar() );
+    menuBar()->addMenu( highlightersMenu );
     connect( highlightersMenu, &QMenu::aboutToShow,
              [ this ]() { setCurrentHighlighterAction( highlightersActionGroup ); } );
 

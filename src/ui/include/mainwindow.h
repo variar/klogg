@@ -40,6 +40,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMenu>
 #include <QSystemTrayIcon>
 #include <QTemporaryDir>
 
