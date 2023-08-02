@@ -56,6 +56,7 @@ add_library(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/filteredview.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/highlightersdialog.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/highlighteredit.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/highlightersmenu.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/highlightersetedit.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/highlighterset.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/predefinedfilters.cpp

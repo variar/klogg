@@ -69,6 +69,7 @@
 class QMenu;
 class QAction;
 class QShortcut;
+class HighlightersMenu;
 
 // Utility class representing a buffer for number entered on the keyboard
 // The buffer keep at most 7 digits, and reset itself after a timeout.
@@ -299,7 +300,6 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void setSelectionStart();
     void setSelectionEnd();
     void setQuickFindResult( bool hasMatch, const Portion& selection );
-    void setHighlighterSet( QAction* action );
     void setColorLabel( QAction* action );
 
   private:
@@ -397,7 +397,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     QAction* setSelectionStartAction_;
     QAction* setSelectionEndAction_;
     QAction* saveDefaultSplitterSizesAction_;
-    QMenu* highlightersMenu_;
+    HighlightersMenu* highlightersMenu_;
     QMenu* colorLabelsMenu_;
 
     std::map<QString, QShortcut*> shortcuts_;

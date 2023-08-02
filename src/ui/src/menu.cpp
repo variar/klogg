@@ -18,6 +18,7 @@
  */
 
 #include <QAction>
+#include <QActionGroup>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QRect>

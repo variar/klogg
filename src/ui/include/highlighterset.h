@@ -44,9 +44,9 @@
 #include <QRegularExpression>
 #include <qcolor.h>
 
+#include "containers.h"
 #include "highlightedmatch.h"
 #include "persistable.h"
-#include "containers.h"
 
 struct HighlightColor {
     QColor foreColor;

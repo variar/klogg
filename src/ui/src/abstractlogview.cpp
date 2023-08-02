@@ -655,12 +655,9 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
             replaceSearchAction_->setEnabled( false );
         }
 
-        auto highlightersActionGroup = new QActionGroup( this );
-        highlightersActionGroup->setExclusive( false );
-        connect( highlightersActionGroup, &QActionGroup::triggered, this,
-                 &AbstractLogView::setHighlighterSet );
-        highlightersMenu_->clear();
-        populateHighlightersMenu( highlightersMenu_, highlightersActionGroup );
+        highlightersMenu_->createHighlightersMenu();
+        highlightersMenu_->populateHighlightersMenu();
+        highlightersMenu_->setApplyChange( [ this ]() { forceRefresh(); } );
 
         auto colorLablesActionGroup = new QActionGroup( this );
         connect( colorLablesActionGroup, &QActionGroup::triggered, this,
@@ -717,7 +714,8 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
         }
         // Display the popup (blocking)
         popupMenu_->exec( QCursor::pos( activeScreen( this ) ) );
-        highlightersActionGroup->deleteLater();
+
+        highlightersMenu_->clearHighlightersMenu();
         colorLablesActionGroup->deleteLater();
     }
 
@@ -2173,7 +2171,8 @@ void AbstractLogView::createMenu()
              [ this ]( auto ) { Q_EMIT replaceScratchpadWithSelection(); } );
 
     popupMenu_ = new QMenu( this );
-    highlightersMenu_ = popupMenu_->addMenu( tr( "Highlighters" ) );
+    highlightersMenu_ = new HighlightersMenu( tr( "Highlighters" ) );
+    popupMenu_->addMenu( highlightersMenu_ );
     colorLabelsMenu_ = popupMenu_->addMenu( tr( "Color labels" ) );
 
     popupMenu_->addSeparator();
@@ -2706,12 +2705,6 @@ void AbstractLogView::disableFollow()
 {
     Q_EMIT followModeChanged( false );
     followElasticHook_.hook( false );
-}
-
-void AbstractLogView::setHighlighterSet( QAction* action )
-{
-    saveCurrentHighlighterFromAction( action );
-    forceRefresh();
 }
 
 void AbstractLogView::setColorLabel( QAction* action )

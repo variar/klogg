@@ -65,6 +65,7 @@ class QAction;
 class QActionGroup;
 class Session;
 class RecentFiles;
+class HighlightersMenu;
 
 // Main window of the application, creates menus, toolbar and
 // the CrawlerWidget
@@ -109,7 +110,6 @@ class MainWindow : public QMainWindow {
     void openFileFromRecent( QAction* action );
     void openFileFromFavorites( QAction* action );
     void switchToOpenedFile( QAction* action );
-    void setCurrentHighlighter( QAction* action );
     void closeTab( ActionInitiator initiator );
     void closeAll( ActionInitiator initiator );
     void selectAll();
@@ -237,7 +237,7 @@ class MainWindow : public QMainWindow {
     QMenu* viewMenu;
     QMenu* toolsMenu;
     QMenu* favoritesMenu;
-    QMenu* highlightersMenu;
+    HighlightersMenu* highlightersMenu;
     QMenu* openedFilesMenu;
     QMenu* helpMenu;
 

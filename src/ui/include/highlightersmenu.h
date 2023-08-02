@@ -22,61 +22,51 @@
 
 #include "highlighterset.h"
 
+#include <functional>
+
 #include <QAction>
 #include <QActionGroup>
 #include <QMenu>
 
-inline void populateHighlightersMenu( QMenu* highlightersMenu,
-                                      QActionGroup* highlightersActionGroup )
-{
-    const auto& highlightersCollection = HighlighterSetCollection::get();
-    const auto& highlighterSets = highlightersCollection.highlighterSets();
-    const auto& activeSetIds = highlightersCollection.activeSetIds();
+#include "menu.h"
 
-    auto noneAction = highlightersMenu->addAction( QApplication::tr( "None" ) );
-    noneAction->setActionGroup( highlightersActionGroup );
-    noneAction->setEnabled( !activeSetIds.isEmpty() );
+class CrawlerWidget;
 
-    highlightersMenu->addSeparator();
-    for ( const auto& highlighter : qAsConst( highlighterSets ) ) {
-        auto setAction = highlightersMenu->addAction( highlighter.name() );
-        setAction->setActionGroup( highlightersActionGroup );
-        setAction->setCheckable( true );
-        setAction->setChecked( activeSetIds.contains( highlighter.id() ) );
-        setAction->setData( highlighter.id() );
-    }
-}
+class HighlightersMenu : public HoverMenu {
+    Q_OBJECT
 
-inline void setCurrentHighlighterAction( QActionGroup* highlightersActionGroup )
-{
-    const auto& highlightersCollection = HighlighterSetCollection::get();
-    const auto activeSets = highlightersCollection.activeSetIds();
+  public:
+    using HoverMenu::addAction;
 
-    const auto selectNone = activeSets.isEmpty();
+    HighlightersMenu( const QString& title, QWidget* parent = nullptr );
 
-    for ( auto* action : highlightersActionGroup->actions() ) {
-        const auto actionSet = action->data().toString();
-        action->setChecked( activeSets.contains( actionSet )
-                            || ( actionSet.isEmpty() && selectNone ) );
-    }
-}
+    void addAction( QAction* action, bool seq );
 
-inline void saveCurrentHighlighterFromAction( const QAction* action )
-{
-    auto setId = action->data().toString();
-    auto& highlighterSets = HighlighterSetCollection::get();
+    void clearHighlightersMenu();
 
-    if ( setId.isEmpty() ) {
-        highlighterSets.deactivateAll();
-    }
-    else if ( action->isChecked() ) {
-        highlighterSets.activateSet( setId );
-    }
-    else {
-        highlighterSets.deactivateSet( setId );
+    void createHighlightersMenu();
+
+    void populateHighlightersMenu();
+
+    inline void setApplyChange( std::function<void()> apply )
+    {
+        applyChange_ = apply;
     }
 
-    highlighterSets.save();
-}
+  private:
+    using HoverMenu::clear;
+
+    // save highlighter action
+    void saveCurrentHighlighterFromAction( const QAction* action ) const;
+
+  private Q_SLOTS:
+    void applySelectionHighlighters( QAction* action ) const;
+
+    void updateActionsStatus() const;
+
+  private:
+    QActionGroup* highLighters_;
+    std::function<void()> applyChange_;
+};
 
 #endif
