@@ -657,7 +657,7 @@ void AbstractLogView::mousePressEvent( QMouseEvent* mouseEvent )
 
         highlightersMenu_->createHighlightersMenu();
         highlightersMenu_->populateHighlightersMenu();
-        highlightersMenu_->setApplyChange( [ this ]() { forceRefresh(); } );
+        highlightersMenu_->setApplyChange( [ this ]() { Q_EMIT highlightersChange(); } );
 
         auto colorLablesActionGroup = new QActionGroup( this );
         connect( colorLablesActionGroup, &QActionGroup::triggered, this,

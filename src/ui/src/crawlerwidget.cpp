@@ -1207,6 +1207,9 @@ void CrawlerWidget::setup()
 
     connect( logMainView_, &LogMainView::markLines, this, &CrawlerWidget::markLinesFromMain );
 
+    connect( logMainView_, &LogMainView::highlightersChange, this,
+             &CrawlerWidget::applyConfiguration );
+
     connect( logMainView_, QOverload<const QString&>::of( &LogMainView::addToSearch ), this,
              &CrawlerWidget::addToSearch );
 
@@ -1362,6 +1365,8 @@ void CrawlerWidget::connectAllFilteredViewSlots( FilteredView* view )
     connect( view, &FilteredView::newSelection, this, &CrawlerWidget::jumpToMatchingLine );
 
     connect( view, &FilteredView::markLines, this, &CrawlerWidget::markLinesFromFiltered );
+
+    connect( view, &FilteredView::highlightersChange, this, &CrawlerWidget::applyConfiguration );
 
     connect( view, QOverload<const QString&>::of( &FilteredView::addToSearch ), this,
              &CrawlerWidget::addToSearch );

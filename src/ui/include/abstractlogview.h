@@ -238,6 +238,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void addColorLabel( size_t label );
     void addNextColorLabel();
     void clearColorLabels();
+    void highlightersChange();
 
   public Q_SLOTS:
     // Makes the widget select and display the passed line.
