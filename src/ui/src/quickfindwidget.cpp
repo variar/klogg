@@ -181,14 +181,10 @@ void QuickFindWidget::doSearchBackward()
     Q_EMIT searchBackward();
 }
 
-// Close and search when the user presses Return
+// Same as user clicks backward arrow
 void QuickFindWidget::returnHandler()
 {
-    Q_EMIT patternConfirmed( editQuickFind_->text(), isIgnoreCase(), isRegexSearch() );
-    // Close the widget
-    userRequested_ = false;
-    this->hide();
-    Q_EMIT close();
+    doSearchForward();
 }
 
 // Close and reset flag when the user clicks 'close'
