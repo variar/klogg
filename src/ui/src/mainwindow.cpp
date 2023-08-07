@@ -75,6 +75,7 @@
 #include <QTemporaryFile>
 #include <QTextBrowser>
 #include <QToolBar>
+#include <QToolTip>
 #include <QUrl>
 #include <QUrlQuery>
 #include <QWindow>
@@ -493,6 +494,9 @@ void MainWindow::createActions()
     connect( recentFilesGroup, &QActionGroup::triggered, this, &MainWindow::openFileFromRecent );
     for ( auto i = 0u; i < recentFileActions.size(); ++i ) {
         recentFileActions[ i ] = new QAction( this );
+        connect( recentFileActions[ i ], &QAction::hovered, [ this, a = recentFileActions[ i ] ]() {
+            QToolTip::showText( QCursor::pos(), a->toolTip(), this );
+        } );
         recentFileActions[ i ]->setVisible( false );
         recentFileActions[ i ]->setActionGroup( recentFilesGroup );
     }
