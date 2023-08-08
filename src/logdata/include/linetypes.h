@@ -268,7 +268,7 @@ QDebug operator<<( QDebug dbg, type_safe::strong_typedef<Tag, T> const& object )
 
 // Represents a position in a file (line, column)
 class FilePosition {
-  public:
+public:
     FilePosition()
         : column_{ -1 }
     {
@@ -298,7 +298,7 @@ class FilePosition {
         return !this->operator==( other );
     }
 
-  private:
+private:
     LineNumber line_;
     LineColumn column_;
 };
@@ -308,17 +308,14 @@ constexpr int TabStop = 8;
 
 inline QString untabify( QString&& line, LineColumn initialPosition = 0_lcol )
 {
-    LineLength::UnderlyingType totalSpaces = 0;
     line.replace( QChar::Null, QChar::Space );
 
     LineLength::UnderlyingType position = 0;
     position = type_safe::narrow_cast<LineLength::UnderlyingType>(
         line.indexOf( QChar::Tabulation, position ) );
     while ( position >= 0 ) {
-        const auto spaces
-            = TabStop - ( ( initialPosition.get() + position + totalSpaces ) % TabStop );
+        const auto spaces = TabStop - ( ( initialPosition.get() + position ) % TabStop );
         line.replace( position, 1, QString( spaces, QChar::Space ) );
-        totalSpaces += spaces - 1;
         position = type_safe::narrow_cast<LineLength::UnderlyingType>(
             line.indexOf( QChar::Tabulation, position ) );
     }

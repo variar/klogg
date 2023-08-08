@@ -5,14 +5,12 @@ BreakBeforeBinaryOperators: true
 ColumnLimit: 100
 Standard: c++17
 IndentWidth: 4
-BreakBeforeBraces: Linux
 
 # Glogg-specific options
 PointerAlignment: Left
 SpacesInParentheses: true
 SpacesInSquareBrackets: true
 # DerivePointerAlignment: true
-AccessModifierOffset: -2
 
 BreakBeforeBraces: Custom
 BraceWrapping:
