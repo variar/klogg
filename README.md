@@ -144,7 +144,7 @@ You might need to manually create `/etc/apt/keyrings` directory.
 
 Then download the repository list file for you distribution (replace `<ubuntu_release>` with one of `bionic`, `focal`, `jammy`):
 ```
-curl -sS https://klogg.filimonov.dev/dev/klogg.<ubuntu_release>.list | sudo tee /etc/apt/sources.list.d/klogg.list
+curl -sS https://klogg.filimonov.dev/deb/klogg.<ubuntu_release>.list | sudo tee /etc/apt/sources.list.d/klogg.list
 ```
 
 Finally, install using apt
