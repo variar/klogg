@@ -64,6 +64,7 @@
 #include "quickfindmux.h"
 #include "regularexpressionpattern.h"
 #include "selection.h"
+#include "sgrparser.h"
 #include "viewtools.h"
 
 class QMenu;

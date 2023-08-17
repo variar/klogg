@@ -310,6 +310,49 @@ QTextCodec* LogData::doGetDisplayEncoding() const
     return codec_.codec();
 }
 
+OneLineLog LogData::doGetOneLineLog( LineNumber line ) const
+{
+    auto lines = doGetOneLineLogs( line, 1_lcount );
+    return lines.empty() ? OneLineLog{} : std::move( lines.front() );
+}
+
+klogg::vector<OneLineLog> LogData::doGetOneLineLogs( LineNumber firstLine, LinesCount number ) const
+{
+    LOG_DEBUG << "firstLine:" << firstLine << " nb:" << number;
+
+    if ( number.get() == 0 ) {
+        return {};
+    }
+
+    klogg::vector<OneLineLog> processedLines;
+    std::shared_ptr<TextDecoder> dec{ std::make_shared<TextDecoder>( codec_.makeDecoder() ) };
+    std::shared_ptr<QRegularExpression> reg{ std::make_shared<QRegularExpression>(
+        prefilterPattern_, QRegularExpression::CaseInsensitiveOption ) };
+    try {
+        const auto rawLines = getLinesRaw( firstLine, number );
+        processedLines = rawLines.splitLines(
+            [ &dec, &reg ]( const char* log, OneLineLog::Length len ) -> OneLineLog {
+                return { log, len, dec, reg };
+            } );
+
+    } catch ( const std::bad_alloc& e ) {
+        LOG_ERROR << "not enough memory " << e.what();
+        const char* replaceLog = "KLOGG WARNING: not enough memory";
+        processedLines.emplace_back(
+            replaceLog, type_safe::narrow_cast<OneLineLog::Length>( ::strlen( replaceLog ) ), dec,
+            reg );
+    }
+
+    while ( processedLines.size() < number.get() ) {
+        const char* replaceLog = "KLOGG WARNING: failed to read some lines before this one";
+        processedLines.emplace_back(
+            replaceLog, type_safe::narrow_cast<OneLineLog::Length>( ::strlen( replaceLog ) ), dec,
+            reg );
+    }
+
+    return processedLines;
+}
+
 QString LogData::doGetLineString( LineNumber line ) const
 {
     const auto lines = doGetLines( line, 1_lcount );
@@ -501,6 +544,60 @@ klogg::vector<QString> LogData::RawLines::decodeLines() const
     decodedLines.reserve( this->endOfLines.size() - decodedLines.size() );
     while ( decodedLines.size() < this->endOfLines.size() ) {
         decodedLines.emplace_back( "KLOGG WARNING: failed to decode some lines before this one" );
+    }
+
+    return decodedLines;
+}
+
+klogg::vector<OneLineLog>
+LogData::RawLines::splitLines( OneLineLogConstructor makeOneLineLog ) const
+{
+    if ( this->endOfLines.empty() ) {
+        return {};
+    }
+
+    klogg::vector<OneLineLog> decodedLines;
+    decodedLines.reserve( this->endOfLines.size() );
+
+    try {
+        qint64 lineStart = 0;
+        //        size_t currentLineIndex = 0;
+        const auto lineFeedWidth = textDecoder.encodingParams.lineFeedWidth;
+        for ( const auto& lineEnd : this->endOfLines ) {
+            const auto length = lineEnd - lineStart - lineFeedWidth;
+
+            constexpr auto maxlength = std::numeric_limits<int>::max() / 2;
+            if ( length >= maxlength ) {
+                const char* log = "KLOGG WARNING: this line is too long";
+                decodedLines.emplace_back( makeOneLineLog(
+                    log, type_safe::narrow_cast<OneLineLog::Length>( ::strlen( log ) ) ) );
+                break;
+            }
+
+            if ( lineStart + length > klogg::ssize( buffer ) ) {
+                const char* log = "KLOGG WARNING: file read failed";
+                decodedLines.emplace_back( makeOneLineLog(
+                    log, type_safe::narrow_cast<OneLineLog::Length>( ::strlen( log ) ) ) );
+                LOG_WARNING << "not enough data in buffer";
+                break;
+            }
+
+            decodedLines.emplace_back( makeOneLineLog(
+                buffer.data() + lineStart, type_safe::narrow_cast<OneLineLog::Length>( length ) ) );
+
+            lineStart = lineEnd;
+        }
+    } catch ( const std::bad_alloc& ) {
+        LOG_ERROR << "not enough memory";
+        const char* log = "KLOGG WARNING: not enough memory";
+        decodedLines.emplace_back(
+            makeOneLineLog( log, type_safe::narrow_cast<OneLineLog::Length>( ::strlen( log ) ) ) );
+    }
+
+    while ( decodedLines.size() < this->endOfLines.size() ) {
+        const char* log = "KLOGG WARNING: failed to decode some lines before this one";
+        decodedLines.emplace_back(
+            makeOneLineLog( log, type_safe::narrow_cast<OneLineLog::Length>( ::strlen( log ) ) ) );
     }
 
     return decodedLines;

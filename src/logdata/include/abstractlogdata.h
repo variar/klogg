@@ -45,13 +45,18 @@
 #include <QTextCodec>
 
 #include "linetypes.h"
+#include "onelinelog.h"
 
 // Base class representing a set of data.
 // It can be either a full set or a filtered set.
 class AbstractLogData : public QObject {
     Q_OBJECT
-
   public:
+  public:
+    // Returns then line as OneLineLog structure, You can do anything with it.
+    OneLineLog getOneLineLog( LineNumber line ) const;
+    // Returns a set of lines as a set of OneLineLog structure, You can do anything with it.
+    klogg::vector<OneLineLog> getOneLineLogs( LineNumber firstLine, LinesCount number ) const;
     // Returns the line passed as a QString
     QString getLineString( LineNumber line ) const;
     // Returns the line passed as a QString, with tabs expanded
@@ -92,6 +97,12 @@ class AbstractLogData : public QObject {
     Q_DECLARE_FLAGS( LineType, LineTypeFlags )
 
   protected:
+    // Returns then line as OneLineLog structure, You can do anything with it.
+    virtual OneLineLog doGetOneLineLog( LineNumber line ) const = 0;
+    // Returns a set of lines as a set of OneLineLog structure, You can do anything with it.
+    virtual klogg::vector<OneLineLog> doGetOneLineLogs( LineNumber firstLine,
+                                                        LinesCount number ) const
+        = 0;
     // Internal function called to get a given line
     virtual QString doGetLineString( LineNumber line ) const = 0;
     // Internal function called to get a given line
@@ -100,7 +111,8 @@ class AbstractLogData : public QObject {
     virtual klogg::vector<QString> doGetLines( LineNumber first_line, LinesCount number ) const = 0;
     // Internal function called to get a set of expanded lines
     virtual klogg::vector<QString> doGetExpandedLines( LineNumber first_line,
-                                                     LinesCount number ) const = 0;
+                                                       LinesCount number ) const
+        = 0;
 
     // Internal function called to get the index of given line
     virtual LineNumber doGetLineNumber( LineNumber index ) const = 0;

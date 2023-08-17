@@ -44,6 +44,17 @@
 
 #include "abstractlogdata.h"
 
+OneLineLog AbstractLogData::getOneLineLog( LineNumber line ) const
+{
+    return doGetOneLineLog( line );
+}
+
+klogg::vector<OneLineLog> AbstractLogData::getOneLineLogs( LineNumber firstLine,
+                                                           LinesCount number ) const
+{
+    return doGetOneLineLogs( firstLine, number );
+}
+
 // Simple wrapper in order to use a clean Template Method
 QString AbstractLogData::getLineString( LineNumber line ) const
 {
@@ -64,7 +75,7 @@ klogg::vector<QString> AbstractLogData::getLines( LineNumber first_line, LinesCo
 
 // Simple wrapper in order to use a clean Template Method
 klogg::vector<QString> AbstractLogData::getExpandedLines( LineNumber first_line,
-                                                        LinesCount number ) const
+                                                          LinesCount number ) const
 {
     return doGetExpandedLines( first_line, number );
 }
