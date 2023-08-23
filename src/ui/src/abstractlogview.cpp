@@ -221,7 +221,7 @@ QFontMetrics pixmapFontMetrics( const QFont& font )
 }
 
 class WrappedLinesView {
-  public:
+public:
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
     using WrappedString = QStringView;
 #else
@@ -310,7 +310,7 @@ class WrappedLinesView {
 };
 
 class LineChunk {
-  public:
+public:
     LineChunk( LineColumn firstCol, LineColumn endCol, QColor foreColor, QColor backColor )
         : start_{ firstCol }
         , end_{ endCol }
@@ -344,7 +344,7 @@ class LineChunk {
         return backColor_;
     }
 
-  private:
+private:
     LineColumn start_ = {};
     LineColumn end_ = {};
 
@@ -356,7 +356,7 @@ class LineChunk {
 // It stores the chunks of line to draw
 // each chunk having a different colour
 class LineDrawer {
-  public:
+public:
     explicit LineDrawer( const QColor& backColor )
         : backColor_( backColor )
     {
@@ -441,7 +441,7 @@ class LineDrawer {
             painter->fillRect( xPos, yPos, blankWidth, fontHeight, backColor_ );
     }
 
-  private:
+private:
     klogg::vector<LineChunk> chunks_;
     QColor backColor_;
 };
@@ -2514,12 +2514,14 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
         // string to print, cut to fit the length and position of the view
         const QString& expandedLine = expandedLines[ currentLine.get() ];
 
-        // Has the line got elements to be highlighted
-        klogg::vector<HighlightedMatch> quickFindMatches;
-        quickFindPattern_->matchLine( expandedLine, quickFindMatches );
-        allHighlights.insert( allHighlights.end(),
-                              std::make_move_iterator( quickFindMatches.begin() ),
-                              std::make_move_iterator( quickFindMatches.end() ) );
+        // Has the line got elements to be highlighted, only highlight focus widget
+        if ( quickFindPattern_->focusWidget() == this ) {
+            klogg::vector<HighlightedMatch> quickFindMatches;
+            quickFindPattern_->matchLine( expandedLine, quickFindMatches );
+            allHighlights.insert( allHighlights.end(),
+                                  std::make_move_iterator( quickFindMatches.begin() ),
+                                  std::make_move_iterator( quickFindMatches.end() ) );
+        }
 
         // Is there something selected in the line?
         const auto selectionPortion = selection_.getPortionForLine( lineNumber );

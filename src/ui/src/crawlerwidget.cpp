@@ -84,7 +84,7 @@ const QPalette CrawlerWidget::ErrorPalette( Qt::darkYellow );
 
 // Implementation of the view context for the CrawlerWidget
 class CrawlerWidgetContext : public ViewContextInterface {
-  public:
+public:
     // Construct from the stored string representation
     explicit CrawlerWidgetContext( const QString& string );
     // Construct from the value passsed
@@ -142,11 +142,11 @@ class CrawlerWidgetContext : public ViewContextInterface {
         return marks_;
     }
 
-  private:
+private:
     void loadFromString( const QString& string );
     void loadFromJson( const QString& json );
 
-  private:
+private:
     QList<int> sizes_;
 
     bool ignoreCase_;
@@ -671,11 +671,18 @@ void CrawlerWidget::enteringQuickFind()
 
     // Remember who had the focus (only if it is one of our views)
     QWidget* focus_widget = QApplication::focusWidget();
+    // Refresh immediately when entering QuickFind. This is very important when triggering QuickFind
+    // again after switching the focus of a widget during QuickFind.
+    logMainView_->forceRefresh();
+    filteredView_->forceRefresh();
 
-    if ( ( focus_widget == logMainView_ ) || ( focus_widget == filteredView_ ) )
+    if ( ( focus_widget == logMainView_ ) || ( focus_widget == filteredView_ ) ) {
         qfSavedFocus_ = focus_widget;
-    else
+        quickFindPattern_->setFocusWidget( focus_widget );
+    }
+    else {
         qfSavedFocus_ = nullptr;
+    }
 }
 
 void CrawlerWidget::exitingQuickFind()

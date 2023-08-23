@@ -45,14 +45,14 @@
 #include <QString>
 #include <qglobal.h>
 
-#include "highlightedmatch.h"
 #include "containers.h"
+#include "highlightedmatch.h"
 #include "linetypes.h"
 
 class QuickFind;
 
 class QuickFindMatcher {
-  public:
+public:
     QuickFindMatcher() = default;
 
     QuickFindMatcher( bool isActive, const QRegularExpression& regexp )
@@ -72,13 +72,13 @@ class QuickFindMatcher {
     bool isLineMatching( const QString& line, LineColumn column = 0_lcol ) const;
 
     // Same as isLineMatching but search backward
-    bool isLineMatchingBackward( const QString& line, LineColumn column = LineColumn{-1} ) const;
+    bool isLineMatchingBackward( const QString& line, LineColumn column = LineColumn{ -1 } ) const;
 
     // Must be called when isLineMatching returns 'true', returns
     // the position of the first match found.
     std::pair<LineColumn, LineColumn> getLastMatch() const;
 
-  private:
+private:
     bool isActive_ = false;
     QRegularExpression regexp_;
 
@@ -90,7 +90,7 @@ class QuickFindMatcher {
 class QuickFindPattern : public QObject {
     Q_OBJECT
 
-  public:
+public:
     // Construct an empty search
     QuickFindPattern() = default;
 
@@ -100,6 +100,16 @@ class QuickFindPattern : public QObject {
 
     // Set the search to a new pattern, as well as the case status
     void changeSearchPattern( const QString& pattern, bool ignoreCase, bool isRegex );
+
+    inline void setFocusWidget( const QWidget* w )
+    {
+        focusWidget_ = w;
+    }
+
+    inline const QWidget* focusWidget() const
+    {
+        return focusWidget_;
+    }
 
     // Returns whether the search is active (i.e. valid and non empty regexp)
     bool isActive() const
@@ -120,14 +130,15 @@ class QuickFindPattern : public QObject {
 
     QuickFindMatcher getMatcher() const;
 
-  Q_SIGNALS:
+Q_SIGNALS:
     // Sent when the pattern is changed
     void patternUpdated();
 
-  private:
+private:
     bool active_ = false;
     QRegularExpression regexp_;
     QString pattern_;
+    const QWidget* focusWidget_{ nullptr };
 };
 
 #endif
