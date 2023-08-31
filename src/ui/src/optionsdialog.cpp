@@ -661,29 +661,31 @@ void OptionsDialog::buildShortcutsTable( bool useDefaultsOnly )
     shortcutsTable->setRowCount( 0 );
 
     const auto& config = Configuration::get();
-    auto shortcuts = ShortcutAction::defaultShortcuts();
+    auto shortcutList = ShortcutAction::defaultShortcutList();
     if ( !useDefaultsOnly ) {
         for ( const auto& [ action, keys ] : config.shortcuts() ) {
-            shortcuts[ action ] = keys;
+            shortcutList[ action ].keySequence = keys;
         }
     }
 
-    for ( const auto& [ action, keys ] : shortcuts ) {
+    for ( const auto& [ action, shortCut ] : shortcutList ) {
         auto currentRow = shortcutsTable->rowCount();
         shortcutsTable->insertRow( currentRow );
 
-        auto keyItem = new QTableWidgetItem( ShortcutAction::actionName( action ) );
+        auto keyItem = new QTableWidgetItem( shortCut.name );
         keyItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable );
         keyItem->setData( Qt::UserRole, QString::fromStdString( action ) );
         shortcutsTable->setItem( currentRow, 0, keyItem );
 
-        auto primaryKeySequence = new KeySequencePresenter( keys.size() > 0 ? keys[ 0 ] : "" );
+        auto primaryKeySequence = new KeySequencePresenter(
+            shortCut.keySequence.size() > 0 ? shortCut.keySequence[ 0 ] : "" );
         shortcutsTable->setItem( currentRow, 1, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 1, primaryKeySequence );
         connect( primaryKeySequence, &KeySequencePresenter::edited, this,
                  &OptionsDialog::checkShortcutsOnDuplicate );
 
-        auto secondaryKeySequence = new KeySequencePresenter( keys.size() > 1 ? keys[ 1 ] : "" );
+        auto secondaryKeySequence = new KeySequencePresenter(
+            shortCut.keySequence.size() > 1 ? shortCut.keySequence[ 1 ] : "" );
         shortcutsTable->setItem( currentRow, 2, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 2, secondaryKeySequence );
         connect( secondaryKeySequence, &KeySequencePresenter::edited, this,
