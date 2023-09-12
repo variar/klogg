@@ -147,6 +147,34 @@ const ShortcutAction::ShortcutList& ShortcutAction::defaultShortcutList()
             },
         },
         {
+            MainWindowFullScreen,
+            {
+                QApplication::tr( "Full Screen" ),
+                QStringList{},
+            },
+        },
+        {
+            MainWindowMax,
+            {
+                QApplication::tr( "Maximize window" ),
+                QStringList{},
+            },
+        },
+        {
+            MainWindowMin,
+            {
+                QApplication::tr( "Minimize Window" ),
+                QStringList{},
+            },
+        },
+        {
+            MainWindowPreference,
+            {
+                QApplication::tr( "Preferences" ),
+                QStringList{},
+            },
+        },
+        {
             MainWindowOpenQf,
             {
                 QApplication::tr( "Open quick find" ),

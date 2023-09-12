@@ -695,6 +695,15 @@ void MainWindow::updateShortcuts()
                                               crawler->focusSearchEdit();
                                           }
                                       } );
+    ShortcutAction::registerShortcut( shortcuts, shortcuts_, this, Qt::WindowShortcut,
+                                      ShortcutAction::MainWindowFullScreen,
+                                      [ this ] { this->showFullScreen(); } );
+    ShortcutAction::registerShortcut( shortcuts, shortcuts_, this, Qt::WindowShortcut,
+                                      ShortcutAction::MainWindowMax,
+                                      [ this ] { this->showMaximized(); } );
+    ShortcutAction::registerShortcut( shortcuts, shortcuts_, this, Qt::WindowShortcut,
+                                      ShortcutAction::MainWindowMin,
+                                      [ this ] { this->showMinimized(); } );
 
     auto setShortcuts = [ &shortcuts ]( auto* action, const auto& actionName ) {
         action->setShortcuts( ShortcutAction::shortcutKeys( actionName, shortcuts ) );
@@ -721,6 +730,7 @@ void MainWindow::updateShortcuts()
     setShortcuts( showScratchPadAction, ShortcutAction::MainWindowScratchpad );
     setShortcuts( selectOpenFileAction, ShortcutAction::MainWindowSelectOpenFile );
     setShortcuts( goToLineAction, ShortcutAction::LogViewJumpToLine );
+    setShortcuts( optionsAction, ShortcutAction::MainWindowPreference );
 }
 
 void MainWindow::loadIcons()

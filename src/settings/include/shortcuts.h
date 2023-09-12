@@ -54,6 +54,10 @@ struct ShortcutAction {
     static constexpr auto MainWindowCloseFile = "mainwindow.close_file";
     static constexpr auto MainWindowCloseAll = "mainwindow.close_all";
     static constexpr auto MainWindowQuit = "mainwindow.quit";
+    static constexpr auto MainWindowFullScreen = "mainwindow.fullscreen";
+    static constexpr auto MainWindowMax = "mainwindow.max_window";
+    static constexpr auto MainWindowMin = "mainwindow.min_window";
+    static constexpr auto MainWindowPreference = "mainwindow.preference";
     static constexpr auto MainWindowCopy = "mainwindow.copy_selection";
     static constexpr auto MainWindowSelectAll = "mainwindow.select_all";
     static constexpr auto MainWindowOpenQf = "mainwindow.open_qf";
