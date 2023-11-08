@@ -4,7 +4,7 @@ include(CPM)
 
 set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
 
-cpmaddpackage("gh:simdutf/simdutf@3.2.13")
+cpmaddpackage("gh:simdutf/simdutf@4.0.3")
 cpmaddpackage("gh:foonathan/type_safe@0.2.3")
 
 if(APPLE)
