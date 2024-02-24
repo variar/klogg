@@ -82,8 +82,7 @@ std::pair<int, int> Overview::getViewLines() const
     if ( linesInFile_.get() > 0 ) {
         top = static_cast<int>( ( topLine_.get() ) * height_ / ( linesInFile_.get() ) );
 
-        bottom = static_cast<int>( ( static_cast<unsigned>( top ) + nbLines_.get() ) * height_
-                                   / ( linesInFile_.get() ) );
+        bottom = top + static_cast<int>( nbLines_.get() * height_ / ( linesInFile_.get() ) );
     }
 
     return std::make_pair( top, bottom );
