@@ -1438,6 +1438,42 @@ void CrawlerWidget::registerShortcuts()
                                              % visibilityBox_->count() );
         } );
 
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableCaseMatching, [ this ]() {
+            matchCaseButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableRegex, [ this ]() {
+            useRegexpButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableInverseMatching, [ this ]() {
+            inverseButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableRegexCombining, [ this ]() {
+            booleanButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableAutoRefresh, [ this ]() {
+            searchRefreshButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerKeepResults, [ this ]() {
+            keepSearchResultsButton_->toggle();
+        } );
+
     ShortcutAction::registerShortcut( configuredShortcuts, shortcuts_, this,
                                       Qt::WidgetWithChildrenShortcut,
                                       ShortcutAction::CrawlerChangeVisibilityBackward, [ this ]() {
