@@ -146,8 +146,8 @@ class MainWindow : public QMainWindow {
 
     // Update the selection information displayed in the status bar.
     // Must be passed as the internal (starts at 0) line number.
-    void lineNumberHandler( LineNumber startLine, LinesCount nLines, LineColumn startCol,
-                            LineLength nSymbols );
+    void lineNumberHandler( LineNumber startLine, LinesCount nLines, const LineColumn& startCol,
+                            const LineLength& nSymbols );
 
     // Save current search in line edit as predefined filter.
     // Opens dialog with new entry.

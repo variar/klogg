@@ -69,10 +69,10 @@ class QuickFindMatcher {
     // Returns whether there is a match in the passed line, starting at
     // the passed column.
     // Results are stored internally.
-    bool isLineMatching( const QString& line, LineColumn column = 0_lcol ) const;
+    bool isLineMatching( const QString& line, const LineColumn& column = 0_lcol ) const;
 
     // Same as isLineMatching but search backward
-    bool isLineMatchingBackward( const QString& line, LineColumn column = LineColumn{-1} ) const;
+    bool isLineMatchingBackward( const QString& line, const LineColumn& column = LineColumn{-1} ) const;
 
     // Must be called when isLineMatching returns 'true', returns
     // the position of the first match found.

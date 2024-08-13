@@ -150,7 +150,7 @@ void VersionChecker::downloadFinished( QNetworkReply* reply )
     config.save();
 }
 
-void VersionChecker::checkVersionData( QByteArray versionData )
+void VersionChecker::checkVersionData( const QByteArray& versionData )
 {
     LOG_DEBUG << "Version reply: " << QString::fromUtf8( versionData );
 

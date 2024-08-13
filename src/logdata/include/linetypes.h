@@ -306,7 +306,7 @@ private:
 // Length of a tab stop
 constexpr int TabStop = 8;
 
-inline QString untabify( QString&& line, LineColumn initialPosition = 0_lcol )
+inline QString untabify( QString&& line, const LineColumn& initialPosition = 0_lcol )
 {
     line.replace( QChar::Null, QChar::Space );
 

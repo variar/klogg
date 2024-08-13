@@ -111,7 +111,7 @@ QTextCodec* IndexingData::getForcedEncoding() const
     return encodingForced_;
 }
 
-void IndexingData::addAll( const klogg::vector<char>& block, LineLength length,
+void IndexingData::addAll( const klogg::vector<char>& block, const LineLength& length,
                            const FastLinePositionArray& linePosition, QTextCodec* encoding )
 
 {

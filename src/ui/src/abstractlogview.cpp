@@ -254,7 +254,7 @@ class WrappedLinesView {
         return wrappedLines_.size();
     }
 
-    klogg::vector<WrappedString> mid( LineColumn start, LineLength length ) const
+    klogg::vector<WrappedString> mid( const LineColumn& start, const LineLength& length ) const
     {
         auto getLength = []( const auto& view ) -> LineLength::UnderlyingType {
             return type_safe::narrow_cast<LineLength::UnderlyingType>( view.size() );
@@ -1790,7 +1790,7 @@ void AbstractLogView::selectAndDisplayLine( LineNumber line )
 }
 
 void AbstractLogView::selectPortionAndDisplayLine( LineNumber line, LinesCount nLines,
-                                                   LineColumn startCol, LineLength nSymbols )
+                                                   const LineColumn& startCol, const LineLength& nSymbols )
 {
     disableFollow();
     selection_.selectLine( line );
@@ -2081,7 +2081,7 @@ void AbstractLogView::updateGlobalSelection()
     }
 }
 
-void AbstractLogView::selectAndDisplayRange( FilePosition pos )
+void AbstractLogView::selectAndDisplayRange( const FilePosition& pos )
 {
     disableFollow();
     selection_.selectRange( selectionStartPos_.line(), pos.line() );

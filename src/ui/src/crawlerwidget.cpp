@@ -545,7 +545,7 @@ void CrawlerWidget::updateFilteredView( LinesCount nbMatches, int progress,
 }
 
 void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nLines,
-                                        LineColumn startCol, LineLength nSymbols )
+                                        const LineColumn& startCol, const LineLength& nSymbols )
 {
     const auto mainViewLine = logFilteredData_->getMatchingLineNumber( filteredLineNb );
     logMainView_->selectPortionAndDisplayLine( mainViewLine, nLines, startCol,
@@ -553,7 +553,7 @@ void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nL
 }
 
 void CrawlerWidget::updateLineNumberHandler( LineNumber line, LinesCount nLines,
-                                             LineColumn startCol, LineLength nSymbols )
+                                             const LineColumn& startCol, const LineLength& nSymbols )
 {
     currentLineNumber_ = line;
     Q_EMIT newSelection( line, nLines, startCol, nSymbols );

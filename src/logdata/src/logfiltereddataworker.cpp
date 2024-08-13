@@ -129,7 +129,7 @@ SearchResults SearchData::takeCurrentResults() const
     return SearchResults{ std::exchange( newMatches_, {} ), maxLength_, nbLinesProcessed_ };
 }
 
-void SearchData::addAll( LineLength length, const SearchResultArray& matches, LinesCount lines )
+void SearchData::addAll( const LineLength& length, const SearchResultArray& matches, LinesCount lines )
 {
     UniqueLock lock( dataMutex_ );
 

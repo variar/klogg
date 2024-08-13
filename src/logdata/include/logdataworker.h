@@ -209,7 +209,7 @@ class IndexingData {
 
     // Atomically add to all the existing
     // indexing data.
-    void addAll( const klogg::vector<char>& block, LineLength length,
+    void addAll( const klogg::vector<char>& block, const LineLength& length,
                  const FastLinePositionArray& linePosition, QTextCodec* encoding );
 
     // Completely clear the indexing data.

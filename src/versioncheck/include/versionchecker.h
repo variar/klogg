@@ -94,7 +94,7 @@ class VersionChecker : public QObject {
     void downloadFinished( QNetworkReply* );
 
   private:
-    void checkVersionData( QByteArray versionData );
+    void checkVersionData( const QByteArray& versionData );
 
   private:
     QNetworkAccessManager* manager_ = nullptr;

@@ -245,8 +245,8 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     // Scrolling as necessary
     void trySelectLine( LineNumber newLine );
     void selectAndDisplayLine( LineNumber line );
-    void selectPortionAndDisplayLine( LineNumber line, LinesCount nLines, LineColumn startCol,
-                                      LineLength nSymbols );
+    void selectPortionAndDisplayLine( LineNumber line, LinesCount nLines, const LineColumn& startCol,
+                                      const LineLength& nSymbols );
 
     // Use the current QFP to go and select the next match.
     void searchForward() override;
@@ -480,7 +480,7 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     // Utils functions
     void updateGlobalSelection();
 
-    void selectAndDisplayRange( FilePosition pos );
+    void selectAndDisplayRange( const FilePosition& pos );
 };
 
 #endif

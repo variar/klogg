@@ -1319,8 +1319,8 @@ void MainWindow::changeFollowMode( bool follow )
     followAction->setChecked( follow );
 }
 
-void MainWindow::lineNumberHandler( LineNumber startLine, LinesCount nLines, LineColumn startCol,
-                                    LineLength nSymbols )
+void MainWindow::lineNumberHandler( LineNumber startLine, LinesCount nLines, const LineColumn& startCol,
+                                    const LineLength& nSymbols )
 {
     // The line number received is the internal (starts at 0)
     uint64_t fileSize{};
