@@ -51,6 +51,7 @@ class PredefinedFiltersComboBox final : public QComboBox {
 
   public:
     explicit PredefinedFiltersComboBox( QWidget* parent );
+    ~PredefinedFiltersComboBox();
 
     PredefinedFiltersComboBox( const PredefinedFiltersComboBox& other ) = delete;
     PredefinedFiltersComboBox( PredefinedFiltersComboBox&& other ) noexcept = delete;
