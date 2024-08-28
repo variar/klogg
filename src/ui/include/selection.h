@@ -162,7 +162,7 @@ class Selection {
     FilePosition getPreviousPosition() const;
 
   private:
-    std::map<LineNumber, QString>
+    std::vector<std::pair<LineNumber, QString>>
     getSelectionWithLineNumbers( const AbstractLogData* logData ) const;
 
   private:

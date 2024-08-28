@@ -231,7 +231,7 @@ class WrappedLinesView {
     explicit WrappedLinesView( const QString& longLine, LineLength visibleColumns )
     {
         if ( longLine.isEmpty() ) {
-            wrappedLines_.push_back( WrappedString{} );
+            wrappedLines_.emplace_back( );
         }
         else {
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
@@ -264,7 +264,7 @@ class WrappedLinesView {
         if ( wrappedLines_.size() == 1 ) {
             auto& wrappedLine = wrappedLines_.front();
             auto len = std::min( length.get(), getLength( wrappedLine ) - start.get() );
-            resultChunks.push_back( wrappedLine.mid( start.get(), ( len > 0 ? len : 0 ) ) );
+            resultChunks.emplace_back( wrappedLine.mid( start.get(), ( len > 0 ? len : 0 ) ) );
             return resultChunks;
         }
 
@@ -281,7 +281,7 @@ class WrappedLinesView {
         auto chunkLength = length.get();
         while ( positionInWrappedLine + chunkLength
                 > getLength( wrappedLines_[ wrappedLineIndex ] ) ) {
-            resultChunks.push_back(
+            resultChunks.emplace_back(
                 wrappedLines_[ wrappedLineIndex ].mid( positionInWrappedLine ) );
             wrappedLineIndex++;
             positionInWrappedLine = 0;
@@ -294,7 +294,7 @@ class WrappedLinesView {
         if ( chunkLength > 0 ) {
             auto& wrappedLine = wrappedLines_[ wrappedLineIndex ];
             auto len = std::min( chunkLength, getLength( wrappedLine ) - positionInWrappedLine );
-            resultChunks.push_back(
+            resultChunks.emplace_back(
                 wrappedLine.mid( positionInWrappedLine, ( len > 0 ? len : 0 ) ) );
         }
 
@@ -2668,8 +2668,9 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             painter->drawText( lineNumberAreaStartX + LineNumberPadding, yPos + fontAscent,
                                lineNumberStr );
         }
+        wrappedLinesNumbers_.reserve(wrappedLineView.wrappedLinesCount());
         for ( auto i = 0u; i < wrappedLineView.wrappedLinesCount(); ++i ) {
-            wrappedLinesNumbers_.push_back( std::make_pair( lineNumber, i ) );
+            wrappedLinesNumbers_.emplace_back( lineNumber, i );
         }
 
         yPos += finalLineHeight;

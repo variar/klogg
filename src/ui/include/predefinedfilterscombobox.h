@@ -58,7 +58,7 @@ class PredefinedFiltersComboBox final : public QComboBox {
     PredefinedFiltersComboBox& operator=( PredefinedFiltersComboBox&& other ) = delete;
 
     void populatePredefinedFilters();
-    void updateSearchPattern( const QString newSearchPattern, bool useLogicalCombining );
+    void updateSearchPattern( const QString& newSearchPattern, bool useLogicalCombining );
 
     virtual void showPopup();
 

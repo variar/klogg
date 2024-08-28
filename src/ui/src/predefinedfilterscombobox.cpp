@@ -114,7 +114,7 @@ void PredefinedFiltersComboBox::populatePredefinedFilters()
     this->setModel( model_ );
 }
 
-void PredefinedFiltersComboBox::updateSearchPattern( const QString newSearchPattern, bool useLogicalCombining )
+void PredefinedFiltersComboBox::updateSearchPattern( const QString& newSearchPattern, bool useLogicalCombining )
 {
     searchPattern_.newOne_ = newSearchPattern;
     searchPattern_.useLogicalCombining_ = useLogicalCombining;
