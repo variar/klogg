@@ -38,13 +38,13 @@
 
 #include "log.h"
 #include <QtGlobal>
-#include <qapplication.h>
-#include <qthreadpool.h>
+#include <QApplication>
+#include <QThreadPool>
 
 #ifdef Q_OS_WIN
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#endif // _WIN32
+#endif
 
 #include <mimalloc.h>
 #include <roaring.hh>
@@ -54,12 +54,10 @@
 #endif
 
 #include "tbb/global_control.h"
-
 #include "configuration.h"
 #include "logger.h"
 #include "mainwindow.h"
 #include "styles.h"
-
 #include "cli.h"
 #include "kloggapp.h"
 
@@ -69,131 +67,122 @@ const bool PersistentInfo::ForcePortable = true;
 const bool PersistentInfo::ForcePortable = false;
 #endif
 
-void setApplicationAttributes( bool enableQtHdpi, int scaleFactorRounding )
-{
-    // When QNetworkAccessManager is instantiated it regularly starts polling
-    // all network interfaces to see if anything changes and if so, what. This
-    // creates a latency spike every 10 seconds on Mac OS 10.12+ and Windows 7 >=
-    // when on a wifi connection.
-    // So here we disable it for lack of better measure.
-    // This will also cause this message: QObject::startTimer: Timers cannot
-    // have negative intervals
-    // For more info see:
-    // - https://bugreports.qt.io/browse/QTBUG-40332
-    // - https://bugreports.qt.io/browse/QTBUG-46015
-    qputenv( "QT_BEARER_POLL_TIMEOUT", QByteArray::number( std::numeric_limits<int>::max() ) );
+namespace {
+    // Constants for configuration
+    constexpr int DEFAULT_MAX_CONCURRENCY = 2;
 
-#if QT_VERSION < QT_VERSION_CHECK( 6, 0, 0 )
-#ifdef Q_OS_WIN
-    QCoreApplication::setAttribute( Qt::AA_DisableWindowContextHelpButton );
-#endif
+    void configureApplicationAttributes(bool enableQtHdpi, int scaleFactorRounding) {
+        qputenv("QT_BEARER_POLL_TIMEOUT", QByteArray::number(std::numeric_limits<int>::max()));
 
-    if ( !enableQtHdpi ) {
-        QCoreApplication::setAttribute( Qt::AA_DisableHighDpiScaling );
+        #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            #ifdef Q_OS_WIN
+                QCoreApplication::setAttribute(Qt::AA_DisableWindowContextHelpButton);
+            #endif
+
+            if (!enableQtHdpi) {
+                QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+            } else {
+                #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+                    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
+                        static_cast<Qt::HighDpiScaleFactorRoundingPolicy>(scaleFactorRounding));
+                #else
+                    Q_UNUSED(scaleFactorRounding);
+                #endif
+                QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+                QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
+            }
+        #else
+            Q_UNUSED(enableQtHdpi);
+            Q_UNUSED(scaleFactorRounding);
+        #endif
+
+        QCoreApplication::setAttribute(Qt::AA_DontShowIconsInMenus);
     }
-    else {
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 14, 0 )
-        QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
-            static_cast<Qt::HighDpiScaleFactorRoundingPolicy>( scaleFactorRounding ) );
-#else
-        Q_UNUSED( scaleFactorRounding );
-#endif
-
-        // This attribute must be set before QGuiApplication is constructed:
-        QCoreApplication::setAttribute( Qt::AA_EnableHighDpiScaling );
-        // We support high-dpi (aka Retina) displays
-        QCoreApplication::setAttribute( Qt::AA_UseHighDpiPixmaps );
+    void setupLogging(const CliParameters& parameters, const Configuration& config) {
+        const auto logLevel = static_cast<logging::LogLevel>(
+            std::max(parameters.log_level, config.loggingLevel()));
+        
+        logging::enableLogging(parameters.enable_logging || config.enableLogging(), logLevel);
+        logging::enableFileLogging(parameters.log_to_file || config.enableLogging(), logLevel);
     }
-#else
-    Q_UNUSED( enableQtHdpi );
-    Q_UNUSED( scaleFactorRounding );
-#endif
 
-    QCoreApplication::setAttribute( Qt::AA_DontShowIconsInMenus );
+    void initializeMemoryAllocators() {
+        roaring_memory_t roaring_memory_allocators;
+        roaring_memory_allocators.malloc = mi_malloc;
+        roaring_memory_allocators.realloc = mi_realloc;
+        roaring_memory_allocators.calloc = mi_calloc;
+        roaring_memory_allocators.free = mi_free;
+        roaring_memory_allocators.aligned_malloc = mi_aligned_alloc;
+        roaring_memory_allocators.aligned_free = mi_free;
+        roaring_init_memory_hook(roaring_memory_allocators);
+    }
+
+    void adjustMaxConcurrency(int& maxConcurrency) {
+        if (maxConcurrency < DEFAULT_MAX_CONCURRENCY) {
+            maxConcurrency = DEFAULT_MAX_CONCURRENCY;
+            LOG_INFO << "Overriding default concurrency to " << maxConcurrency;
+            tbb::global_control concurrencyControl(tbb::global_control::max_allowed_parallelism, maxConcurrency);
+            QThreadPool::globalInstance()->setMaxThreadCount(maxConcurrency);
+        }
+    }
 }
 
-int main( int argc, char* argv[] )
-{
+int main(int argc, char* argv[]) {
 #ifdef KLOGG_USE_MIMALLOC
     mi_process_init();
 #endif
 
     const auto& config = Configuration::getSynced();
-    setApplicationAttributes( config.enableQtHighDpi(), config.scaleFactorRounding() );
+    configureApplicationAttributes(config.enableQtHighDpi(), config.scaleFactorRounding());
 
-    KloggApp app( argc, argv );
+    KloggApp app(argc, argv);
+    MainWindow::installLanguage(config.language());
+    CliParameters parameters(app);
 
-
-    MainWindow::installLanguage( config.language() );
-    CliParameters parameters( app );
-
-    const auto logLevel
-        = static_cast<logging::LogLevel>( std::max( parameters.log_level, config.loggingLevel() ) );
-    logging::enableLogging( parameters.enable_logging || config.enableLogging(), logLevel );
-    logging::enableFileLogging( parameters.log_to_file || config.enableLogging(), logLevel );
-
+    setupLogging(parameters, config);
     app.initCrashHandler();
 
-    auto maxConcurrency
-        = tbb::global_control::active_value( tbb::global_control::max_allowed_parallelism );
-
+    int maxConcurrency = tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism);
     LOG_INFO << "Klogg instance"
              << ", mimalloc v" << mi_version()
              << ", default concurrency " << maxConcurrency;
 
-
-    roaring_memory_t roaring_memory_allocators;
-    roaring_memory_allocators.malloc = mi_malloc;
-    roaring_memory_allocators.realloc = mi_realloc;
-    roaring_memory_allocators.calloc = mi_calloc;
-    roaring_memory_allocators.free = mi_free;
-    roaring_memory_allocators.aligned_malloc = mi_aligned_alloc;
-    roaring_memory_allocators.aligned_free = mi_free;
-    roaring_init_memory_hook(roaring_memory_allocators);
+    initializeMemoryAllocators();
 
 #ifdef KLOGG_HAS_HS
     hs_set_allocator(mi_malloc, mi_free);
 #endif
 
-    if ( maxConcurrency < 2 ) {
-        maxConcurrency = 2;
-        LOG_INFO << "Overriding default concurrency to " << maxConcurrency;
-        tbb::global_control concurrencyControl( tbb::global_control::max_allowed_parallelism,
-                                                maxConcurrency );
-        QThreadPool::globalInstance()->setMaxThreadCount( static_cast<int>( maxConcurrency ) );
-    }
+    adjustMaxConcurrency(maxConcurrency);
 
-    if ( !parameters.multi_instance && app.isSecondary() ) {
+    if (!parameters.multi_instance && app.isSecondary()) {
         LOG_INFO << "Found another klogg, pid " << app.primaryPid();
-        app.sendFilesToPrimaryInstance( parameters.filenames );
-    }
-    else {
-        StyleManager::applyStyle( config.style() );
+        app.sendFilesToPrimaryInstance(parameters.filenames);
+    } else {
+        StyleManager::applyStyle(config.style());
 
-        auto startNewSession = true;
         MainWindow* mw = nullptr;
-        if ( parameters.load_session
-             || ( parameters.filenames.empty() && !parameters.new_session
-                  && config.loadLastSession() ) ) {
+        bool startNewSession = true;
+
+        if (parameters.load_session || (parameters.filenames.empty() && !parameters.new_session && config.loadLastSession())) {
             mw = app.reloadSession();
             startNewSession = false;
-        }
-        else {
+        } else {
             mw = app.newWindow();
             mw->reloadGeometry();
             mw->show();
         }
 
-        if ( parameters.window_width > 0 && parameters.window_height > 0 ) {
-            mw->resize( parameters.window_width, parameters.window_height );
+        if (parameters.window_width > 0 && parameters.window_height > 0) {
+            mw->resize(parameters.window_width, parameters.window_height);
         }
 
-        for ( const auto& filename : parameters.filenames ) {
-            mw->loadInitialFile( filename, parameters.follow_file );
+        for (const auto& filename : parameters.filenames) {
+            mw->loadInitialFile(filename, parameters.follow_file);
         }
 
-        if ( startNewSession ) {
+        if (startNewSession) {
             app.clearInactiveSessions();
         }
 
@@ -202,3 +191,4 @@ int main( int argc, char* argv[] )
 
     return app.exec();
 }
+
