@@ -2215,7 +2215,7 @@ void AbstractLogView::considerMouseHovering( int xPos, int yPos )
         // Mouse moved in the margin, send event up
         // (possibly to highlight the overview)
         if ( line != lastHoveredLine_ ) {
-            LOG_DEBUG << "Mouse moved in margin line: " << line;
+            LOG_DEBUG << "Mouse moved in margin line: " << *line;
             Q_EMIT mouseHoveredOverLine( *line );
             lastHoveredLine_ = line;
         }
