@@ -128,7 +128,7 @@ void OptionsDialog::setupTabs()
 void OptionsDialog::setupFontList()
 {
     const auto families = FontUtils::availableFonts();
-    for ( const QString& str : qAsConst( families ) ) {
+    for ( const QString& str : families ) {
         fontFamilyBox->addItem( str );
     }
 }

@@ -52,7 +52,7 @@ void HighlightersMenu::populateHighlightersMenu()
 
     addSeparator();
 
-    for ( const auto& highlighter : qAsConst( highlighterSets ) ) {
+    for ( const auto& highlighter : highlighterSets ) {
         auto setAction = addAction( highlighter.name() );
         setAction->setActionGroup( highLighters_ );
         setAction->setCheckable( true );

@@ -302,7 +302,7 @@ class KloggApp : public QApplication {
 
         if ( !changes.empty() ) {
             message.append( "<p>Important changes:</p><ul>" );
-            for ( const auto& change : qAsConst( changes ) ) {
+            for ( const auto& change : changes ) {
                 message.append( QString( "<li>%1</li>" ).arg( change ) );
             }
             message.append( "</ul>" );

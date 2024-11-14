@@ -840,7 +840,7 @@ void CrawlerWidget::changeFilteredViewVisibility( int index )
 void CrawlerWidget::setSearchPatternFromPredefinedFilters( const QList<PredefinedFilter>& filters )
 {
     QString searchPattern;
-    for ( const auto& filter : qAsConst( filters ) ) {
+    for ( const auto& filter : filters ) {
         combinePatterns( searchPattern, escapeSearchPattern( filter.pattern, filter.useRegex ) );
     }
     setSearchPattern( searchPattern );

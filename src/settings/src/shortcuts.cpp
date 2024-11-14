@@ -312,7 +312,7 @@ void ShortcutAction::registerShortcut( const ConfiguredShortcuts& configuredShor
                           ? keysConfiguration->second
                           : ShortcutAction::defaultShortcuts( action );
 
-    for ( const auto& key : qAsConst( keys ) ) {
+    for ( const auto& key : keys ) {
         if ( key.isEmpty() ) {
             continue;
         }

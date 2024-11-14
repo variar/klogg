@@ -177,7 +177,7 @@ void VersionChecker::checkVersionData( QByteArray versionData )
     const auto changeLog = latestVersionMap.value( "changelog" ).toList();
 
     QStringList changes;
-    for ( const auto& entry : qAsConst( changeLog ) ) {
+    for ( const auto& entry :  changeLog ) {
         const auto entryData = entry.toMap();
         const auto version = entryData.value( "version" ).toString();
 
