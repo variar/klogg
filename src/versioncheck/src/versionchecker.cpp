@@ -46,7 +46,7 @@ namespace {
 
 #if defined( Q_OS_WIN )
 static constexpr QLatin1String OsSuffix = QLatin1String( "-win", 4 );
-#elif defined( Q_OS_OSX )
+#elif defined( Q_OS_MACOS )
 static constexpr QLatin1String OsSuffix = QLatin1String( "-osx", 4 );
 #else
 static constexpr QLatin1String OsSuffix = QLatin1String( "-linux", 6 );

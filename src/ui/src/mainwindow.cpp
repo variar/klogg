@@ -1276,7 +1276,7 @@ void MainWindow::encodingChanged( QAction* action )
         mib = mibData.toInt();
     }
 
-    LOG_DEBUG << "encodingChanged, encoding " << mib;
+    LOG_DEBUG << "encodingChanged, encoding " << mib.value_or(0);
     if ( auto crawler = currentCrawlerWidget() ) {
         crawler->setEncoding( mib );
         updateInfoLine();
