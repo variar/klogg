@@ -138,13 +138,24 @@ void Configuration::retrieveFromStorage( QSettings& settings )
                       DefaultConfiguration.enableMainSearchHighlightVariance_ )
               .toBool();
 
-    mainSearchBackColor_.setNamedColor(
+
+    mainSearchBackColor_
+    #if QT_VERSION <= QT_VERSION_CHECK( 6, 4, 0 )
+        .setNamedColor(
+    #else
+        .fromString(
+    #endif
         settings
             .value( "regexpType.mainBackColor",
                     DefaultConfiguration.mainSearchBackColor_.name( QColor::HexArgb ) )
             .toString() );
 
-    qfBackColor_.setNamedColor(
+    qfBackColor_
+    #if QT_VERSION <= QT_VERSION_CHECK( 6, 4, 0 )
+        .setNamedColor(
+    #else
+        .fromString(
+    #endif
         settings
             .value( "regexpType.quickfindBackColor",
                     DefaultConfiguration.qfBackColor_.name( QColor::HexArgb ) )
