@@ -170,7 +170,7 @@ TEST_CASE( "Logdata reading changing file", "[logdata]" )
     waitUiState( [ &logData ] { return logData.getNbLine() == 401_lcount; } );
 
     // Check we have a bigger file
-    REQUIRE( changedSpy.count() >= 1 );
+    CHECK( changedSpy.count() >= 1 );
     REQUIRE( logData.getNbLine() == 401_lcount );
     REQUIRE( logData.getMaxLength() == LineLength( SL_LINE_LENGTH ) );
     REQUIRE( logData.getFileSize()
@@ -189,7 +189,7 @@ TEST_CASE( "Logdata reading changing file", "[logdata]" )
         waitUiState( [ &logData ] { return logData.getNbLine() == 421_lcount; } );
 
         // Check we have a bigger file
-        REQUIRE( changedSpy.count() >= 2 );
+        CHECK( changedSpy.count() >= 2 );
         REQUIRE( logData.getNbLine() == 421_lcount );
         REQUIRE( logData.getMaxLength() == LineLength( SL_LINE_LENGTH ) );
         REQUIRE( logData.getFileSize()
@@ -204,7 +204,7 @@ TEST_CASE( "Logdata reading changing file", "[logdata]" )
         waitUiState( [ &logData ] { return logData.getNbLine() == 0_lcount; } );
 
         // Check we have an empty file
-        REQUIRE( changedSpy.count() >= 3 );
+        CHECK( changedSpy.count() >= 3 );
         REQUIRE( logData.getNbLine() == 0_lcount );
         REQUIRE( logData.getMaxLength().get() == 0 );
         REQUIRE( logData.getFileSize() == 0LL );
