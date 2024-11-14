@@ -70,18 +70,6 @@ jobs:
             container: variar/klogg_oracle8
             cmake_opts: -DCMAKE_BUILD_WITH_INSTALL_RPATH=on
 
-          - os: ubuntu_bionic
-            os_version: 18.04
-            arch: x64
-            check_command: apt-get update && apt install --dry-run /usr/local/klogg*.deb
-            cpack_gen: DEB
-            artifacts_id: bionic
-            package_suffix: deb
-            check_container: ubuntu:18.04
-            container_root: docker/ubuntu18.04
-            container: variar/klogg_ubuntu18.04
-            cmake_opts: -DKLOGG_USE_LTO=OFF
-
           - os: ubuntu_focal
             os_version: 20.04
             arch: x64
@@ -106,16 +94,28 @@ jobs:
             container: variar/klogg_ubuntu22.04
             cmake_opts:
 
+          - os: ubuntu_noble
+            os_version: 24.04
+            arch: x64
+            check_command: apt-get update && apt install --dry-run /usr/local/klogg*.deb
+            cpack_gen: DEB
+            artifacts_id: noble
+            package_suffix: deb
+            check_container: ubuntu:24.04
+            container_root: docker/ubuntu24.04
+            container: variar/klogg_ubuntu24.04
+            cmake_opts:
+
           - os: ubuntu_appimage
-            os_version: 18.04
+            os_version: 20.04
             arch: x64
             #check_command: apt-get update && apt install --dry-run /usr/local/klogg*.deb
             #cpack_gen: DEB
             artifacts_id: appimage
             package_suffix: AppImage
             #check_container: ubuntu:18.04
-            container_root: docker/ubuntu18.04_qt5.15
-            container: variar/klogg_ubuntu18.04_qt5.15
+            container_root: docker/ubuntu20.04_qt5.15
+            container: variar/klogg_ubuntu20.04_qt5.15
             cmake_opts: -DKLOGG_USE_LTO=OFF -DCMAKE_PREFIX_PATH=/opt/qt515/
 
 
