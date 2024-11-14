@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update -y
 
-RUN apt install build-essential \
+RUN apt install build-essential python3 \
                     qtbase5-dev qt5-qmake qtbase5-dev-tools qttools5-dev qttranslations5-l10n \
                     libboost-dev libssl-dev libcurl4-openssl-dev \
                     ragel ninja-build zlib1g-dev git \
