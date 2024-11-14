@@ -50,7 +50,7 @@ xcopy %QTDIR%\plugins\platforms\qwindows.dll %KLOGG_WORKSPACE%\release\platforms
 
 md %KLOGG_WORKSPACE%\release\styles
 xcopy %QTDIR%\plugins\styles\qwindowsvistastyle.dll %KLOGG_WORKSPACE%\release\styles /y
-
+xcopy %QTDIR%\plugins\styles\qmodernwindowsstyle.dll %KLOGG_WORKSPACE%\release\styles /y
 
 echo "Copying packaging files..."
 md %KLOGG_WORKSPACE%\chocolately
