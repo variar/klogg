@@ -31,13 +31,13 @@ runs:
       if: "startsWith(matrix.config.qt_version, '5')"
       shell: sh
       run: |
-        python2 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt5_DIR
+        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt5_DIR
 
     - name: Mac deploy Qt fixing
       if: "startsWith(matrix.config.qt_version, '6')"
       shell: sh
       run: |
-        python2 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt6_DIR
+        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt6_DIR
     
     - name: Set packaging env
       shell: sh

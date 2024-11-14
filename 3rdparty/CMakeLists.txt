@@ -14,7 +14,7 @@ if(APPLE)
     GITHUB_REPOSITORY
     arl/macdeployqtfix
     GIT_TAG
-    ffe980011dd7a08ac2bc79dbd5ac86a62b1c1f05
+    df888505849d3c06d20a4338af276dfa7d11826a
     DOWNLOAD_ONLY
     YES
   )
