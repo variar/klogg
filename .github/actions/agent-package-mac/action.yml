@@ -83,37 +83,37 @@ runs:
         pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
         productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
 
-    - name: "Mac notarize DMG"
-      if: ${{ github.event_name != 'pull_request' }} 
-      uses: variar/xcode-notarize@v1.0.3
-      with:
-        verbose: true
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
-        primary-bundle-id: "dev.filimonov.klogg"
-        appstore-connect-username: ${{ inputs.appstore-connect-username }}
-        appstore-connect-password: ${{ inputs.appstore-connect-password }}
+    #- name: "Mac notarize DMG"
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  uses: variar/xcode-notarize@v1.0.3
+    #  with:
+    #    verbose: true
+    #    product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+    #    primary-bundle-id: "dev.filimonov.klogg"
+    #    appstore-connect-username: ${{ inputs.appstore-connect-username }}
+    #    appstore-connect-password: ${{ inputs.appstore-connect-password }}
 
-    - name: "Mac staple DMG"
-      if: ${{ github.event_name != 'pull_request' }} 
-      uses: devbotsxyz/xcode-staple@v1
-      with:
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+    #- name: "Mac staple DMG"
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  uses: devbotsxyz/xcode-staple@v1
+    #  with:
+    #    product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
 
-    - name: "Mac notarize PKG"
-      if: ${{ github.event_name != 'pull_request' }} 
-      uses: variar/xcode-notarize@v1.0.3
-      with:
-        verbose: true
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
-        primary-bundle-id: "dev.filimonov.klogg"
-        appstore-connect-username: ${{ inputs.appstore-connect-username }}
-        appstore-connect-password: ${{ inputs.appstore-connect-password }}
+    #- name: "Mac notarize PKG"
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  uses: variar/xcode-notarize@v1.0.3
+    #  with:
+    #    verbose: true
+    #    product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
+    #    primary-bundle-id: "dev.filimonov.klogg"
+    #    appstore-connect-username: ${{ inputs.appstore-connect-username }}
+    #    appstore-connect-password: ${{ inputs.appstore-connect-password }}
 
-    - name: "Mac staple PKG"
-      if: ${{ github.event_name != 'pull_request' }} 
-      uses: devbotsxyz/xcode-staple@v1
-      with:
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"         
+    #- name: "Mac staple PKG"
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  uses: devbotsxyz/xcode-staple@v1
+    #  with:
+    #    product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"         
 
     - name: Mac symbols
       shell: sh
