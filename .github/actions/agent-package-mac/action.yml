@@ -5,9 +5,11 @@ inputs:
     required: true
   p12-password:
     required: true
-  appstore-connect-username:
+  notarization-username:
     required: true
-  appstore-connect-password:
+  notarization-team:
+    required: true
+  notarization-password:
     required: true
     
 runs:
@@ -91,7 +93,7 @@ runs:
       if: ${{ github.event_name != 'pull_request' }} 
       shell: sh
       run: |
-        xcrun notarytool submit --wait --apple-id "${{ inputs.appstore-connect-username }}" --password "${{ inputs.appstore-connect-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+        xcrun notarytool submit --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
 
     - name: Mac staple DMG 
       if: ${{ github.event_name != 'pull_request' }} 
@@ -103,7 +105,7 @@ runs:
       if: ${{ github.event_name != 'pull_request' }} 
       shell: sh
       run: |
-        xcrun notarytool submit  --wait --apple-id "${{ inputs.appstore-connect-username }}" --password "${{ inputs.appstore-connect-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
+        xcrun notarytool submit  --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
 
     - name: Mac staple PKG 
       if: ${{ github.event_name != 'pull_request' }} 
