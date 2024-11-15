@@ -83,47 +83,33 @@ runs:
         pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
         productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
     
-    - name: Prepare Notarization Credentials
-      run: |
-        # create temporary keychain
-        KEYCHAIN_PATH=$RUNNER_TEMP/notarization.keychain-db
-        KEYCHAIN_PASS=$(uuidgen)
-        security create-keychain -p "${KEYCHAIN_PASS}" ${KEYCHAIN_PATH}
-        security set-keychain-settings -lut 900 ${KEYCHAIN_PATH}
-        security unlock-keychain -p "${KEYCHAIN_PASS}" ${KEYCHAIN_PATH}
-        # import credentials from secrets
-        xcrun notarytool store-credentials notarization --apple-id "${{ inputs.appstore-connect-username }}" --password "${{ inputs.appstore-connect-password }}" --keychain "${KEYCHAIN_PATH}"
-      shell: bash
+    - name: Setup Xcode
+      shell: sh
+      run: sudo xcode-select -s /Applications/Xcode_13.2.1.app
 
     - name: Mac notarize DMG 
       if: ${{ github.event_name != 'pull_request' }} 
+      shell: sh
       run: |
-        KEYCHAIN_PATH=$RUNNER_TEMP/notarization.keychain-db
-        xcrun notarytool submit "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}" --keychain-profile "notarize" --keychain "${KEYCHAIN_PATH}" --wait
-      shell: bash
+        xcrun notarytool submit --wait --apple-id "${{ inputs.appstore-connect-username }}" --password "${{ inputs.appstore-connect-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
 
     - name: Mac staple DMG 
       if: ${{ github.event_name != 'pull_request' }} 
-      run: xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
-      shell: bash
+      shell: sh
+      run: |
+        xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
 
     - name: Mac notarize PKG 
       if: ${{ github.event_name != 'pull_request' }} 
+      shell: sh
       run: |
-        KEYCHAIN_PATH=$RUNNER_TEMP/notarization.keychain-db
-        xcrun notarytool submit "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}" --keychain-profile "notarize" --keychain "${KEYCHAIN_PATH}" --wait
-      shell: bash
+        xcrun notarytool submit  --wait --apple-id "${{ inputs.appstore-connect-username }}" --password "${{ inputs.appstore-connect-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
 
     - name: Mac staple PKG 
       if: ${{ github.event_name != 'pull_request' }} 
-      run: xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
-      shell: bash         
-
-    - name: Cleanup Notarization 
-      if: ${{ always() }}
-      run: security delete-keychain $RUNNER_TEMP/notarization.keychain-db
-      shell: bash
-      continue-on-error: true
+      shell: sh 
+      run: |
+        xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
 
     - name: Mac symbols
       shell: sh
