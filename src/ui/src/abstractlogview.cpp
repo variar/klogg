@@ -47,6 +47,7 @@
 #include <cassert>
 #include <cmath>
 #include <complex>
+#include <cstdint>
 #include <limits>
 #include <memory>
 #include <numeric>
@@ -221,7 +222,7 @@ QFontMetrics pixmapFontMetrics( const QFont& font )
 }
 
 class WrappedLinesView {
-  public:
+public:
 #if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
     using WrappedString = QStringView;
 #else
@@ -310,7 +311,7 @@ class WrappedLinesView {
 };
 
 class LineChunk {
-  public:
+public:
     LineChunk( LineColumn firstCol, LineColumn endCol, QColor foreColor, QColor backColor )
         : start_{ firstCol }
         , end_{ endCol }
@@ -344,7 +345,7 @@ class LineChunk {
         return backColor_;
     }
 
-  private:
+private:
     LineColumn start_ = {};
     LineColumn end_ = {};
 
@@ -356,7 +357,7 @@ class LineChunk {
 // It stores the chunks of line to draw
 // each chunk having a different colour
 class LineDrawer {
-  public:
+public:
     explicit LineDrawer( const QColor& backColor )
         : backColor_( backColor )
     {
@@ -441,7 +442,7 @@ class LineDrawer {
             painter->fillRect( xPos, yPos, blankWidth, fontHeight, backColor_ );
     }
 
-  private:
+private:
     klogg::vector<LineChunk> chunks_;
     QColor backColor_;
 };
@@ -2269,6 +2270,9 @@ void AbstractLogView::updateScrollBars()
     if ( !useTextWrap_ && logData_->getMaxLength().get() >= getNbVisibleCols().get() ) {
         hScrollMaxValue = logData_->getMaxLength().get() - getNbVisibleCols().get() + 1;
     }
+
+    hScrollMaxValue
+        = std::min( hScrollMaxValue, static_cast<int64_t>( std::numeric_limits<int>::max() ) );
 
     horizontalScrollBar()->setRange( 0, type_safe::narrow_cast<int>( hScrollMaxValue ) );
     horizontalScrollBar()->setPageStep(
