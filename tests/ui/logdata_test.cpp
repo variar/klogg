@@ -27,6 +27,7 @@
 #include <QTemporaryFile>
 #include <QTest>
 #include <QThread>
+#include <QFileInfo>
 
 #include "file_write_helper.h"
 #include "log.h"
@@ -117,7 +118,7 @@ TEST_CASE( "Logdata decoding lines", "[logdata]" )
     auto finishedSpy
         = std::make_unique<SafeQSignalSpy>( &logData, SIGNAL( loadingFinished( LoadingStatus ) ) );
 
-    logData.attachFile( file.fileName() );
+    logData.attachFile( QFileInfo{ file }.absoluteFilePath() );
 
     REQUIRE( finishedSpy->safeWait() );
     REQUIRE( finishedSpy->count() == 1 );
@@ -147,7 +148,7 @@ TEST_CASE( "Logdata reading changing file", "[logdata]" )
 
     SafeQSignalSpy finishedSpy( &logData, SIGNAL( loadingFinished( LoadingStatus ) ) );
     // Start loading it
-    logData.attachFile( file.fileName() );
+    logData.attachFile( QFileInfo{ file }.absoluteFilePath() );
     waitUiState( [ &logData ] { return logData.getNbLine() == 200_lcount; } );
     REQUIRE( finishedSpy.safeWait() );
     REQUIRE( finishedSpy.count() == 1 );
@@ -170,7 +171,7 @@ TEST_CASE( "Logdata reading changing file", "[logdata]" )
     waitUiState( [ &logData ] { return logData.getNbLine() == 401_lcount; } );
 
     // Check we have a bigger file
-    CHECK( changedSpy.count() >= 1 );
+    REQUIRE( changedSpy.count() >= 1 );
     REQUIRE( logData.getNbLine() == 401_lcount );
     REQUIRE( logData.getMaxLength() == LineLength( SL_LINE_LENGTH ) );
     REQUIRE( logData.getFileSize()
@@ -189,7 +190,7 @@ TEST_CASE( "Logdata reading changing file", "[logdata]" )
         waitUiState( [ &logData ] { return logData.getNbLine() == 421_lcount; } );
 
         // Check we have a bigger file
-        CHECK( changedSpy.count() >= 2 );
+        REQUIRE( changedSpy.count() >= 2 );
         REQUIRE( logData.getNbLine() == 421_lcount );
         REQUIRE( logData.getMaxLength() == LineLength( SL_LINE_LENGTH ) );
         REQUIRE( logData.getFileSize()
@@ -204,7 +205,7 @@ TEST_CASE( "Logdata reading changing file", "[logdata]" )
         waitUiState( [ &logData ] { return logData.getNbLine() == 0_lcount; } );
 
         // Check we have an empty file
-        CHECK( changedSpy.count() >= 3 );
+        REQUIRE( changedSpy.count() >= 3 );
         REQUIRE( logData.getNbLine() == 0_lcount );
         REQUIRE( logData.getMaxLength().get() == 0 );
         REQUIRE( logData.getFileSize() == 0LL );
@@ -234,7 +235,7 @@ SCENARIO( "Attaching log data to files", "[logdata]" )
             SafeQSignalSpy endSpy( &log_data, SIGNAL( loadingFinished( LoadingStatus ) ) );
 
             // Start loading the VBL
-            log_data.attachFile( bigFile.fileName() );
+            log_data.attachFile( QFileInfo{ bigFile }.absoluteFilePath() );
 
             // Immediately interrupt the loading
             log_data.interruptLoading();
@@ -260,12 +261,12 @@ SCENARIO( "Attaching log data to files", "[logdata]" )
             LogData log_data;
             SafeQSignalSpy endSpy( &log_data, SIGNAL( loadingFinished( LoadingStatus ) ) );
 
-            log_data.attachFile( smallFile.fileName() );
+            log_data.attachFile( QFileInfo{ smallFile }.absoluteFilePath() );
             endSpy.safeWait( 10000 );
 
             THEN( "Throws" )
             {
-                CHECK_THROWS_AS( log_data.attachFile( bigFile.fileName() ), CantReattachErr );
+                CHECK_THROWS_AS( log_data.attachFile( QFileInfo{ bigFile }.absoluteFilePath() ), CantReattachErr );
             }
         }
     }
