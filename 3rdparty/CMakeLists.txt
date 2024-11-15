@@ -220,7 +220,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   gpakosz/whereami
   GIT_TAG
-  ba364cd54fd431c76c045393b6522b4bff547f50
+  dcb52a058dc14530ba9ae05e4339bd3ddfae0e0e
   DOWNLOAD_ONLY
   YES
 )
