@@ -85,7 +85,7 @@ runs:
 
     - name: "Mac notarize DMG"
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: variar/xcode-notarize@v1.0.3
+      uses: BoundfoxStudios/action-xcode-notarize@v1
       with:
         verbose: true
         product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
@@ -101,7 +101,7 @@ runs:
 
     - name: "Mac notarize PKG"
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: variar/xcode-notarize@v1.0.3
+      uses: BoundfoxStudios/action-xcode-notarize@v1
       with:
         verbose: true
         product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
