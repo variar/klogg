@@ -322,7 +322,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   microsoft/mimalloc
   VERSION
-  2.1.2
+  2.1.7
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
