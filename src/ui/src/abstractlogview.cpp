@@ -537,9 +537,11 @@ AbstractLogView::~AbstractLogView()
     try {
         if ( quickFind_ ) {
             quickFind_->stopSearch();
+            delete quickFind_;
         }
     } catch ( const std::exception& e ) {
         LOG_ERROR << "Failed to stop search: " << e.what();
+        delete quickFind_;
     }
 }
 
