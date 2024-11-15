@@ -374,7 +374,7 @@ if(KLOGG_USE_SENTRY)
     GITHUB_REPOSITORY
     getsentry/sentry-native
     GIT_TAG
-    79899a808a4675a66db6b76a144cecea954506ea
+    bf14b8533a3b26853e4e6fecf2f955deaa29e2d8
     EXCLUDE_FROM_ALL
     YES
   )
