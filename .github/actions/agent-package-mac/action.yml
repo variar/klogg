@@ -20,7 +20,7 @@ runs:
       with: 
         p12-file-base64: ${{ inputs.p12-file-base64 }}
         p12-password: ${{ inputs.p12-password }}
-        
+     
     - name: Mac deploy Qt
       shell: sh
       run: |
@@ -82,38 +82,48 @@ runs:
         pkgutil --expand ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-product.pkg ./output/klogg_product_pkg
         pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
         productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
+    
+    - name: Prepare Notarization Credentials
+      run: |
+        # create temporary keychain
+        KEYCHAIN_PATH=$RUNNER_TEMP/notarization.keychain-db
+        KEYCHAIN_PASS=$(uuidgen)
+        security create-keychain -p "${KEYCHAIN_PASS}" ${KEYCHAIN_PATH}
+        security set-keychain-settings -lut 900 ${KEYCHAIN_PATH}
+        security unlock-keychain -p "${KEYCHAIN_PASS}" ${KEYCHAIN_PATH}
+        # import credentials from secrets
+        xcrun notarytool store-credentials notarization --apple-id "${{ inputs.appstore-connect-username }}" --password "${{ inputs.appstore-connect-password }}" --keychain "${KEYCHAIN_PATH}"
+      shell: bash
 
-    - name: "Mac notarize DMG"
+    - name: Mac notarize DMG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: BoundfoxStudios/action-xcode-notarize@v1
-      with:
-        verbose: true
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
-        primary-bundle-id: "dev.filimonov.klogg"
-        appstore-connect-username: ${{ inputs.appstore-connect-username }}
-        appstore-connect-password: ${{ inputs.appstore-connect-password }}
+      run: |
+        KEYCHAIN_PATH=$RUNNER_TEMP/notarization.keychain-db
+        xcrun notarytool submit "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}" --keychain-profile "notarize" --keychain "${KEYCHAIN_PATH}" --wait
+      shell: bash
 
-    - name: "Mac staple DMG"
+    - name: Mac staple DMG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: BoundfoxStudios/action-xcode-staple@v1
-      with:
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+      run: xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+      shell: bash
 
-    - name: "Mac notarize PKG"
+    - name: Mac notarize PKG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: BoundfoxStudios/action-xcode-notarize@v1
-      with:
-        verbose: true
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
-        primary-bundle-id: "dev.filimonov.klogg"
-        appstore-connect-username: ${{ inputs.appstore-connect-username }}
-        appstore-connect-password: ${{ inputs.appstore-connect-password }}
+      run: |
+        KEYCHAIN_PATH=$RUNNER_TEMP/notarization.keychain-db
+        xcrun notarytool submit "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}" --keychain-profile "notarize" --keychain "${KEYCHAIN_PATH}" --wait
+      shell: bash
 
-    - name: "Mac staple PKG"
+    - name: Mac staple PKG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: BoundfoxStudios/action-xcode-staple@v1
-      with:
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"         
+      run: xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
+      shell: bash         
+
+    - name: Cleanup Notarization 
+      if: ${{ always() }}
+      run: security delete-keychain $RUNNER_TEMP/notarization.keychain-db
+      shell: bash
+      continue-on-error: true
 
     - name: Mac symbols
       shell: sh
