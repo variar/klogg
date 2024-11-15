@@ -262,7 +262,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   KDAB/KDToolBox
   GIT_TAG
-  253a6c087c626cd477e15c9dae4b0e3ec27afaee
+  6468867d1a46eabe1bcb2cd342f338fe66f06675
   DOWNLOAD_ONLY
   YES
 )
