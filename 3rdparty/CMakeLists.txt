@@ -283,7 +283,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   SpartanJ/efsw
   GIT_TAG
-  2e73f8e96779a2895c6242d66cadb3a15aa5e192
+  1.4.1
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
