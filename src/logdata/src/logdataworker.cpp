@@ -88,7 +88,7 @@ LinesCount IndexingData::getNbLines() const
 
 OffsetInFile IndexingData::getEndOfLineOffset( LineNumber line ) const
 {
-    return linePosition_.at( line.get(), &linePositionCache_.local() );
+    return linePosition_.at( line.get() );
 }
 
 QTextCodec* IndexingData::getEncodingGuess() const
@@ -150,7 +150,6 @@ void IndexingData::clear()
     encodingForced_ = nullptr;
 
     progress_ = {};
-    linePositionCache_.clear();
 
     const auto& config = Configuration::get();
     useFastModificationDetection_ = config.fastModificationDetection();

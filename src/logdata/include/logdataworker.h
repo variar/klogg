@@ -224,7 +224,6 @@ class IndexingData {
     mutable SharedMutex dataMutex_;
 
     LinePositionArray linePosition_;
-    mutable tbb::enumerable_thread_specific<CompressedLinePositionStorage::Cache> linePositionCache_;
 
     LineLength maxLength_;
 

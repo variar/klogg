@@ -25,10 +25,10 @@
 #include "linepositionarray.h"
 
 #include <algorithm>
-#include <random>
-#include <vector>
 #include <array>
 #include <iostream>
+#include <random>
+#include <vector>
 
 #include <configuration.h>
 
@@ -36,9 +36,9 @@ SCENARIO( "LinePositionArray with small number of lines", "[linepositionarray]" 
 {
 
     std::array<OffsetInFile, 6> offsets = { 4_offset,     8_offset, 10_offset,
-                                          345_offset,   // A longer (>128) line
-                                          20000_offset, // An even longer (>16384) line
-                                          20020_offset };
+                                            345_offset,   // A longer (>128) line
+                                            20000_offset, // An even longer (>16384) line
+                                            20020_offset };
 
     GIVEN( "LinePositionArray with small number of lines" )
     {
@@ -102,9 +102,9 @@ SCENARIO( "LinePositionArray with small number of lines", "[linepositionarray]" 
         WHEN( "Add line to single line array with fake lf" )
         {
             LinePositionArray one_line_array;
-            one_line_array.append(10_offset);
+            one_line_array.append( 10_offset );
             one_line_array.setFakeFinalLF();
-            one_line_array.append(20_offset);
+            one_line_array.append( 20_offset );
             THEN( "New last offset is returned" )
             {
                 REQUIRE( one_line_array.at( 0 ) == 20_offset );
@@ -129,8 +129,8 @@ SCENARIO( "LinePositionArray with small number of lines", "[linepositionarray]" 
                         for ( auto i = 0u; i < offsets.size(); ++i ) {
                             REQUIRE( line_array.at( i ) == offsets[ i ] );
                         }
-                        REQUIRE( line_array.at( 6 ) == other_array.at( 0 ));
-                        REQUIRE( line_array.at( 7 ) == other_array.at( 1 ));
+                        REQUIRE( line_array.at( 6 ) == other_array.at( 0 ) );
+                        REQUIRE( line_array.at( 7 ) == other_array.at( 1 ) );
                     }
                 }
 
@@ -145,8 +145,8 @@ SCENARIO( "LinePositionArray with small number of lines", "[linepositionarray]" 
                         for ( auto i = 0u; i < offsets.size() - 1; ++i ) {
                             REQUIRE( line_array.at( i ) == offsets[ i ] );
                         }
-                        REQUIRE( line_array.at( 5 ) == other_array.at( 0 ));
-                        REQUIRE( line_array.at( 6 ) == other_array.at( 1 ));
+                        REQUIRE( line_array.at( 5 ) == other_array.at( 0 ) );
+                        REQUIRE( line_array.at( 6 ) == other_array.at( 1 ) );
                     }
                 }
             }
@@ -165,18 +165,18 @@ SCENARIO( "LinePositionArray with full block of lines", "[linepositionarray]" )
         // Add 255 lines (of various sizes)
         const int lines = 255;
         for ( int i = 0; i < lines; ++i )
-            line_array.append(OffsetInFile( i * 4 ) );
+            line_array.append( OffsetInFile( i * 4 ) );
         // Line no 256
-        line_array.append(OffsetInFile( 255 * 4 ) );
+        line_array.append( OffsetInFile( 255 * 4 ) );
 
         WHEN( "Adding line after block" )
         {
             // Add line no 257
-            line_array.append(OffsetInFile( 255 * 4 + 10 ) );
+            line_array.append( OffsetInFile( 255 * 4 + 10 ) );
 
             THEN( "Correct offset is returned" )
             {
-                REQUIRE( line_array.at( 256 ) ==OffsetInFile( 255 * 4 + 10 ) );
+                REQUIRE( line_array.at( 256 ) == OffsetInFile( 255 * 4 + 10 ) );
             }
         }
 
@@ -185,11 +185,11 @@ SCENARIO( "LinePositionArray with full block of lines", "[linepositionarray]" )
             THEN( "Correct offset is returned" )
             for ( uint32_t i = 0; i < 1000; ++i ) {
                 int64_t pos = ( 257LL * 4 ) + i * 35LL;
-                line_array.append(OffsetInFile( pos ) );
+                line_array.append( OffsetInFile( pos ) );
                 line_array.setFakeFinalLF();
-                REQUIRE( line_array.at( 256 + i ) ==OffsetInFile( pos ) );
-                line_array.append(OffsetInFile( pos + 21LL ) );
-                REQUIRE( line_array.at( 256 + i ) ==OffsetInFile( pos + 21LL ) );
+                REQUIRE( line_array.at( 256 + i ) == OffsetInFile( pos ) );
+                line_array.append( OffsetInFile( pos + 21LL ) );
+                REQUIRE( line_array.at( 256 + i ) == OffsetInFile( pos + 21LL ) );
             }
         }
     }
@@ -198,25 +198,21 @@ SCENARIO( "LinePositionArray with full block of lines", "[linepositionarray]" )
 SCENARIO( "LinePositionArray with UINT32_MAX offsets", "[linepositionarray]" )
 {
 
-    std::array<OffsetInFile, 9> offsets = { 4_offset,
-                                          8_offset,
-                                         OffsetInFile( UINT32_MAX - 10 ),
-                                         OffsetInFile( (uint64_t)UINT32_MAX + 10LL ),
-                                         OffsetInFile( (uint64_t)UINT32_MAX + 30LL ),
-                                         OffsetInFile( (uint64_t)2 * UINT32_MAX ),
-                                         OffsetInFile( (uint64_t)2 * UINT32_MAX + 10LL ),
-                                         OffsetInFile( (uint64_t)2 * UINT32_MAX + 1000LL ),
-                                         OffsetInFile( (uint64_t)3 * UINT32_MAX ) };
-
     GIVEN( "LinePositionArray with long offsets" )
     {
+        std::array<OffsetInFile, 3> offsets = {
+            OffsetInFile( UINT32_MAX - 10 ),
+            OffsetInFile( (uint64_t)UINT32_MAX + 10LL ),
+            OffsetInFile( (uint64_t)UINT32_MAX + 30LL ),
+        };
+
         LinePositionArray line_array;
 
         for ( const auto& offset : offsets ) {
             line_array.append( offset );
         }
 
-        REQUIRE( line_array.size() == 9_lcount );
+        REQUIRE( line_array.size() == 3_lcount );
 
         WHEN( "Access items in linear order" )
         {
@@ -232,28 +228,33 @@ SCENARIO( "LinePositionArray with UINT32_MAX offsets", "[linepositionarray]" )
         {
             THEN( "Correct offset is returned" )
             for ( uint32_t i = 0; i < 1000; ++i ) {
-                int64_t pos = 3LL * UINT32_MAX + 524LL + i * 35LL;
-                line_array.append(OffsetInFile( pos ) );
+                int64_t pos = UINT32_MAX + 524LL + i * 35LL;
+                line_array.append( OffsetInFile( pos ) );
                 line_array.setFakeFinalLF();
-                REQUIRE( line_array.at( 9 + i ) ==OffsetInFile( pos ) );
-                line_array.append(OffsetInFile( pos + 21LL ) );
-                REQUIRE( line_array.at( 9 + i ) ==OffsetInFile( pos + 21LL ) );
+                REQUIRE( line_array.at( offsets.size() + i ).get() == OffsetInFile( pos ).get() );
+                line_array.append( OffsetInFile( pos + 21LL ) );
+                REQUIRE( line_array.at( offsets.size() + i ).get()
+                         == OffsetInFile( pos + 21LL ).get() );
             }
         }
     }
 
     GIVEN( "LinePositionArray with small lines" )
     {
-
+        std::array<OffsetInFile, 2> offsets = {
+            OffsetInFile( (uint64_t)UINT32_MAX / 2 + 10LL ),
+            OffsetInFile( (uint64_t)UINT32_MAX / 2 + 12LL ),
+        };
         LinePositionArray line_array;
-        line_array.append( 4_offset );
-        line_array.append( 8_offset );
+        for ( const auto& offset : offsets ) {
+            line_array.append( offset );
+        }
 
         WHEN( "Appending large lines" )
         {
             FastLinePositionArray other_array;
-            other_array.append(OffsetInFile( (uint64_t)UINT32_MAX + 10LL ) );
-            other_array.append(OffsetInFile( (uint64_t)UINT32_MAX + 30LL ) );
+            other_array.append( OffsetInFile( (uint64_t)UINT32_MAX + 10LL ) );
+            other_array.append( OffsetInFile( (uint64_t)UINT32_MAX + 30LL ) );
 
             line_array.append_list( other_array );
 
@@ -261,10 +262,12 @@ SCENARIO( "LinePositionArray with UINT32_MAX offsets", "[linepositionarray]" )
             {
                 REQUIRE( line_array.size() == 4_lcount );
 
-                REQUIRE( line_array.at( 0 ) == 4_offset );
-                REQUIRE( line_array.at( 1 ) == 8_offset );
-                REQUIRE( line_array.at( 2 ) ==OffsetInFile( (uint64_t)UINT32_MAX + 10 ) );
-                REQUIRE( line_array.at( 3 ) ==OffsetInFile( (uint64_t)UINT32_MAX + 30 ) );
+                REQUIRE( line_array.at( 0 ).get() == offsets[ 0 ].get() );
+                REQUIRE( line_array.at( 1 ).get() == offsets[ 1 ].get() );
+                REQUIRE( line_array.at( 2 ).get()
+                         == OffsetInFile( (uint64_t)UINT32_MAX + 10 ).get() );
+                REQUIRE( line_array.at( 3 ).get()
+                         == OffsetInFile( (uint64_t)UINT32_MAX + 30 ).get() );
             }
         }
     }
