@@ -20,7 +20,6 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 
 #include "linetypes.h"
 #include <type_safe/strong_typedef.hpp>
@@ -39,12 +38,10 @@ public:
 
     // Copy constructor would be slow, delete!
     CompressedLinePositionStorage( const CompressedLinePositionStorage& orig ) = delete;
-    CompressedLinePositionStorage& operator=( const CompressedLinePositionStorage& orig )
-        = delete;
+    CompressedLinePositionStorage& operator=( const CompressedLinePositionStorage& orig ) = delete;
 
     CompressedLinePositionStorage( CompressedLinePositionStorage&& orig ) noexcept;
-    CompressedLinePositionStorage&
-    operator=( CompressedLinePositionStorage&& orig ) noexcept;
+    CompressedLinePositionStorage& operator=( CompressedLinePositionStorage&& orig ) noexcept;
 
     ~CompressedLinePositionStorage() = default;
 
@@ -89,7 +86,11 @@ private:
     };
 
     klogg::vector<BlockMetadata> blocks_;
-    klogg::vector<uint8_t> packedLinesStorage_;
+
+    struct alignas( 16 ) AlignedStorage {
+        std::array<uint8_t, 16> d;
+    };
+    klogg::vector<AlignedStorage> packedLinesStorage_;
 
     klogg::vector<OffsetInFile> currentLinesBlock_;
     klogg::vector<uint32_t> currentLinesBlockShifted_;
@@ -100,7 +101,7 @@ private:
     // Current position (position of the end of the last line added)
     OffsetInFile lastPos_;
 
-    bool canUseSimdSelect_ {false};
+    bool canUseSimdSelect_{ false };
 };
 
 #endif

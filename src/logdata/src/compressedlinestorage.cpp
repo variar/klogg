@@ -95,7 +95,7 @@ void CompressedLinePositionStorage::compress_current_block()
     block.packetBitWidth
         = static_cast<uint8_t>( simdmaxbitsd1( 0, currentLinesBlockShifted_.data() ) );
 
-    const size_t packedLinesSize = block.packetBitWidth * sizeof( __m128i );
+    const size_t packedLinesSize = block.packetBitWidth;
     packedLinesStorage_.resize( packedLinesStorage_.size() + packedLinesSize );
     block.packetStorageOffset = packedLinesStorage_.size() - packedLinesSize;
 
