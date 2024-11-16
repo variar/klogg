@@ -116,6 +116,7 @@ if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4")
   endif(CMAKE_C_FLAGS MATCHES "/W[0-4]")
 
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D __SSE4_1__=1")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj ")
 else()
   ucm_add_flags(CXX "-fno-sized-deallocation -fno-omit-frame-pointer")
