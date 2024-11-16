@@ -54,6 +54,7 @@
 #include "dispatch_to.h"
 #include "encodingdetector.h"
 #include "issuereporter.h"
+#include "linepositionarray.h"
 #include "linetypes.h"
 #include "log.h"
 #include "logdata.h"
@@ -83,12 +84,15 @@ LineLength IndexingData::getMaxLength() const
 
 LinesCount IndexingData::getNbLines() const
 {
-    return LinesCount( linePosition_.size() );
+    return LinesCount( std::visit( []( const auto& linePosition ) { return linePosition.size(); },
+                                   linePosition_ ) );
 }
 
 OffsetInFile IndexingData::getEndOfLineOffset( LineNumber line ) const
 {
-    return linePosition_.at( line.get() );
+    return std::visit(
+        [ line ]( const auto& linePosition ) { return linePosition.at( line.get() ); },
+        linePosition_ );
 }
 
 QTextCodec* IndexingData::getEncodingGuess() const
@@ -112,11 +116,13 @@ QTextCodec* IndexingData::getForcedEncoding() const
 }
 
 void IndexingData::addAll( const klogg::vector<char>& block, LineLength length,
-                           const FastLinePositionArray& linePosition, QTextCodec* encoding )
+                           const FastLinePositionArray& newLinePosition, QTextCodec* encoding )
 
 {
     maxLength_ = std::max( maxLength_, length );
-    linePosition_.append_list( linePosition );
+    std::visit(
+        [ &newLinePosition ]( auto& linePosition ) { linePosition.append_list( newLinePosition ); },
+        linePosition_ );
 
     if ( !block.empty() ) {
         hash_.size += klogg::ssize( block );
@@ -142,22 +148,28 @@ void IndexingData::setProgress( int progress )
 
 void IndexingData::clear()
 {
+    const auto& config = Configuration::get();
+
     maxLength_ = 0_length;
     hash_ = {};
     hashBuilder_.reset();
-    linePosition_ = LinePositionArray();
+    if ( config.useCompressedIndex() ) {
+        linePosition_ = LinePositionArrayType( LinePositionArray{} );
+    }
+    else {
+        linePosition_ = LinePositionArrayType( FastLinePositionArray{} );
+    }
     encodingGuess_ = nullptr;
     encodingForced_ = nullptr;
 
     progress_ = {};
-
-    const auto& config = Configuration::get();
     useFastModificationDetection_ = config.fastModificationDetection();
 }
 
 size_t IndexingData::allocatedSize() const
 {
-    return linePosition_.allocatedSize();
+    return std::visit( []( const auto& linePosition ) { return linePosition.allocatedSize(); },
+                       linePosition_ );
 }
 
 LogDataWorker::LogDataWorker( const std::shared_ptr<IndexingData>& indexing_data )

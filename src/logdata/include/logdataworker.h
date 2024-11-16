@@ -223,7 +223,8 @@ class IndexingData {
   private:
     mutable SharedMutex dataMutex_;
 
-    LinePositionArray linePosition_;
+    using LinePositionArrayType = std::variant<LinePositionArray, FastLinePositionArray>;
+    LinePositionArrayType linePosition_;
 
     LineLength maxLength_;
 

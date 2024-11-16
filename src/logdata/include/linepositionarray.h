@@ -44,6 +44,7 @@
 
 #include "compressedlinestorage.h"
 
+#include "linetypes.h"
 #include "log.h"
 
 class SimpleLinePositionStorage {
@@ -78,7 +79,7 @@ public:
 
     size_t allocatedSize() const
     {
-        return storage_.capacity();
+        return storage_.size() * sizeof(OffsetInFile);
     }
 
     // Element at index
