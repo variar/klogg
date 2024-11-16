@@ -231,10 +231,9 @@ SCENARIO( "LinePositionArray with UINT32_MAX offsets", "[linepositionarray]" )
                 int64_t pos = UINT32_MAX + 524LL + i * 35LL;
                 line_array.append( OffsetInFile( pos ) );
                 line_array.setFakeFinalLF();
-                REQUIRE( line_array.at( offsets.size() + i ).get() == OffsetInFile( pos ).get() );
+                REQUIRE( line_array.at( offsets.size() + i ) == OffsetInFile( pos ) );
                 line_array.append( OffsetInFile( pos + 21LL ) );
-                REQUIRE( line_array.at( offsets.size() + i ).get()
-                         == OffsetInFile( pos + 21LL ).get() );
+                REQUIRE( line_array.at( offsets.size() + i ) == OffsetInFile( pos + 21LL ) );
             }
         }
     }
@@ -262,12 +261,10 @@ SCENARIO( "LinePositionArray with UINT32_MAX offsets", "[linepositionarray]" )
             {
                 REQUIRE( line_array.size() == 4_lcount );
 
-                REQUIRE( line_array.at( 0 ).get() == offsets[ 0 ].get() );
-                REQUIRE( line_array.at( 1 ).get() == offsets[ 1 ].get() );
-                REQUIRE( line_array.at( 2 ).get()
-                         == OffsetInFile( (uint64_t)UINT32_MAX + 10 ).get() );
-                REQUIRE( line_array.at( 3 ).get()
-                         == OffsetInFile( (uint64_t)UINT32_MAX + 30 ).get() );
+                REQUIRE( line_array.at( 0 ) == offsets[ 0 ] );
+                REQUIRE( line_array.at( 1 ) == offsets[ 1 ] );
+                REQUIRE( line_array.at( 2 ) == OffsetInFile( (uint64_t)UINT32_MAX + 10 ) );
+                REQUIRE( line_array.at( 3 ) == OffsetInFile( (uint64_t)UINT32_MAX + 30 ) );
             }
         }
     }
