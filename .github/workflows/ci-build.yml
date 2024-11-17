@@ -153,13 +153,6 @@ jobs:
         config:
           - os: macos
             os_version: 12
-            qt_version: 5.15.2
-            qt_modules:
-            arch: x64
-            artifacts_id: macos-qt5
-            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=11.7
-          - os: macos
-            os_version: 12
             qt_version: 6.7.3
             qt_modules: qt5compat
             arch: x64
@@ -214,14 +207,6 @@ jobs:
             ssl_arch: -x64
             cmake_opts:
             artifacts_id: windows-x64-qt6
-
-          - os: windows
-            os_version: 2022
-            qt_version: 5.15.2
-            arch: x64
-            ssl_arch: -x64
-            cmake_opts:
-            artifacts_id: windows-x64-qt5
 
           - os: windows
             os_version: 2022
