@@ -48,10 +48,12 @@
 #include <cmath>
 #include <complex>
 #include <cstdint>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <qchar.h>
 #include <qcolor.h>
 #include <qscreen.h>
 #include <utility>
@@ -221,95 +223,6 @@ QFontMetrics pixmapFontMetrics( const QFont& font )
     return devicePainter->fontMetrics();
 }
 
-class WrappedLinesView {
-public:
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
-    using WrappedString = QStringView;
-#else
-    using WrappedString = QStringRef;
-#endif
-
-    explicit WrappedLinesView( const QString& longLine, LineLength visibleColumns )
-    {
-        if ( longLine.isEmpty() ) {
-            wrappedLines_.push_back( WrappedString{} );
-        }
-        else {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
-            WrappedString lineToWrap( longLine );
-#else
-            WrappedString lineToWrap( &longLine );
-#endif
-            while ( lineToWrap.size() > visibleColumns.get() ) {
-                wrappedLines_.push_back( lineToWrap.left( visibleColumns.get() ) );
-                lineToWrap = lineToWrap.mid( visibleColumns.get() );
-            }
-            if ( lineToWrap.size() > 0 ) {
-                wrappedLines_.push_back( lineToWrap );
-            }
-        }
-    }
-
-    size_t wrappedLinesCount() const
-    {
-        return wrappedLines_.size();
-    }
-
-    klogg::vector<WrappedString> mid( LineColumn start, LineLength length ) const
-    {
-        auto getLength = []( const auto& view ) -> LineLength::UnderlyingType {
-            return type_safe::narrow_cast<LineLength::UnderlyingType>( view.size() );
-        };
-
-        klogg::vector<WrappedString> resultChunks;
-        if ( wrappedLines_.size() == 1 ) {
-            auto& wrappedLine = wrappedLines_.front();
-            auto len = std::min( length.get(), getLength( wrappedLine ) - start.get() );
-            resultChunks.push_back( wrappedLine.mid( start.get(), ( len > 0 ? len : 0 ) ) );
-            return resultChunks;
-        }
-
-        size_t wrappedLineIndex = 0;
-        auto positionInWrappedLine = start.get();
-        while ( positionInWrappedLine > getLength( wrappedLines_[ wrappedLineIndex ] ) ) {
-            positionInWrappedLine -= getLength( wrappedLines_[ wrappedLineIndex ] );
-            wrappedLineIndex++;
-            if ( wrappedLineIndex >= wrappedLines_.size() ) {
-                return resultChunks;
-            }
-        }
-
-        auto chunkLength = length.get();
-        while ( positionInWrappedLine + chunkLength
-                > getLength( wrappedLines_[ wrappedLineIndex ] ) ) {
-            resultChunks.push_back(
-                wrappedLines_[ wrappedLineIndex ].mid( positionInWrappedLine ) );
-            wrappedLineIndex++;
-            positionInWrappedLine = 0;
-            chunkLength -= getLength( resultChunks.back() );
-            if ( wrappedLineIndex >= wrappedLines_.size() ) {
-                return resultChunks;
-            }
-        }
-
-        if ( chunkLength > 0 ) {
-            auto& wrappedLine = wrappedLines_[ wrappedLineIndex ];
-            auto len = std::min( chunkLength, getLength( wrappedLine ) - positionInWrappedLine );
-            resultChunks.push_back(
-                wrappedLine.mid( positionInWrappedLine, ( len > 0 ? len : 0 ) ) );
-        }
-
-        return resultChunks;
-    }
-
-    bool isEmpty() const
-    {
-        return wrappedLines_.empty() || wrappedLines_.front().isEmpty();
-    }
-
-    klogg::vector<WrappedString> wrappedLines_;
-};
-
 class LineChunk {
 public:
     LineChunk( LineColumn firstCol, LineColumn endCol, QColor foreColor, QColor backColor )
@@ -387,7 +300,7 @@ public:
     // the coloured // background, going all the way to the element
     // left of the line looks better.
     void draw( QPainter* painter, int initialXPos, int initialYPos, int lineWidth,
-               const WrappedLinesView& wrappedLines, int leftExtraBackgroundPx )
+               const WrappedString& wrappedLines, int leftExtraBackgroundPx )
     {
         QFontMetrics fm = painter->fontMetrics();
         const int fontHeight = fm.height();
@@ -1854,8 +1767,8 @@ OptionalLineNumber AbstractLogView::convertCoordToLine( int yPos ) const
 {
     const auto offset = std::abs( ( yPos - drawingTopOffset_ ) / charHeight_ );
     const auto wrappedLineInfoIndex = static_cast<size_t>( std::floor( offset ) );
-    if ( wrappedLineInfoIndex < wrappedLinesNumbers_.size() && !wrappedLinesNumbers_.empty() ) {
-        return wrappedLinesNumbers_[ wrappedLineInfoIndex ].first;
+    if ( wrappedLineInfoIndex < wrappedLinesInfo_.size() && !wrappedLinesInfo_.empty() ) {
+        return wrappedLinesInfo_[ wrappedLineInfoIndex ].lineNumber;
     }
     else {
         return OptionalLineNumber{};
@@ -1868,48 +1781,47 @@ FilePosition AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
 {
     const auto offset = std::abs( ( pos.y() - drawingTopOffset_ ) / charHeight_ );
 
-    if ( wrappedLinesNumbers_.empty() ) {
+    if ( wrappedLinesInfo_.empty() ) {
         return FilePosition{ 0_lnum, 0_lcol };
     }
 
-    const auto wrappedLineInfoIndex
-        = wrappedLinesNumbers_.size() > 1
-              ? std::clamp( static_cast<size_t>( std::floor( offset ) ), size_t{ 0 },
-                            wrappedLinesNumbers_.size() - 1 )
-              : 0;
+    const auto wrappedLineInfoIndex = wrappedLinesInfo_.size() > 1
+                                          ? std::clamp( static_cast<size_t>( std::floor( offset ) ),
+                                                        size_t{ 0 }, wrappedLinesInfo_.size() - 1 )
+                                          : 0;
 
-    auto [ line, wrappedLine ] = wrappedLinesNumbers_[ wrappedLineInfoIndex ];
-    if ( line >= logData_->getNbLine() )
-        line = LineNumber( logData_->getNbLine().get() ) - 1_lcount;
+    const auto [ lineIndex, wrappedLineIndex, wrappedString ]
+        = wrappedLinesInfo_[ wrappedLineInfoIndex ];
 
-    const auto lineText = logData_->getExpandedLineString( line );
+    auto clampedLineIndex = lineIndex;
+    if ( clampedLineIndex >= logData_->getNbLine() ) {
+        clampedLineIndex = LineNumber( logData_->getNbLine().get() ) - 1_lcount;
+    }
+
+    const WrappedString::WrappedStringPart lineText = wrappedString.unwrappedLine();
+
     if ( lineText.size() <= 1 ) {
-        return FilePosition{ line, 0_lcol };
+        return FilePosition{ clampedLineIndex, 0_lcol };
     }
 
-    WrappedLinesView::WrappedString visibleText;
-    if ( useTextWrap_ ) {
-        WrappedLinesView wrapped{ lineText, getNbVisibleCols() };
-        visibleText = wrapped.wrappedLines_[ wrappedLine ];
-    }
-    else {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
-        visibleText = QStringView( lineText ).mid( firstCol_.get(), getNbVisibleCols().get() );
-#else
-        visibleText = QStringRef( &lineText ).mid( firstCol_.get(), getNbVisibleCols().get() );
-#endif
-    }
+    const WrappedString::WrappedStringPart visibleText
+        = useTextWrap_ ? wrappedString.wrappedLine( wrappedLineIndex )
+                       : lineText.mid( firstCol_.get(), getNbVisibleCols().get() );
 
     klogg::vector<LineColumn> possibleColumns( static_cast<size_t>( visibleText.size() ) );
+    klogg::vector<int> columnsWidth( static_cast<size_t>( visibleText.size() ), -1 );
     std::iota( possibleColumns.begin(), possibleColumns.end(), 0_lcol );
 
     const auto columnIt = std::lower_bound(
         possibleColumns.cbegin(), possibleColumns.cend(), pos,
-        [ this, &visibleText ]( LineColumn c, const QPoint& p ) {
-            const auto width
-                = textWidth( pixmapFontMetrics_, visibleText.left( c.get() ) ) + leftMarginPx_;
+        [ this, &visibleText, &columnsWidth ]( LineColumn c, const QPoint& p ) {
+            const size_t columnIndex = static_cast<size_t>( c.get() );
+            if ( columnsWidth[ columnIndex ] == -1 ) {
+                columnsWidth[ columnIndex ]
+                    = textWidth( pixmapFontMetrics_, visibleText.left( c.get() ) ) + leftMarginPx_;
+            }
 
-            return width < p.x();
+            return columnsWidth[ columnIndex ] < p.x();
         } );
 
     const auto length
@@ -1917,16 +1829,26 @@ FilePosition AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
 
     auto column = ( columnIt != possibleColumns.end() ? *columnIt : length ) - 1_length;
     if ( useTextWrap_ ) {
-        column += LineLength{ getNbVisibleCols().get() * static_cast<int>( wrappedLine ) };
+        for ( auto i = 0u; i < wrappedLineIndex; ++i ) {
+            column += LineLength{ type_safe::narrow_cast<LineLength::UnderlyingType>(
+                wrappedString.wrappedLine( i ).size() ) };
+        }
     }
     else {
         column += LineLength{ firstCol_.get() };
     }
 
-    column = std::clamp( column, 0_lcol, LineColumn( lineText.size() ) - 1_length );
+    const auto maxColumn
+        = LineColumn( type_safe::narrow_cast<LineColumn::UnderlyingType>( std::min(
+              lineText.size(), static_cast<decltype( lineText.size() )>(
+                                   std::numeric_limits<LineColumn::UnderlyingType>::max() ) ) ) )
+          - 1_length;
 
-    LOG_DEBUG << "AbstractLogView::convertCoordToFilePos col=" << column << " line=" << line;
-    return FilePosition{ line, column };
+    column = std::clamp( column, 0_lcol, maxColumn );
+
+    LOG_DEBUG << "AbstractLogView::convertCoordToFilePos col=" << column
+              << " line=" << clampedLineIndex;
+    return FilePosition{ clampedLineIndex, column };
 }
 
 // Makes the widget adjust itself to display the passed line.
@@ -2429,7 +2351,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
 
     // Position in pixel of the base line of the line to print
     int yPos = 0;
-    wrappedLinesNumbers_.clear();
+    wrappedLinesInfo_.clear();
     for ( auto currentLine = 0_lcount; currentLine < nbLines; ++currentLine ) {
         const auto lineNumber = firstLine_ + currentLine;
         const QString logLine = logData_->getLineString( lineNumber );
@@ -2535,7 +2457,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
 
         const auto wrappedLineLength
             = useTextWrap_ ? nbVisibleCols : LineLength{ klogg::isize( expandedLine ) + 1 };
-        const WrappedLinesView wrappedLineView{ expandedLine, wrappedLineLength };
+        const WrappedString wrappedLineView{ expandedLine, wrappedLineLength };
         const auto finalLineHeight
             = fontHeight * static_cast<int>( wrappedLineView.wrappedLinesCount() );
         // LOG_INFO << "Draw line " << lineNumber << ": " << expandedLine;
@@ -2672,8 +2594,8 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             painter->drawText( lineNumberAreaStartX + LineNumberPadding, yPos + fontAscent,
                                lineNumberStr );
         }
-        for ( auto i = 0u; i < wrappedLineView.wrappedLinesCount(); ++i ) {
-            wrappedLinesNumbers_.push_back( std::make_pair( lineNumber, i ) );
+        for ( size_t i = 0u; i < wrappedLineView.wrappedLinesCount(); ++i ) {
+            wrappedLinesInfo_.emplace_back( WrappedLineData{ lineNumber, i, wrappedLineView } );
         }
 
         yPos += finalLineHeight;
