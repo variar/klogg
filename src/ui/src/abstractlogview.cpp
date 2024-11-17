@@ -1951,13 +1951,8 @@ void AbstractLogView::jumpToTop()
 // Jump to the last line
 void AbstractLogView::jumpToBottom()
 {
-    const auto newTopLine
-        = ( logData_->getNbLine().get() < getNbVisibleLines().get() )
-              ? 0
-              : logData_->getNbLine().get() - getNbBottomWrappedVisibleLines().get() + 1;
-
     // This will also trigger a scrollContents event
-    verticalScrollBar()->setValue( lineNumberToVerticalScroll( LineNumber( newTopLine ) ) );
+    verticalScrollBar()->setValue( verticalScrollBar()->maximum() );
 
     forceRefresh();
 }
@@ -2153,44 +2148,53 @@ void AbstractLogView::considerMouseHovering( int xPos, int yPos )
 
 LinesCount AbstractLogView::getNbBottomWrappedVisibleLines() const
 {
-    const auto visibleLines = getNbVisibleLines();
-
+    const LinesCount visibleLines = getNbVisibleLines();
+    const LineLength visibleColumns = getNbVisibleCols();
     if ( useTextWrap_ ) {
         const auto totalLines = logData_->getNbLine();
-
-        LinesCount wrappedLinesCount{ 0 };
-        LinesCount offset = 0_lcount;
-        for ( ; offset < visibleLines && offset < totalLines && wrappedLinesCount < visibleLines;
-              ++offset ) {
-            LineNumber line = LineNumber{ totalLines.get() } - offset;
-            wrappedLinesCount += LinesCount{ static_cast<LinesCount::UnderlyingType>(
-                logData_->getLineLength( line ).get() / getNbVisibleCols().get() + 1 ) };
+        LinesCount wrappedVisibleLines;
+        LinesCount unwrappedLines;
+        LineNumber unwrappedLineNumber {logData_->getNbLine().get() - 1};
+        while ( unwrappedLines < totalLines && unwrappedLines < visibleLines ) {
+            QString expandedLine
+                = logData_->getExpandedLineString(unwrappedLineNumber  );
+            WrappedString wrapped{ expandedLine, visibleColumns };
+            wrappedVisibleLines += LinesCount(
+                type_safe::narrow_cast<LinesCount::UnderlyingType>( wrapped.wrappedLinesCount() ) );
+            unwrappedLines++;
+            unwrappedLineNumber--;
         }
 
-        return offset;
+        LOG_INFO << "Bottom visible lines " << visibleLines.get() << " wrapped "
+                 << wrappedVisibleLines.get();
+        return wrappedVisibleLines;
     }
-    return visibleLines;
+    else {
+        return visibleLines;
+    }
 }
 
 void AbstractLogView::updateScrollBars()
 {
-    if ( logData_->getNbLine() < getNbVisibleLines() ) {
+    const LinesCount visibleLines = getNbVisibleLines();
+    const LineLength visibleColumns = getNbVisibleCols();
+    if ( logData_->getNbLine() < visibleLines ) {
         verticalScrollBar()->setRange( 0, 0 );
     }
     else {
         const auto visibleWrappedLines = getNbBottomWrappedVisibleLines();
-        const auto wrappedLinesScrollAdjust = ( getNbVisibleLines() - visibleWrappedLines ).get();
+        const auto wrappedLinesScrollAdjust = ( visibleWrappedLines - visibleLines ).get();
 
         verticalScrollBar()->setRange(
-            0, static_cast<int>( std::min( logData_->getNbLine().get() - getNbVisibleLines().get()
+            0, static_cast<int>( std::min( logData_->getNbLine().get() - visibleLines.get()
                                                + LinesCount::UnderlyingType{ 1 }
                                                + wrappedLinesScrollAdjust,
                                            maxValue<LinesCount>().get() ) ) );
     }
 
     int64_t hScrollMaxValue = 0;
-    if ( !useTextWrap_ && logData_->getMaxLength().get() >= getNbVisibleCols().get() ) {
-        hScrollMaxValue = logData_->getMaxLength().get() - getNbVisibleCols().get() + 1;
+    if ( !useTextWrap_ && logData_->getMaxLength().get() >= visibleColumns.get() ) {
+        hScrollMaxValue = logData_->getMaxLength().get() - visibleColumns.get() + 1;
     }
 
     hScrollMaxValue
@@ -2198,7 +2202,7 @@ void AbstractLogView::updateScrollBars()
 
     horizontalScrollBar()->setRange( 0, type_safe::narrow_cast<int>( hScrollMaxValue ) );
     horizontalScrollBar()->setPageStep(
-        type_safe::narrow_cast<int>( getNbVisibleCols().get() * 7 / 8 ) );
+        type_safe::narrow_cast<int>( visibleColumns.get() * 7 / 8 ) );
 }
 
 void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
