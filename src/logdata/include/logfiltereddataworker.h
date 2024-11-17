@@ -43,16 +43,15 @@
 
 #include <qthreadpool.h>
 
-
 #ifndef Q_MOC_RUN
-#include <tbb/task_group.h>
 #include <roaring.hh>
 #include <roaring64map.hh>
+#include <tbb/task_group.h>
 #endif
 
 #include "atomicflag.h"
-#include "regularexpression.h"
 #include "linetypes.h"
+#include "regularexpression.h"
 #include "synchronization.h"
 
 class LogData;
@@ -60,7 +59,7 @@ class LogData;
 // Class encapsulating a single matching line
 // Contains the line number the line was found in and its content.
 class MatchingLine {
-  public:
+public:
     MatchingLine( LineNumber line )
         : lineNumber_{ line }
     {
@@ -77,7 +76,7 @@ class MatchingLine {
         return lineNumber_ < other.lineNumber_;
     }
 
-  private:
+private:
     LineNumber lineNumber_;
 };
 
@@ -95,12 +94,13 @@ struct SearchResults {
 // This class is a mutex protected set of search result data.
 // It is thread safe.
 class SearchData {
-  public:
+public:
     // will clear new matches
     SearchResults takeCurrentResults() const;
 
     // Atomically add to all the existing search data.
-    void addAll( LineLength length, const SearchResultArray& matches, LinesCount nbLinesProcessed );
+    void addAll( LineLength length, const SearchResultArray& matches, LinesCount nbMatches,
+                 LinesCount nbLinesProcessed );
     // Get the number of matches
     LinesCount getNbMatches() const;
     // Get the last matched line number
@@ -116,7 +116,7 @@ class SearchData {
     // Atomically clear the data.
     void clear();
 
-  private:
+private:
     mutable SharedMutex dataMutex_;
 
     SearchResultArray matches_;
@@ -128,7 +128,7 @@ class SearchData {
 
 class SearchOperation : public QObject {
     Q_OBJECT
-  public:
+public:
     SearchOperation( const LogData& sourceLogData, AtomicFlag& interruptRequested,
                      const RegularExpressionPattern& regExp, LineNumber startLine,
                      LineNumber endLine );
@@ -137,11 +137,11 @@ class SearchOperation : public QObject {
     // and false if it has been cancelled (results not copied)
     virtual void run( SearchData& result ) = 0;
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void searchProgressed( LinesCount nbMatches, int percent, LineNumber initialLine );
     void searchFinished();
 
-  protected:
+protected:
     // Implement the common part of the search, passing
     // the shared results and the line to begin the search from.
     void doSearch( SearchData& result, LineNumber initialLine );
@@ -155,7 +155,7 @@ class SearchOperation : public QObject {
 
 class FullSearchOperation : public SearchOperation {
     Q_OBJECT
-  public:
+public:
     FullSearchOperation( const LogData& sourceLogData, AtomicFlag& interruptRequested,
                          const RegularExpressionPattern& regExp, LineNumber startLine,
                          LineNumber endLine )
@@ -168,7 +168,7 @@ class FullSearchOperation : public SearchOperation {
 
 class UpdateSearchOperation : public SearchOperation {
     Q_OBJECT
-  public:
+public:
     UpdateSearchOperation( const LogData& sourceLogData, AtomicFlag& interruptRequested,
                            const RegularExpressionPattern& regExp, LineNumber startLine,
                            LineNumber endLine, LineNumber position )
@@ -179,14 +179,14 @@ class UpdateSearchOperation : public SearchOperation {
 
     void run( SearchData& result ) override;
 
-  private:
+private:
     LineNumber initialPosition_;
 };
 
 class LogFilteredDataWorker : public QObject {
     Q_OBJECT
 
-  public:
+public:
     explicit LogFilteredDataWorker( const LogData& sourceLogData );
     ~LogFilteredDataWorker() noexcept override;
 
@@ -209,7 +209,7 @@ class LogFilteredDataWorker : public QObject {
     // get the current indexing data
     SearchResults getSearchResults() const;
 
-  Q_SIGNALS:
+Q_SIGNALS:
     // Sent during the indexing process to signal progress
     // percent being the percentage of completion.
     void searchProgressed( LinesCount nbMatches, int percent, LineNumber initialLine );
@@ -217,10 +217,10 @@ class LogFilteredDataWorker : public QObject {
     // to copy the new data back.
     void searchFinished();
 
-  private:
+private:
     void connectSignalsAndRun( SearchOperation* operationRequested );
 
-  private:
+private:
     const LogData& sourceLogData_;
     AtomicFlag interruptRequested_;
 

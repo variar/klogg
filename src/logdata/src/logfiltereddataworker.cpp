@@ -49,6 +49,7 @@
 #include "configuration.h"
 #include "dispatch_to.h"
 #include "issuereporter.h"
+#include "linetypes.h"
 #include "log.h"
 #include "progress.h"
 #include "runnable_lambda.h"
@@ -129,13 +130,14 @@ SearchResults SearchData::takeCurrentResults() const
     return SearchResults{ std::exchange( newMatches_, {} ), maxLength_, nbLinesProcessed_ };
 }
 
-void SearchData::addAll( LineLength length, const SearchResultArray& matches, LinesCount lines )
+void SearchData::addAll( LineLength length, const SearchResultArray& matches,
+                         LinesCount matchedLines, LinesCount processedLines )
 {
     UniqueLock lock( dataMutex_ );
 
     maxLength_ = qMax( maxLength_, length );
-    nbLinesProcessed_ = qMax( nbLinesProcessed_, lines );
-    nbMatches_ += LinesCount( matches.cardinality() );
+    nbLinesProcessed_ = qMax( nbLinesProcessed_, processedLines );
+    nbMatches_ += matchedLines;
 
     newMatches_ |= matches;
 }
@@ -376,7 +378,9 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
                 if ( matchResults.processedLines.get() ) {
 
                     maxLength = qMax( maxLength, matchResults.maxLength );
-                    nbMatches += LinesCount( matchResults.matchingLines.cardinality() );
+                    const LinesCount matchesCount
+                        = LinesCount( matchResults.matchingLines.cardinality() );
+                    nbMatches += matchesCount;
 
                     const auto processedLines = LinesCount{ matchResults.chunkStart.get()
                                                             + matchResults.processedLines.get() };
@@ -385,12 +389,18 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
 
                     // After each block, copy the data to shared data
                     // and update the client
-                    searchData.addAll( maxLength, matchResults.matchingLines, processedLines );
+                    searchData.addAll( maxLength, matchResults.matchingLines, matchesCount,
+                                       processedLines );
 
                     LOG_DEBUG << "done Searching chunk starting at " << matchResults.chunkStart
                               << ", " << matchResults.processedLines << " lines read.";
                 }
 
+                delete blockData;
+
+                const auto matchProcessorEndTime = high_resolution_clock::now();
+                matchCombiningDuration += duration_cast<microseconds>( matchProcessorEndTime
+                                                                       - matchProcessorStartTime );
                 const int percentage
                     = calculateProgress( totalProcessedLines.get(), totalLines.get() );
 
@@ -402,10 +412,6 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
                     reportedMatches = nbMatches;
                 }
 
-                const auto matchProcessorEndTime = high_resolution_clock::now();
-                matchCombiningDuration += duration_cast<microseconds>( matchProcessorEndTime
-                                                                       - matchProcessorStartTime );
-                delete blockData;
                 return tbb::flow::continue_msg{};
             } );
 
@@ -431,8 +437,8 @@ void SearchOperation::doSearch( SearchData& searchData, LineNumber initialLine )
         /*LOG_DEBUG << "Sending chunk starting at " << chunkStart << ", " <<
             lines.second.size()
                 << " lines read.";*/
-        BlockDataType blockData = new SearchBlockData{chunkStart, std::move(lines)};
-        
+        BlockDataType blockData = new SearchBlockData{ chunkStart, std::move( lines ) };
+
         const auto lineSourceEndTime = high_resolution_clock::now();
         const auto chunkReadTime
             = duration_cast<microseconds>( lineSourceEndTime - lineSourceStartTime );
