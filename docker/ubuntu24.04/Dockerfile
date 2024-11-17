@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update -y
 
 RUN apt install build-essential python3 python-is-python3 \
-                    qt6-base-dev qt6-base-dev-tools qt6-5compat-dev qt6-l10n-tools \
+                    qt6-base-dev qt6-base-dev-tools qt6-5compat-dev qt6-l10n-tools linguist-qt6 \
                     libboost-dev libssl-dev libcurl4-openssl-dev \
                     ragel ninja-build zlib1g-dev git \
                     wget fuse file -y && \
