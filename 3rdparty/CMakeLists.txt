@@ -4,8 +4,9 @@ include(CPM)
 
 set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
 
-cpmaddpackage("gh:simdutf/simdutf@3.2.13")
-cpmaddpackage("gh:foonathan/type_safe@0.2.3")
+cpmaddpackage("gh:simdutf/simdutf@5.6.2")
+cpmaddpackage("gh:foonathan/type_safe@0.2.4")
+cpmaddpackage("gh:RoaringBitmap/CRoaring@4.2.1")
 
 if(APPLE)
   cpmaddpackage(
@@ -25,19 +26,6 @@ endif()
 
 cpmaddpackage(
   NAME
-  CRoaring
-  GITHUB_REPOSITORY
-  variar/CRoaring
-  GIT_TAG
-  80a8dcf4f683f00cc9be180f8b18de13491b7e27
-  EXCLUDE_FROM_ALL
-  YES
-  OPTIONS
-  "ENABLE_ROARING_TESTS OFF"
-)
-
-cpmaddpackage(
-  NAME
   maddy
   GITHUB_REPOSITORY
   variar/maddy
@@ -47,48 +35,38 @@ cpmaddpackage(
   YES
 )
 
-if(KLOGG_USE_HYPERSCAN)
-  cpmaddpackage(
-    NAME
-    hyperscan
-    GITHUB_REPOSITORY
-    variar/hyperscan
-    GIT_TAG
-    0931a40e0cf1d7f92189bc546c3491ed5c113f8b
-    EXCLUDE_FROM_ALL
-    YES
-  )
-  if(hyperscan_ADDED)
-    message("Adding alias for hyperscan")
-    add_library(hyperscan_wrapper INTERFACE)
-    target_link_libraries(hyperscan_wrapper INTERFACE hs)
-    target_include_directories(hyperscan_wrapper INTERFACE ${hyperscan_SOURCE_DIR}/src)
-  else()
-    add_library(hyperscan_wrapper INTERFACE)
-    target_link_libraries(hyperscan_wrapper INTERFACE ${HYPERSCAN_LIBRARY})
-    target_include_directories(hyperscan_wrapper INTERFACE ${HYPERSCAN_INCLUDE_DIR})
-  endif()
-elseif(KLOGG_USE_VECTORSCAN)
+if(KLOGG_USE_VECTORSCAN)
   cpmaddpackage(
     NAME
     vectorscan
     GITHUB_REPOSITORY
     VectorCamp/vectorscan
     GIT_TAG
-    b4bba94b1a250603b0b198e0394946e32f6c3f30
+    d29730e1cb9daaa66bda63426cdce83505d2c809
     EXCLUDE_FROM_ALL
     YES
+    OPTIONS
+    "BUILD_STATIC_LIBS ON"
+    "BUILD_UNIT OFF"
+    "BUILD_TOOLS OFF"
+    "BUILD_EXAMPLES OFF"
+    "BUILD_BENCHMARKS OFF"
+    "BUILD_DOC OFF"
+    "BUILD_CHIMERA OFF"
+    "BUIlD_AVX2 OFF"
+    "BUIlD_AVX512 OFF"
+    "BUIlD_AVX512VBMI OFF"
+    "FAT_RUNTIME OFF"
   )
-  if(vectorscan_ADDED)
-    message("Adding alias for vectorscan")
-    add_library(vectorscan_wrapper INTERFACE)
-    target_link_libraries(vectorscan_wrapper INTERFACE hs)
-    target_include_directories(vectorscan_wrapper INTERFACE ${vectorscan_SOURCE_DIR}/src)
-  else()
-    add_library(vectorscan_wrapper INTERFACE)
-    target_link_libraries(vectorscan_wrapper INTERFACE ${VECTORSCAN_LIBRARY})
-    target_include_directories(vectorscan_wrapper INTERFACE ${VECTORSCAN_INCLUDE_DIR})
-  endif()
+ 
+  message("Adding alias for vectorscan")
+  add_library(klogg_vectorscan INTERFACE)
+  target_link_libraries(klogg_vectorscan INTERFACE hs)
+  target_include_directories(klogg_vectorscan INTERFACE 
+    ${vectorscan_SOURCE_DIR}/src
+    ${vectorscan_BINARY_DIR}
+  )
+
 endif()
 
 cpmaddpackage(
