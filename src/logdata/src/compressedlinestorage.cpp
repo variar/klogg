@@ -29,6 +29,7 @@
 #include <stdexcept>
 
 #include "compressedlinestorage.h"
+#include "containers.h"
 #include "cpu_info.h"
 #include "linetypes.h"
 #include "log.h"
@@ -191,4 +192,52 @@ void CompressedLinePositionStorage::pop_back()
 size_t CompressedLinePositionStorage::allocatedSize() const
 {
     return packedLinesStorage_.size() + blocks_.size() * sizeof( BlockMetadata );
+}
+
+klogg::vector<OffsetInFile> CompressedLinePositionStorage::range( LineNumber firstLine,
+                                                                  LinesCount count ) const
+{
+    const size_t firstBlockIndex = firstLine.get() / SimdIndexBlockSize;
+    const size_t indexInFirstBlock = firstLine.get() % SimdIndexBlockSize;
+
+    const LineNumber lastLine = firstLine + count - 1_lcount;
+    const size_t lastBlockIndex = lastLine.get() / SimdIndexBlockSize;
+    const size_t indexInLastBlock = lastLine.get() % SimdIndexBlockSize;
+
+    klogg::vector<OffsetInFile> result;
+    result.reserve( count.get() );
+
+    if ( firstBlockIndex == blocks_.size() ) {
+        std::copy( currentLinesBlock_.begin() + static_cast<int64_t>(indexInFirstBlock),
+                   currentLinesBlock_.begin() + static_cast<int64_t>(indexInLastBlock + 1),
+                   std::back_inserter( result ) );
+    }
+    else {
+        size_t lastBlockToUnpack = std::min( lastBlockIndex, blocks_.size() - 1 );
+        for ( size_t blockIndex = firstBlockIndex; blockIndex <= lastBlockToUnpack; ++blockIndex ) {
+            const BlockMetadata& block = blocks_[ blockIndex ];
+            std::array<uint32_t, SimdIndexBlockSize> unpackedBlock;
+            simdunpackd1( 0,
+                          reinterpret_cast<const __m128i*>(
+                              &packedLinesStorage_[ block.packetStorageOffset ] ),
+                          unpackedBlock.data(), block.packetBitWidth );
+            const size_t copyFromIndex = blockIndex == firstBlockIndex ? indexInFirstBlock : 0u;
+            const size_t copyToIndex
+                = blockIndex == lastBlockIndex ? indexInLastBlock + 1 : unpackedBlock.size();
+
+            std::transform( unpackedBlock.begin() + copyFromIndex,
+                            unpackedBlock.begin() + copyToIndex, std::back_inserter( result ),
+                            [ &block ]( uint32_t pos ) {
+                                return OffsetInFile( pos ) + block.firstLineOffset;
+                            } );
+        }
+
+        if ( lastBlockIndex == blocks_.size() ) {
+            std::copy( currentLinesBlock_.begin(),
+                       currentLinesBlock_.begin() + static_cast<int64_t>(indexInLastBlock + 1),
+                       std::back_inserter( result ) );
+        }
+    }
+
+    return result;
 }

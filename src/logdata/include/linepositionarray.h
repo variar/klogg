@@ -39,11 +39,14 @@
 #ifndef LINEPOSITIONARRAY_H
 #define LINEPOSITIONARRAY_H
 
+#include <algorithm>
 #include <cstddef>
+#include <iterator>
 #include <vector>
 
 #include "compressedlinestorage.h"
 
+#include "containers.h"
 #include "linetypes.h"
 #include "log.h"
 
@@ -79,7 +82,7 @@ public:
 
     size_t allocatedSize() const
     {
-        return storage_.size() * sizeof(OffsetInFile);
+        return storage_.size() * sizeof( OffsetInFile );
     }
 
     // Element at index
@@ -91,6 +94,19 @@ public:
     OffsetInFile at( LineNumber i ) const
     {
         return at( i.get() );
+    }
+
+    klogg::vector<OffsetInFile> range( LineNumber firstLine, LinesCount count ) const
+    {
+        klogg::vector<OffsetInFile> result;
+        result.reserve( count.get() );
+        size_t beginIndex = firstLine.get();
+        size_t endIndex = std::min( beginIndex + count.get(), storage_.size() );
+
+        std::copy_n( storage_.begin() + static_cast<int64_t>( beginIndex ), endIndex - beginIndex,
+                     std::back_inserter( result ) );
+
+        return result;
     }
 
     // Add one list to the other
@@ -168,6 +184,10 @@ public:
         const auto pos = array.at( i );
         // LOG_DEBUG << "Line pos at " << i << " is " << pos;
         return pos;
+    }
+
+    klogg::vector<OffsetInFile> range( LineNumber firstLine, LinesCount count ) const {
+        return array.range(firstLine, count);
     }
 
     // Set the presence of a fake final LF

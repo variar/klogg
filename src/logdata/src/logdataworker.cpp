@@ -51,6 +51,7 @@
 #include <tuple>
 
 #include "configuration.h"
+#include "containers.h"
 #include "dispatch_to.h"
 #include "encodingdetector.h"
 #include "issuereporter.h"
@@ -92,6 +93,14 @@ OffsetInFile IndexingData::getEndOfLineOffset( LineNumber line ) const
 {
     return std::visit(
         [ line ]( const auto& linePosition ) { return linePosition.at( line.get() ); },
+        linePosition_ );
+}
+
+klogg::vector<OffsetInFile> IndexingData::getEndOfLineOffsets( LineNumber line,
+                                                               LinesCount count ) const
+{
+    return std::visit(
+        [ line, count ]( const auto& linePosition ) { return linePosition.range( line, count ); },
         linePosition_ );
 }
 

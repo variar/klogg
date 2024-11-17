@@ -67,6 +67,8 @@ public:
     }
     OffsetInFile at( LineNumber i ) const;
 
+    klogg::vector<OffsetInFile> range( LineNumber firstLine, LinesCount count ) const;
+
     // Add one list to the other
     void append_list( const klogg::vector<OffsetInFile>& positions );
 
