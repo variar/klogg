@@ -175,7 +175,6 @@ LogFilteredDataWorker::LogFilteredDataWorker( const LogData& sourceLogData )
     : sourceLogData_( sourceLogData )
 {
     operationsPool_.setMaxThreadCount( 1 );
-    LOG_INFO << "Roaring hw " << roaring::internal::croaring_hardware_support();
 }
 
 LogFilteredDataWorker::~LogFilteredDataWorker() noexcept
