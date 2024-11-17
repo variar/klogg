@@ -41,6 +41,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <vector>
 
@@ -100,10 +101,11 @@ public:
     {
         klogg::vector<OffsetInFile> result;
         result.reserve( count.get() );
-        size_t beginIndex = firstLine.get();
-        size_t endIndex = std::min( beginIndex + count.get(), storage_.size() );
+        const int64_t beginIndex = static_cast<int64_t>( firstLine.get() );
+        const int64_t endIndex = std::min( beginIndex + static_cast<int64_t>( count.get() ),
+                                           static_cast<int64_t>( storage_.size() ) );
 
-        std::copy_n( storage_.begin() + static_cast<int64_t>( beginIndex ), endIndex - beginIndex,
+        std::copy_n( storage_.begin() + beginIndex, endIndex - beginIndex,
                      std::back_inserter( result ) );
 
         return result;
@@ -186,8 +188,9 @@ public:
         return pos;
     }
 
-    klogg::vector<OffsetInFile> range( LineNumber firstLine, LinesCount count ) const {
-        return array.range(firstLine, count);
+    klogg::vector<OffsetInFile> range( LineNumber firstLine, LinesCount count ) const
+    {
+        return array.range( firstLine, count );
     }
 
     // Set the presence of a fake final LF
