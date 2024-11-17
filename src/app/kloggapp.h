@@ -30,9 +30,7 @@
 #include <QApplication>
 #include <vector>
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 12, 0 )
 #include <QCborValue>
-#endif
 
 #include <QDir>
 #include <QFontDatabase>
@@ -124,13 +122,8 @@ class KloggApp : public QApplication {
             data.insert( "version", kloggVersion() );
             data.insert( "files", QVariant{ filesToOpen } );
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 12, 0 )
             auto cbor = QCborValue::fromVariant( data );
             singleApplication_.sendMessageWithTimeout( cbor.toCbor(), 5000 );
-#else
-            auto json = QJsonDocument::fromVariant( data );
-            singleApplication_.sendMessageWithTimeout( json.toBinaryData(), 5000 );
-#endif
 
             QTimer::singleShot( 100, this, &QApplication::quit );
         } );

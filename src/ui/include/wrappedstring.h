@@ -22,30 +22,18 @@
 #include <qchar.h>
 #include <qglobal.h>
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
 #include <QStringView>
-#else
-#include <QStringRef>
-#endif
 
 #include "containers.h"
 #include "linetypes.h"
 
 class WrappedString {
 public:
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
     using WrappedStringPart = QStringView;
-#else
-    using WrappedStringPart = QStringRef;
-#endif
 
     static WrappedStringPart makeWrappedStringPart(const QString& lineText, 
         LineColumn firstCol, LineLength length ) {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
         return QStringView( lineText ).mid( firstCol.get(), length.get() );
-#else
-        return QStringRef( &lineText ).mid( firstCol.get(), length.get() );
-#endif
     }
 
     explicit WrappedString( QString longLine, LineLength visibleColumns )
@@ -55,11 +43,7 @@ public:
             wrappedLines_.push_back( WrappedStringPart{} );
         }
         else {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
             WrappedStringPart lineToWrap( longLine );
-#else
-            WrappedStringPart lineToWrap( &longLine );
-#endif
             while ( lineToWrap.size() > visibleColumns.get() ) {
                 WrappedStringPart stringToWrap = lineToWrap.left( visibleColumns.get() );
                 auto lastSpaceIt = std::find_if( stringToWrap.rbegin(), stringToWrap.rend(),

@@ -73,11 +73,7 @@
 #include <QRect>
 #include <QScrollBar>
 #include <QShortcut>
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
 #include <QStringView>
-#else
-#include <QStringRef>
-#endif
 #include <QtCore>
 
 #include <tbb/flow_graph.h>
@@ -179,14 +175,9 @@ int countDigits( uint64_t x )
 
 int textWidth( const QFontMetrics& fm, const QString& text )
 {
-#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
     return fm.horizontalAdvance( text );
-#else
-    return fm.width( text );
-#endif
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
 int textWidth( const QFontMetrics& fm, const QStringView& text )
 {
     if ( text.isEmpty() ) {
@@ -194,15 +185,6 @@ int textWidth( const QFontMetrics& fm, const QStringView& text )
     }
     return textWidth( fm, QString::fromRawData( text.data(), klogg::isize( text ) ) );
 }
-#else
-int textWidth( const QFontMetrics& fm, const QStringRef& text )
-{
-    if ( text.isEmpty() ) {
-        return 0;
-    }
-    return textWidth( fm, QString::fromRawData( text.data(), klogg::isize( text ) ) );
-}
-#endif
 
 std::unique_ptr<QPainter> pixmapPainter( QPaintDevice* paintDevice, const QFont& font )
 {
@@ -961,9 +943,7 @@ void AbstractLogView::wheelEvent( QWheelEvent* wheelEvent )
                 followElasticHook_.hold();
             }
             else if ( wheelEvent->phase() == Qt::ScrollEnd
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 12, 0 )
                       || wheelEvent->phase() == Qt::ScrollMomentum
-#endif
             ) {
                 followElasticHook_.release();
             }
@@ -2407,14 +2387,9 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
         }
 
         const auto untabifyHighlight = [ &logLine ]( const auto& match ) {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
             const auto prefix = QStringView{ logLine }.left( match.startColumn().get() );
             const auto matchPart
                 = QStringView{ logLine }.mid( match.startColumn().get(), match.size().get() );
-#else
-            const auto prefix = logLine.leftRef( match.startColumn().get() );
-            const auto matchPart = logLine.midRef( match.startColumn().get(), match.size().get() );
-#endif
             const auto expandedPrefixLength = untabify( prefix.toString() ).size();
             const LineLength startDelta
                 = LineLength{ type_safe::narrow_cast<LineLength::UnderlyingType>(
