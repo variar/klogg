@@ -12,10 +12,8 @@ xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\klogg.pdb %KLOGG_WORKSPACE%\re
 xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\klogg_crashpad_handler.exe %KLOGG_WORKSPACE%\release\ /y
 xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\klogg_minidump_dump.exe %KLOGG_WORKSPACE%\release\ /y
 
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.42_cxx17_64_md_relwithdebinfo\tbb12.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.42_cxx17_64_md_relwithdebinfo\tbb12.pdb %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.42_cxx17_32_md_relwithdebinfo\tbb12.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_19.42_cxx17_32_md_relwithdebinfo\tbb12.pdb %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_*_relwithdebinfo\tbb12.dll %KLOGG_WORKSPACE%\release\ /y
+xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\msvc_*_relwithdebinfo\tbb12.pdb %KLOGG_WORKSPACE%\release\ /y
 
 xcopy %KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\generated\documentation.html %KLOGG_WORKSPACE%\release\ /y
 xcopy %KLOGG_WORKSPACE%\COPYING %KLOGG_WORKSPACE%\release\ /y
