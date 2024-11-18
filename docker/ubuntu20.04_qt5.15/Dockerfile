@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
     apt-get install --no-install-recommends software-properties-common -y && \
-    add-apt-repository ppa:beineri/opt-qt-5.15.4-focal -y && \
+    add-apt-repository ppa:beineri/opt-qt-5.15.3-focal -y && \
     apt-get update -y && \
     apt-get install --no-install-recommends build-essential \
                     qt515base qt515svg qt515tools qt515imageformats qt515translations \
