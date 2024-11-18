@@ -282,7 +282,7 @@ HighlighterMatchType HighlighterSet::matchLine( const QString& line,
 
     auto matchType = HighlighterMatchType::NoMatch;
 
-    for ( int index = highlighterList_.size() - 1; index >= 0; --index ) {
+    for ( int index = static_cast<int>(highlighterList_.size()) - 1; index >= 0; --index ) {
         const Highlighter& hl = highlighterList_[ index ];
         if ( !matchedPatterns[ static_cast<size_t>( index ) ].second ) {
             continue;
