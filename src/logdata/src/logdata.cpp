@@ -545,7 +545,7 @@ klogg::vector<std::string_view> LogData::RawLines::buildUtf8View() const
             //     resultSize = static_cast<size_t>( utf8Data_.size() );
             // }
             // else {
-            utf8Data_.resize( buffer.size() * 2 );
+            utf8Data_.resize( buffer.size() * 4 );
             resultSize = simdutf::convert_utf16_to_utf8(
                 reinterpret_cast<const char16_t*>( utf16Data.utf16() ),
                 static_cast<size_t>( utf16Data.size() ), utf8Data_.data() );
