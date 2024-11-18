@@ -102,6 +102,11 @@ PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     setSizeAdjustPolicy( QComboBox::AdjustToContents );
 }
 
+PredefinedFiltersComboBox::~PredefinedFiltersComboBox()
+{
+    delete model_;
+}
+
 void PredefinedFiltersComboBox::populatePredefinedFilters()
 {
     model_->clear();
@@ -172,6 +177,7 @@ void PredefinedFiltersComboBox::setTitle( const QString& title )
 {
     auto* titleItem = new QStandardItem( title );
     model_->insertRow( 0, titleItem );
+    delete titleItem;
 }
 
 void PredefinedFiltersComboBox::insertFilters(
