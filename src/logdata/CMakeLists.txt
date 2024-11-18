@@ -52,7 +52,7 @@ target_link_libraries(
          kdtoolbox
          robin_hood
          simdutf
-         simdcomp
+         streamvbyte
          klogg_mimalloc_wrapper
 )
 

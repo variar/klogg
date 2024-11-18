@@ -34,7 +34,8 @@
 #include "linetypes.h"
 #include "log.h"
 
-#include <simdcomp.h>
+#include <streamvbyte.h>
+#include <streamvbytedelta.h>
 
 static constexpr size_t SimdIndexBlockSize = 128;
 
@@ -93,16 +94,16 @@ void CompressedLinePositionStorage::compress_current_block()
 {
     BlockMetadata& block = blocks_.emplace_back();
     block.firstLineOffset = currentLinesBlock_.front();
-    block.packetBitWidth
-        = static_cast<uint8_t>( simdmaxbitsd1( 0, currentLinesBlockShifted_.data() ) );
 
-    const size_t packedLinesSize = block.packetBitWidth;
-    packedLinesStorage_.resize( packedLinesStorage_.size() + packedLinesSize );
-    block.packetStorageOffset = packedLinesStorage_.size() - packedLinesSize;
+    const size_t packedLinesSize = streamvbyte_max_compressedbytes( SimdIndexBlockSize );
+    packedLinesStorage_.resize( packedLinesStorageUsedSize_ + packedLinesSize );
+    block.packetStorageOffset = packedLinesStorageUsedSize_;
 
-    simdpackd1( 0, currentLinesBlockShifted_.data(),
-                (__m128i*)( packedLinesStorage_.data() + block.packetStorageOffset ),
-                block.packetBitWidth );
+    const size_t packedBytes
+        = streamvbyte_delta_encode( currentLinesBlockShifted_.data(), SimdIndexBlockSize,
+                                    packedLinesStorage_.data() + block.packetStorageOffset, 0 );
+
+    packedLinesStorageUsedSize_ += packedBytes;
 
     currentLinesBlock_.clear();
     currentLinesBlockShifted_.clear();
@@ -125,18 +126,8 @@ OffsetInFile CompressedLinePositionStorage::at( LineNumber index ) const
 
     const BlockMetadata& block = blocks_[ blockIndex ];
     std::array<uint32_t, SimdIndexBlockSize> unpackedBlock;
-    if ( canUseSimdSelect_ ) {
-        unpackedBlock[ indexInBlock ] = simdselectd1(
-            0,
-            reinterpret_cast<const __m128i*>( &packedLinesStorage_[ block.packetStorageOffset ] ),
-            block.packetBitWidth, static_cast<int>( indexInBlock ) );
-    }
-    else {
-        simdunpackd1(
-            0,
-            reinterpret_cast<const __m128i*>( &packedLinesStorage_[ block.packetStorageOffset ] ),
-            unpackedBlock.data(), block.packetBitWidth );
-    }
+    streamvbyte_delta_decode( &packedLinesStorage_[ block.packetStorageOffset ],
+                              unpackedBlock.data(), SimdIndexBlockSize, 0 );
 
     return block.firstLineOffset + OffsetInFile( unpackedBlock[ indexInBlock ] );
 }
@@ -155,9 +146,8 @@ void CompressedLinePositionStorage::uncompress_last_block()
     currentLinesBlockShifted_.resize( SimdIndexBlockSize );
     const BlockMetadata& block = blocks_.back();
 
-    simdunpackd1(
-        0, reinterpret_cast<const __m128i*>( &packedLinesStorage_[ block.packetStorageOffset ] ),
-        currentLinesBlockShifted_.data(), block.packetBitWidth );
+    streamvbyte_delta_decode( &packedLinesStorage_[ block.packetStorageOffset ],
+                              currentLinesBlockShifted_.data(), SimdIndexBlockSize, 0 );
 
     std::transform( currentLinesBlockShifted_.begin(), currentLinesBlockShifted_.end(),
                     currentLinesBlock_.begin(), [ &block ]( uint32_t pos ) {
@@ -208,8 +198,8 @@ klogg::vector<OffsetInFile> CompressedLinePositionStorage::range( LineNumber fir
     result.reserve( count.get() );
 
     if ( firstBlockIndex == blocks_.size() ) {
-        std::copy( currentLinesBlock_.begin() + static_cast<int64_t>(indexInFirstBlock),
-                   currentLinesBlock_.begin() + static_cast<int64_t>(indexInLastBlock + 1),
+        std::copy( currentLinesBlock_.begin() + static_cast<int64_t>( indexInFirstBlock ),
+                   currentLinesBlock_.begin() + static_cast<int64_t>( indexInLastBlock + 1 ),
                    std::back_inserter( result ) );
     }
     else {
@@ -217,10 +207,8 @@ klogg::vector<OffsetInFile> CompressedLinePositionStorage::range( LineNumber fir
         for ( size_t blockIndex = firstBlockIndex; blockIndex <= lastBlockToUnpack; ++blockIndex ) {
             const BlockMetadata& block = blocks_[ blockIndex ];
             std::array<uint32_t, SimdIndexBlockSize> unpackedBlock;
-            simdunpackd1( 0,
-                          reinterpret_cast<const __m128i*>(
-                              &packedLinesStorage_[ block.packetStorageOffset ] ),
-                          unpackedBlock.data(), block.packetBitWidth );
+            streamvbyte_delta_decode( &packedLinesStorage_[ block.packetStorageOffset ],
+                                      unpackedBlock.data(), SimdIndexBlockSize, 0 );
             const size_t copyFromIndex = blockIndex == firstBlockIndex ? indexInFirstBlock : 0u;
             const size_t copyToIndex
                 = blockIndex == lastBlockIndex ? indexInLastBlock + 1 : unpackedBlock.size();
@@ -234,7 +222,7 @@ klogg::vector<OffsetInFile> CompressedLinePositionStorage::range( LineNumber fir
 
         if ( lastBlockIndex == blocks_.size() ) {
             std::copy( currentLinesBlock_.begin(),
-                       currentLinesBlock_.begin() + static_cast<int64_t>(indexInLastBlock + 1),
+                       currentLinesBlock_.begin() + static_cast<int64_t>( indexInLastBlock + 1 ),
                        std::back_inserter( result ) );
         }
     }

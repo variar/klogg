@@ -7,6 +7,7 @@ set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
 cpmaddpackage("gh:simdutf/simdutf@5.6.2")
 cpmaddpackage("gh:foonathan/type_safe@0.2.4")
 cpmaddpackage("gh:RoaringBitmap/CRoaring@4.2.1")
+cpmaddpackage("gh:lemire/streamvbyte@1.0.0")
 
 if(APPLE)
   cpmaddpackage(
@@ -364,29 +365,6 @@ if(KLOGG_USE_SENTRY)
   endif()
 endif(KLOGG_USE_SENTRY)
 
-cpmaddpackage(
-  NAME
-  simdcomp
-  GITHUB_REPOSITORY
-  lemire/simdcomp
-  GIT_TAG
-  009c67807670d16f8984c0534aef0e630e5465a4
-  DOWNLOAD_ONLY
-  YES
-)
-if(simdcomp_ADDED)
-  add_library(simdcomp STATIC 
-    ${simdcomp_SOURCE_DIR}/src/avxbitpacking.c
-    ${simdcomp_SOURCE_DIR}/src/simdfor.c
-    ${simdcomp_SOURCE_DIR}/src/simdcomputil.c
-    ${simdcomp_SOURCE_DIR}/src/simdbitpacking.c
-    ${simdcomp_SOURCE_DIR}/src/simdintegratedbitpacking.c
-    ${simdcomp_SOURCE_DIR}/src/simdpackedsearch.c
-    ${simdcomp_SOURCE_DIR}/src/simdpackedselect.c
-  )
-  target_include_directories(simdcomp PUBLIC ${simdcomp_SOURCE_DIR}/include)
-endif()
-
 set(klogg_cpm_targets
     xxhash
     Catch2
@@ -408,7 +386,8 @@ set(klogg_cpm_targets
     crashpad_compat
     crashpad_util
     mini_chromium
-    simdcomp
+    streamvbyte
+    FastPFor
 )
 foreach(target ${klogg_cpm_targets})
   if(TARGET ${target})

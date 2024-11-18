@@ -83,16 +83,12 @@ private:
     void uncompress_last_block();
     struct BlockMetadata {
         OffsetInFile firstLineOffset{};
-        uint8_t packetBitWidth{};
         size_t packetStorageOffset{};
     };
 
     klogg::vector<BlockMetadata> blocks_;
-
-    struct alignas( 16 ) AlignedStorage {
-        std::array<uint8_t, 16> d;
-    };
-    klogg::vector<AlignedStorage> packedLinesStorage_;
+    klogg::vector<uint8_t> packedLinesStorage_;
+    size_t packedLinesStorageUsedSize_ = 0;
 
     klogg::vector<OffsetInFile> currentLinesBlock_;
     klogg::vector<uint32_t> currentLinesBlockShifted_;
