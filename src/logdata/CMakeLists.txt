@@ -1,7 +1,6 @@
 add_library(
   klogg_logdata STATIC
   ${CMAKE_CURRENT_SOURCE_DIR}/include/abstractlogdata.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/blockpool.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/compressedlinestorage.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/encodingdetector.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/linepositionarray.h
@@ -16,7 +15,6 @@ add_library(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/filedigest.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/readablesize.h
   ${CMAKE_CURRENT_SOURCE_DIR}/src/abstractlogdata.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/blockpool.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/compressedlinestorage.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/encodingdetector.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/logdata.cpp
@@ -54,6 +52,7 @@ target_link_libraries(
          kdtoolbox
          robin_hood
          simdutf
+         simdcomp
          klogg_mimalloc_wrapper
 )
 

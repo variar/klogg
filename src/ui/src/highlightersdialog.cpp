@@ -46,6 +46,7 @@
 #include <qpushbutton.h>
 #include <utility>
 
+#include "containers.h"
 #include "dispatch_to.h"
 #include "highlightersdialog.h"
 #include "highlighterset.h"
@@ -206,15 +207,15 @@ void HighlightersDialog::exportHighlighters()
 
 void HighlightersDialog::importHighlighters()
 {
-    QStringList files = QFileDialog::getOpenFileNames(
+    const QStringList files = QFileDialog::getOpenFileNames(
         this, tr( "Select one or more files to open" ), "", tr( "Highlighters (*.conf)" ) );
 
-    for ( const auto& file : qAsConst( files ) ) {
+    for ( const auto& file : files ) {
         LOG_DEBUG << "Loading highlighters from " << file;
         QSettings settings{ file, QSettings::IniFormat };
         HighlighterSetCollection collection;
         collection.retrieveFromStorage( settings );
-        for ( const auto& set : qAsConst( collection.highlighters_ ) ) {
+        for ( const auto& set : klogg::as_const( collection.highlighters_ ) ) {
             if ( highlighterSetCollection_.hasSet( set.id() ) ) {
                 continue;
             }
@@ -382,7 +383,7 @@ void HighlightersDialog::populateHighlighterList()
 {
     highlighterListWidget->clear();
     for ( const HighlighterSet& highlighterSet :
-          qAsConst( highlighterSetCollection_.highlighters_ ) ) {
+          klogg::as_const( highlighterSetCollection_.highlighters_ ) ) {
         auto* new_item = new QListWidgetItem( highlighterSet.name() );
         // new_item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled );
         highlighterListWidget->addItem( new_item );

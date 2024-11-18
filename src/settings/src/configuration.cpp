@@ -138,17 +138,27 @@ void Configuration::retrieveFromStorage( QSettings& settings )
                       DefaultConfiguration.enableMainSearchHighlightVariance_ )
               .toBool();
 
-    mainSearchBackColor_.setNamedColor(
-        settings
-            .value( "regexpType.mainBackColor",
-                    DefaultConfiguration.mainSearchBackColor_.name( QColor::HexArgb ) )
-            .toString() );
+    mainSearchBackColor_
+#if QT_VERSION <= QT_VERSION_CHECK( 6, 4, 0 )
+        .setNamedColor(
+#else
+        .fromString(
+#endif
+            settings
+                .value( "regexpType.mainBackColor",
+                        DefaultConfiguration.mainSearchBackColor_.name( QColor::HexArgb ) )
+                .toString() );
 
-    qfBackColor_.setNamedColor(
-        settings
-            .value( "regexpType.quickfindBackColor",
-                    DefaultConfiguration.qfBackColor_.name( QColor::HexArgb ) )
-            .toString() );
+    qfBackColor_
+#if QT_VERSION <= QT_VERSION_CHECK( 6, 4, 0 )
+        .setNamedColor(
+#else
+        .fromString(
+#endif
+            settings
+                .value( "regexpType.quickfindBackColor",
+                        DefaultConfiguration.qfBackColor_.name( QColor::HexArgb ) )
+                .toString() );
 
     qfIgnoreCase_
         = settings.value( "quickfind.ignore_case", DefaultConfiguration.qfIgnoreCase_ ).toBool();
@@ -240,6 +250,10 @@ void Configuration::retrieveFromStorage( QSettings& settings )
                                                 DefaultConfiguration.optimizeForNotLatinEncodings_ )
                                         .toBool();
 
+    useCompressedIndex_
+        = settings.value( "perf.useCompressedIndex", DefaultConfiguration.useCompressedIndex_ )
+              .toBool();
+
     verifySslPeers_
         = settings.value( "net.verifySslPeers", DefaultConfiguration.verifySslPeers_ ).toBool();
 
@@ -300,7 +314,7 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         const auto mapping = settings.value( "shortcuts.mapping" ).toMap();
         for ( auto keys = mapping.begin(); keys != mapping.end(); ++keys ) {
             auto action = keys.key().toStdString();
-            if (action == ShortcutAction::LogViewJumpToButtom) {
+            if ( action == ShortcutAction::LogViewJumpToButtom ) {
                 action = ShortcutAction::LogViewJumpToBottom;
             }
             shortcuts_.emplace( action, keys.value().toStringList() );
@@ -314,7 +328,7 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         settings.setArrayIndex( static_cast<int>( shortcutIndex ) );
         auto action = settings.value( "action", "" ).toString();
         if ( !action.isEmpty() ) {
-            if (action == ShortcutAction::LogViewJumpToButtom) {
+            if ( action == ShortcutAction::LogViewJumpToButtom ) {
                 action = ShortcutAction::LogViewJumpToBottom;
             }
             const auto keys = settings.value( "keys", QStringList() ).toStringList();
@@ -379,6 +393,7 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "perf.searchReadBufferSizeLines", searchReadBufferSizeLines_ );
     settings.setValue( "perf.searchThreadPoolSize", searchThreadPoolSize_ );
     settings.setValue( "perf.keepFileClosed", keepFileClosed_ );
+    settings.setValue( "perf.useCompressedIndex", useCompressedIndex_ );
     settings.setValue( "perf.optimizeForNotLatinEncodings", optimizeForNotLatinEncodings_ );
 
     settings.setValue( "net.verifySslPeers", verifySslPeers_ );

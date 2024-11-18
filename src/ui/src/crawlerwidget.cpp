@@ -840,7 +840,7 @@ void CrawlerWidget::changeFilteredViewVisibility( int index )
 void CrawlerWidget::setSearchPatternFromPredefinedFilters( const QList<PredefinedFilter>& filters )
 {
     QString searchPattern;
-    for ( const auto& filter : qAsConst( filters ) ) {
+    for ( const auto& filter : filters ) {
         combinePatterns( searchPattern, escapeSearchPattern( filter.pattern, filter.useRegex ) );
     }
     setSearchPattern( searchPattern );
@@ -1436,6 +1436,42 @@ void CrawlerWidget::registerShortcuts()
         ShortcutAction::CrawlerChangeVisibilityForward, [ this ]() {
             visibilityBox_->setCurrentIndex( ( visibilityBox_->currentIndex() + 1 )
                                              % visibilityBox_->count() );
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableCaseMatching, [ this ]() {
+            matchCaseButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableRegex, [ this ]() {
+            useRegexpButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableInverseMatching, [ this ]() {
+            inverseButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableRegexCombining, [ this ]() {
+            booleanButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerEnableAutoRefresh, [ this ]() {
+            searchRefreshButton_->toggle();
+        } );
+
+    ShortcutAction::registerShortcut(
+        configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
+        ShortcutAction::CrawlerKeepResults, [ this ]() {
+            keepSearchResultsButton_->toggle();
         } );
 
     ShortcutAction::registerShortcut( configuredShortcuts, shortcuts_, this,

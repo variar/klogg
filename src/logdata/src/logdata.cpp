@@ -352,20 +352,18 @@ LogData::RawLines LogData::getLinesRaw( LineNumber firstLine, LinesCount number 
     rawLines.startLine = firstLine;
 
     try {
-        rawLines.endOfLines.reserve( number.get() );
-        klogg::vector<LineNumber> lineNumbers{ static_cast<size_t>( number.get() ) };
-        std::iota( lineNumbers.begin(), lineNumbers.end(), firstLine );
-
         IndexingData::ConstAccessor scopedAccessor{ indexing_data_.get() };
-        rawLines.prefilterPattern
-            = !prefilterPattern_.isEmpty() ? QRegularExpression(
-                  prefilterPattern_, QRegularExpression::CaseInsensitiveOption )
-                                           : QRegularExpression{};
-
-        if ( lineNumbers.back() >= scopedAccessor.getNbLines() ) {
+        if ( (firstLine + number).get() > scopedAccessor.getNbLines().get() ) {
             LOG_WARNING << "Lines out of bound asked for";
             return {}; /* exception? */
         }
+
+        rawLines.endOfLines.reserve( number.get() );
+        rawLines.prefilterPattern
+            = !prefilterPattern_.isEmpty()
+                  ? QRegularExpression( prefilterPattern_,
+                                        QRegularExpression::CaseInsensitiveOption )
+                  : QRegularExpression{};
 
         ScopedFileHolder<FileHolder> fileHolder( attached_file_.get() );
 
@@ -373,13 +371,15 @@ LogData::RawLines LogData::getLinesRaw( LineNumber firstLine, LinesCount number 
             = ( firstLine == 0_lnum )
                   ? 0
                   : scopedAccessor.getEndOfLineOffset( firstLine - 1_lcount ).get();
-        const auto lastByte = scopedAccessor.getEndOfLineOffset( lineNumbers.back() ).get();
 
-        std::transform( lineNumbers.begin(), lineNumbers.end(),
-                        std::back_inserter( rawLines.endOfLines ),
-                        [ &scopedAccessor, firstByte ]( const LineNumber& line ) {
-                            return scopedAccessor.getEndOfLineOffset( line ).get() - firstByte;
-                        } );
+        klogg::vector<OffsetInFile> endOfLines
+            = scopedAccessor.getEndOfLineOffsets( firstLine, number );
+
+        const auto lastByte = endOfLines.back().get();
+
+        std::transform(
+            endOfLines.begin(), endOfLines.end(), std::back_inserter( rawLines.endOfLines ),
+            [ firstByte ]( const OffsetInFile& offset ) { return offset.get() - firstByte; } );
 
         const auto bytesToRead = lastByte - firstByte;
         LOG_DEBUG << "will try to read:" << bytesToRead << " bytes";

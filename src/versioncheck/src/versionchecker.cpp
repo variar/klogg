@@ -46,7 +46,7 @@ namespace {
 
 #if defined( Q_OS_WIN )
 static constexpr QLatin1String OsSuffix = QLatin1String( "-win", 4 );
-#elif defined( Q_OS_OSX )
+#elif defined( Q_OS_MACOS )
 static constexpr QLatin1String OsSuffix = QLatin1String( "-osx", 4 );
 #else
 static constexpr QLatin1String OsSuffix = QLatin1String( "-linux", 6 );
@@ -177,7 +177,7 @@ void VersionChecker::checkVersionData( const QByteArray& versionData )
     const auto changeLog = latestVersionMap.value( "changelog" ).toList();
 
     QStringList changes;
-    for ( const auto& entry : qAsConst( changeLog ) ) {
+    for ( const auto& entry :  changeLog ) {
         const auto entryData = entry.toMap();
         const auto version = entryData.value( "version" ).toString();
 

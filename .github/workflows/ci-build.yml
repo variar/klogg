@@ -70,18 +70,6 @@ jobs:
             container: variar/klogg_oracle8
             cmake_opts: -DCMAKE_BUILD_WITH_INSTALL_RPATH=on
 
-          - os: ubuntu_bionic
-            os_version: 18.04
-            arch: x64
-            check_command: apt-get update && apt install --dry-run /usr/local/klogg*.deb
-            cpack_gen: DEB
-            artifacts_id: bionic
-            package_suffix: deb
-            check_container: ubuntu:18.04
-            container_root: docker/ubuntu18.04
-            container: variar/klogg_ubuntu18.04
-            cmake_opts: -DKLOGG_USE_LTO=OFF
-
           - os: ubuntu_focal
             os_version: 20.04
             arch: x64
@@ -106,16 +94,28 @@ jobs:
             container: variar/klogg_ubuntu22.04
             cmake_opts:
 
+          - os: ubuntu_noble
+            os_version: 24.04
+            arch: x64
+            check_command: apt-get update && apt install --dry-run /usr/local/klogg*.deb
+            cpack_gen: DEB
+            artifacts_id: noble
+            package_suffix: deb
+            check_container: ubuntu:24.04
+            container_root: docker/ubuntu24.04
+            container: variar/klogg_ubuntu24.04
+            cmake_opts:
+
           - os: ubuntu_appimage
-            os_version: 18.04
+            os_version: 20.04
             arch: x64
             #check_command: apt-get update && apt install --dry-run /usr/local/klogg*.deb
             #cpack_gen: DEB
             artifacts_id: appimage
             package_suffix: AppImage
             #check_container: ubuntu:18.04
-            container_root: docker/ubuntu18.04_qt5.15
-            container: variar/klogg_ubuntu18.04_qt5.15
+            container_root: docker/ubuntu20.04_qt5.15
+            container: variar/klogg_ubuntu20.04_qt5.15
             cmake_opts: -DKLOGG_USE_LTO=OFF -DCMAKE_PREFIX_PATH=/opt/qt515/
 
 
@@ -152,19 +152,12 @@ jobs:
       matrix:
         config:
           - os: macos
-            os_version: 11
-            qt_version: 5.15.2
-            qt_modules:
-            arch: x64
-            artifacts_id: macos-qt5
-            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=10.14
-          - os: macos
-            os_version: 11
-            qt_version: 6.5.1
+            os_version: 12
+            qt_version: 6.7.3
             qt_modules: qt5compat
             arch: x64
             artifacts_id: macos-qt6
-            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=10.15
+            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=11.7
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
@@ -190,8 +183,9 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.CODESIGN_BASE64 }}
           p12-password: ${{ secrets.CODESIGN_PASSWORD }}
-          appstore-connect-username: ${{ secrets.NOTARIZATION_USERNAME }}
-          appstore-connect-password: ${{ secrets.NOTARIZATION_PASSWORD }}
+          notarization-username: ${{ secrets.NOTARIZATION_USERNAME }}
+          notarization-team: ${{ secrets.NOTARIZATION_TEAM }}
+          notarization-password: ${{ secrets.NOTARIZATION_PASSWORD }}
 
       - uses: actions/upload-artifact@v3
         with:
@@ -207,15 +201,7 @@ jobs:
         config:
           - os: windows
             os_version: 2022
-            qt_version: 5.15.2
-            arch: x64
-            ssl_arch: -x64
-            cmake_opts:
-            artifacts_id: windows-x64-qt5
-
-          - os: windows
-            os_version: 2022
-            qt_version: 6.5.1
+            qt_version: 6.7.3
             qt_modules: qt5compat
             arch: x64
             ssl_arch: -x64
@@ -239,12 +225,12 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}\openssl-1.1
-          key: OpensslCache-1-1-1n
+          key: OpensslCache-1-1-1w
 
       - name: Download openssl
         if: ${{ steps.cache-openssl.outputs.cache-hit != 'true' }} 
         run: |
-          Invoke-WebRequest -Uri "https://www.firedaemon.com/download-firedaemon-openssl-1-zip" -OutFile openssl.zip
+          Invoke-WebRequest -Uri "https://www.firedaemon.com/download-firedaemon-openssl-1.1.1-zip" -OutFile openssl.zip
           7z x openssl.zip 
 
       - name: Set openssl paths

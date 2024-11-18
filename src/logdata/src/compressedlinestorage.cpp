@@ -1,23 +1,4 @@
 /*
- * Copyright (C) 2015 Nicolas Bonnefon and other contributors
- *
- * This file is part of glogg.
- *
- * glogg is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * glogg is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with glogg.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
  * Copyright (C) 2016 -- 2019 Anton Filimonov and other contributors
  *
  * This file is part of klogg.
@@ -37,178 +18,56 @@
  */
 
 #include <QtEndian>
+#include <algorithm>
+#include <array>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <iterator>
 #include <limits>
 #include <stdexcept>
 
 #include "compressedlinestorage.h"
+#include "containers.h"
+#include "cpu_info.h"
 #include "linetypes.h"
 #include "log.h"
 
-static constexpr size_t IndexBlockSize = 256;
+#include <simdcomp.h>
 
-namespace {
-// Functions to manipulate blocks
-
-using BlockOffset = CompressedLinePositionStorage::BlockOffset;
-
-void set_value_at_offset( uint8_t* block, const BlockOffset& offset, uint8_t value )
-{
-    *( block + type_safe::get( offset ) ) = value;
-}
-template <typename T>
-void set_value_at_offset( uint8_t* block, const BlockOffset& offset, T value )
-{
-    *reinterpret_cast<T*>( block + type_safe::get( offset ) ) = value;
-}
-
-template <typename T = uint8_t>
-T get_value_at_offset( const uint8_t* block, const BlockOffset& offset )
-{
-    return *reinterpret_cast<const T*>( block + type_safe::get( offset ) );
-}
-
-// Add a one byte relative delta (0-127) and inc pointer
-// First bit is always 0
-void block_add_one_byte_relative( uint8_t* block, BlockOffset& offset, uint8_t value )
-{
-    set_value_at_offset( block, offset, value );
-    offset += BlockOffset( sizeof( value ) );
-}
-
-uint8_t block_get_alignment_offset( uint8_t alignment, uint64_t offset )
-{
-    return static_cast<uint8_t>( alignment - offset % alignment );
-}
-
-// Add a two bytes relative delta (0-16383) and inc pointer
-// First 2 bits are always 10
-void block_add_two_bytes_relative( uint8_t* block, BlockOffset& offset, uint16_t value )
-{
-    const uint8_t alignmentOffset
-        = block_get_alignment_offset( alignof( uint16_t ), type_safe::get( offset ) );
-    if ( alignmentOffset != 0 ) {
-        set_value_at_offset( block, offset, 0xC0 | alignmentOffset );
-        offset += BlockOffset( alignmentOffset );
-    }
-
-    // Stored in big endian format in order to recognise the initial pattern:
-    // 10xx xxxx xxxx xxxx
-    //  HO byte | LO byte
-    set_value_at_offset( block, offset,
-                         qToBigEndian( static_cast<uint16_t>( value | ( 1 << 15 ) ) ) );
-    offset += BlockOffset( sizeof( value ) );
-}
-
-template <typename ElementType>
-void block_add_absolute( uint8_t* block, BlockOffset& offset, ElementType value )
-{
-    uint8_t alignmentOffset
-        = block_get_alignment_offset( alignof( uint16_t ), type_safe::get( offset ) );
-    if ( alignmentOffset != 0 ) {
-        set_value_at_offset( block, offset, 0xC0 | alignmentOffset );
-        offset += BlockOffset( alignmentOffset );
-    }
-
-    alignmentOffset = block_get_alignment_offset( alignof( ElementType ),
-                                                  type_safe::get( offset ) + sizeof( uint16_t ) );
-
-    // 2 bytes marker (actually only the first two bits are tested)
-    set_value_at_offset( block, offset, uint8_t( 0xFF ) );
-    set_value_at_offset( block + 1, offset, alignmentOffset );
-    offset += BlockOffset( sizeof( uint16_t ) + alignmentOffset );
-
-    // Absolute value (machine endian)
-    // This might be unaligned, can cause problem on some CPUs
-    set_value_at_offset( block, offset, value );
-    offset += BlockOffset( sizeof( ElementType ) );
-}
-
-// Initialise the passed block for reading, returning
-// the initial position and a pointer to the second entry.
-template <typename ElementType>
-OffsetInFile block_initial_pos( const uint8_t* block, BlockOffset& offset )
-{
-    offset = BlockOffset( sizeof( ElementType ) );
-    return OffsetInFile( *( reinterpret_cast<const ElementType*>( block ) ) );
-}
-
-// Give the next position in the block based on the previous
-// position, then increase the pointer.
-template <typename ElementType>
-OffsetInFile block_next_pos( const uint8_t* block, BlockOffset& offset, OffsetInFile previous_pos )
-{
-    OffsetInFile pos = previous_pos;
-
-    uint8_t byte = get_value_at_offset( block, offset );
-
-    if ( !( byte & 0x80 ) ) {
-        // High order bit is 0
-        pos += OffsetInFile( byte );
-        ++offset;
-        return pos;
-    }
-
-    if ( byte != 0xFF && ( byte & 0xC0 ) == 0xC0 ) {
-        // need to skip aligned bytes;
-        const auto alignmentOffset = static_cast<uint8_t>( byte & ( ~0xC0 ) );
-        offset += BlockOffset( alignmentOffset );
-        byte = get_value_at_offset( block, offset );
-    }
-    ++offset;
-
-    if ( ( byte & 0xC0 ) == 0x80 ) {
-        // Remove the starting 10b
-        const auto hi_byte = static_cast<uint16_t>( byte & ( ~0xC0 ) );
-        // We need to read the low order byte
-        const auto lo_byte = static_cast<uint16_t>( get_value_at_offset( block, offset ) );
-        // And form the displacement (stored as big endian)
-        pos += OffsetInFile( ( hi_byte << 8 ) | lo_byte );
-
-        ++offset;
-    }
-    else {
-        // skip aligned bytes
-        const auto alignmentOffset = get_value_at_offset( block, offset );
-        offset += BlockOffset( alignmentOffset + 1u );
-
-        // And read the new absolute pos (machine endian)
-        pos = OffsetInFile( get_value_at_offset<ElementType>( block, offset ) );
-        offset += BlockOffset( sizeof( ElementType ) );
-    }
-
-    return pos;
-}
-} // namespace
+static constexpr size_t SimdIndexBlockSize = 128;
 
 void CompressedLinePositionStorage::move_from( CompressedLinePositionStorage&& orig ) noexcept
 {
-    nb_lines_ = orig.nb_lines_;
-    first_long_line_ = orig.first_long_line_;
-    current_pos_ = orig.current_pos_;
-    block_index_ = orig.block_index_;
-    long_block_index_ = orig.long_block_index_;
-    block_offset_ = orig.block_offset_;
-    previous_block_offset_ = orig.previous_block_offset_;
+    blocks_ = std::move( orig.blocks_ );
+    packedLinesStorage_ = std::move( orig.packedLinesStorage_ );
+    currentLinesBlock_ = std::move( orig.currentLinesBlock_ );
+    currentLinesBlockShifted_ = std::move( orig.currentLinesBlockShifted_ );
 
-    orig.nb_lines_ = 0_lcount;
+    nbLines_ = orig.nbLines_;
+    lastPos_ = orig.lastPos_;
+    canUseSimdSelect_ = orig.canUseSimdSelect_;
+
+    orig.nbLines_ = 0_lcount;
+    orig.lastPos_ = 0_offset;
 }
 
-// Move constructor
+CompressedLinePositionStorage::CompressedLinePositionStorage()
+{
+    auto requiredInstructions = CpuInstructions::SSE41;
+    canUseSimdSelect_ = hasRequiredInstructions( supportedCpuInstructions(), requiredInstructions );
+}
+
 CompressedLinePositionStorage::CompressedLinePositionStorage(
     CompressedLinePositionStorage&& orig ) noexcept
-    : pool32_( std::move( orig.pool32_ ) )
-    , pool64_( std::move( orig.pool64_ ) )
 {
     move_from( std::move( orig ) );
 }
 
-// Move assignement
 CompressedLinePositionStorage&
 CompressedLinePositionStorage::operator=( CompressedLinePositionStorage&& orig ) noexcept
 {
-    pool32_ = std::move( orig.pool32_ );
-    pool64_ = std::move( orig.pool64_ );
     move_from( std::move( orig ) );
     return *this;
 }
@@ -216,148 +75,70 @@ CompressedLinePositionStorage::operator=( CompressedLinePositionStorage&& orig )
 void CompressedLinePositionStorage::append( OffsetInFile pos )
 {
     // Lines must be stored in order
-    assert( ( pos > current_pos_ ) || ( pos == 0_offset ) );
+    assert( ( pos > lastPos_ ) || ( pos == 0_offset ) );
 
-    // Save the pointer in case we need to "pop_back"
-    previous_block_offset_ = block_offset_;
+    currentLinesBlock_.push_back( pos );
+    currentLinesBlockShifted_.push_back(
+        type_safe::narrow_cast<uint32_t>( pos.get() - currentLinesBlock_.front().get() ) );
 
-    bool store_in_big = false;
-    if ( pos.get() > std::numeric_limits<uint32_t>::max() ) {
-        store_in_big = true;
-        if ( !first_long_line_ ) {
-            // First "big" end of line, we will start a new (64) block
-            first_long_line_ = LineNumber( nb_lines_.get() );
-            block_offset_ = {};
-        }
+    if ( currentLinesBlock_.size() == SimdIndexBlockSize ) {
+        compress_current_block();
     }
 
-    if ( !block_offset_ ) {
-        // We need to start a new block
-        size_t nextOffset{};
-        if ( !store_in_big ) {
-            block_index_ = pool32_.get_block( IndexBlockSize, pos.get<uint32_t>(), &nextOffset );
-        }
-        else {
-            long_block_index_ = pool64_.get_block( IndexBlockSize, pos.get(), &nextOffset );
-        }
-        block_offset_ = BlockOffset{ nextOffset };
-    }
-    else {
-        const auto block
-            = ( !store_in_big ) ? pool32_.at( block_index_ ) : pool64_.at( long_block_index_ );
-        auto delta = pos - current_pos_;
-        if ( delta < 128_offset ) {
-            // Code relative on one byte
-            block_add_one_byte_relative( block, block_offset_, delta.get<uint8_t>() );
-        }
-        else if ( delta < 16384_offset ) {
-            // Code relative on two bytes
-            block_add_two_bytes_relative( block, block_offset_, delta.get<uint16_t>() );
-        }
-        else {
-            // Code absolute
-            if ( !store_in_big )
-                block_add_absolute( block, block_offset_, pos.get<uint32_t>() );
-            else
-                block_add_absolute( block, block_offset_, pos.get() );
-        }
-    }
-
-    current_pos_ = pos;
-    ++nb_lines_;
-
-    const auto shrinkBlock = [ this ]( auto& blockPool ) {
-        const auto effective_block_size = type_safe::get( previous_block_offset_ );
-
-        // We allocate extra space for the last element in case it
-        // is replaced by an absolute value in the future (following a pop_back)
-        const auto new_size = effective_block_size + blockPool.getPaddedElementSize();
-        blockPool.resize_last_block( new_size );
-
-        block_offset_ = {};
-        previous_block_offset_ = BlockOffset( effective_block_size );
-    };
-
-    if ( !store_in_big ) {
-        if ( nb_lines_.get() % IndexBlockSize == 0 ) {
-            // We have finished the block
-
-            // Let's reduce its size to what is actually used
-            shrinkBlock( pool32_ );
-        }
-    }
-    else {
-        if ( ( nb_lines_.get() - first_long_line_->get() ) % IndexBlockSize == 0 ) {
-            // We have finished the block
-
-            // Let's reduce its size to what is actually used
-            shrinkBlock( pool64_ );
-        }
-    }
+    lastPos_ = pos;
+    ++nbLines_;
 }
 
-OffsetInFile CompressedLinePositionStorage::at( LineNumber index, Cache* lastPosition ) const
+void CompressedLinePositionStorage::compress_current_block()
 {
-    if ( index >= nb_lines_ ) {
+    BlockMetadata& block = blocks_.emplace_back();
+    block.firstLineOffset = currentLinesBlock_.front();
+    block.packetBitWidth
+        = static_cast<uint8_t>( simdmaxbitsd1( 0, currentLinesBlockShifted_.data() ) );
+
+    const size_t packedLinesSize = block.packetBitWidth;
+    packedLinesStorage_.resize( packedLinesStorage_.size() + packedLinesSize );
+    block.packetStorageOffset = packedLinesStorage_.size() - packedLinesSize;
+
+    simdpackd1( 0, currentLinesBlockShifted_.data(),
+                (__m128i*)( packedLinesStorage_.data() + block.packetStorageOffset ),
+                block.packetBitWidth );
+
+    currentLinesBlock_.clear();
+    currentLinesBlockShifted_.clear();
+}
+
+OffsetInFile CompressedLinePositionStorage::at( LineNumber index ) const
+{
+    if ( index >= nbLines_ ) {
         LOG_ERROR << "Line number not in storage: " << index.get() << ", storage size is "
-                  << nb_lines_;
+                  << nbLines_;
         throw std::runtime_error( "Line number not in storage" );
     }
 
-    auto last_read = lastPosition != nullptr ? *lastPosition : Cache{};
+    const size_t blockIndex = index.get() / SimdIndexBlockSize;
+    const size_t indexInBlock = index.get() % SimdIndexBlockSize;
 
-    const uint8_t* block = nullptr;
-    BlockOffset offset;
-    OffsetInFile position;
+    if ( blockIndex == blocks_.size() ) {
+        return currentLinesBlock_[ indexInBlock ];
+    }
 
-    if ( !first_long_line_ || index < *first_long_line_ ) {
-        block = pool32_.at( index.get() / IndexBlockSize );
-
-        if ( ( index.get() == last_read.index.get() + 1 )
-             && ( index.get() % IndexBlockSize != 0 ) ) {
-            position = last_read.position;
-            offset = last_read.offset;
-
-            position = block_next_pos<uint32_t>( block, offset, position );
-        }
-        else {
-            position = block_initial_pos<uint32_t>( block, offset );
-
-            for ( uint32_t i = 0; i < index.get() % IndexBlockSize; i++ ) {
-                // Go through all the lines in the block till the one we want
-                position = block_next_pos<uint32_t>( block, offset, position );
-            }
-        }
+    const BlockMetadata& block = blocks_[ blockIndex ];
+    std::array<uint32_t, SimdIndexBlockSize> unpackedBlock;
+    if ( canUseSimdSelect_ ) {
+        unpackedBlock[ indexInBlock ] = simdselectd1(
+            0,
+            reinterpret_cast<const __m128i*>( &packedLinesStorage_[ block.packetStorageOffset ] ),
+            block.packetBitWidth, static_cast<int>( indexInBlock ) );
     }
     else {
-        const auto index_in_64 = index - *first_long_line_;
-        block = pool64_.at( index_in_64.get() / IndexBlockSize );
-
-        if ( ( index.get() == last_read.index.get() + 1 )
-             && ( index_in_64.get() % IndexBlockSize != 0 ) ) {
-            position = last_read.position;
-            offset = last_read.offset;
-
-            position = block_next_pos<OffsetInFile::UnderlyingType>( block, offset, position );
-        }
-        else {
-            position = block_initial_pos<OffsetInFile::UnderlyingType>( block, offset );
-
-            for ( uint32_t i = 0; i < index_in_64.get() % IndexBlockSize; i++ ) {
-                // Go through all the lines in the block till the one we want
-                position = block_next_pos<OffsetInFile::UnderlyingType>( block, offset, position );
-            }
-        }
+        simdunpackd1(
+            0,
+            reinterpret_cast<const __m128i*>( &packedLinesStorage_[ block.packetStorageOffset ] ),
+            unpackedBlock.data(), block.packetBitWidth );
     }
 
-    // Populate our cache ready for next consecutive read
-    if ( lastPosition != nullptr ) {
-        lastPosition->index = index;
-        lastPosition->position = position;
-        lastPosition->offset = offset;
-    }
-
-    return position;
+    return block.firstLineOffset + OffsetInFile( unpackedBlock[ indexInBlock ] );
 }
 
 void CompressedLinePositionStorage::append_list( const klogg::vector<OffsetInFile>& positions )
@@ -368,41 +149,95 @@ void CompressedLinePositionStorage::append_list( const klogg::vector<OffsetInFil
         append( position );
 }
 
+void CompressedLinePositionStorage::uncompress_last_block()
+{
+    currentLinesBlock_.resize( SimdIndexBlockSize );
+    currentLinesBlockShifted_.resize( SimdIndexBlockSize );
+    const BlockMetadata& block = blocks_.back();
+
+    simdunpackd1(
+        0, reinterpret_cast<const __m128i*>( &packedLinesStorage_[ block.packetStorageOffset ] ),
+        currentLinesBlockShifted_.data(), block.packetBitWidth );
+
+    std::transform( currentLinesBlockShifted_.begin(), currentLinesBlockShifted_.end(),
+                    currentLinesBlock_.begin(), [ &block ]( uint32_t pos ) {
+                        return OffsetInFile( pos ) + block.firstLineOffset;
+                    } );
+
+    blocks_.pop_back();
+}
+
 void CompressedLinePositionStorage::pop_back()
 {
-    // Removing the last entered data, there are two cases
-    if ( previous_block_offset_ ) {
-        // The last append was a normal entry in an existing block,
-        // so we can just revert the pointer
-        block_offset_ = previous_block_offset_;
-        previous_block_offset_ = {};
+    if ( currentLinesBlock_.empty() && !blocks_.empty() ) {
+        // Last entry caused block compression, so we need to uncompress it
+        // to de-alloc last entry.
+        uncompress_last_block();
+    }
+
+    if ( !currentLinesBlock_.empty() ) {
+        currentLinesBlock_.pop_back();
+        currentLinesBlockShifted_.pop_back();
+    }
+
+    if ( nbLines_.get() == 0 ) {
+        lastPos_ = 0_offset;
     }
     else {
-        // A new block has been created for the last entry, we need
-        // to de-alloc it.
-
-        if ( !first_long_line_ ) {
-            assert( ( nb_lines_.get() - 1 ) % IndexBlockSize == 0 );
-            block_index_ = pool32_.free_last_block();
-        }
-        else {
-            assert( ( nb_lines_.get() - first_long_line_->get() - 1 ) % IndexBlockSize == 0 );
-            long_block_index_ = pool64_.free_last_block();
-        }
-
-        block_offset_ = {};
-    }
-
-    if ( nb_lines_.get() == 0 ) {
-        current_pos_ = 0_offset;
-    }
-    else {
-        --nb_lines_;
-        current_pos_ = nb_lines_.get() > 0 ? at( nb_lines_.get() - 1 ) : 0_offset;
+        --nbLines_;
+        lastPos_ = nbLines_.get() > 0 ? at( nbLines_.get() - 1 ) : 0_offset;
     }
 }
 
 size_t CompressedLinePositionStorage::allocatedSize() const
 {
-    return pool32_.allocatedSize() + pool64_.allocatedSize();
+    return packedLinesStorage_.size() + blocks_.size() * sizeof( BlockMetadata );
+}
+
+klogg::vector<OffsetInFile> CompressedLinePositionStorage::range( LineNumber firstLine,
+                                                                  LinesCount count ) const
+{
+    const size_t firstBlockIndex = firstLine.get() / SimdIndexBlockSize;
+    const size_t indexInFirstBlock = firstLine.get() % SimdIndexBlockSize;
+
+    const LineNumber lastLine = firstLine + count - 1_lcount;
+    const size_t lastBlockIndex = lastLine.get() / SimdIndexBlockSize;
+    const size_t indexInLastBlock = lastLine.get() % SimdIndexBlockSize;
+
+    klogg::vector<OffsetInFile> result;
+    result.reserve( count.get() );
+
+    if ( firstBlockIndex == blocks_.size() ) {
+        std::copy( currentLinesBlock_.begin() + static_cast<int64_t>(indexInFirstBlock),
+                   currentLinesBlock_.begin() + static_cast<int64_t>(indexInLastBlock + 1),
+                   std::back_inserter( result ) );
+    }
+    else {
+        size_t lastBlockToUnpack = std::min( lastBlockIndex, blocks_.size() - 1 );
+        for ( size_t blockIndex = firstBlockIndex; blockIndex <= lastBlockToUnpack; ++blockIndex ) {
+            const BlockMetadata& block = blocks_[ blockIndex ];
+            std::array<uint32_t, SimdIndexBlockSize> unpackedBlock;
+            simdunpackd1( 0,
+                          reinterpret_cast<const __m128i*>(
+                              &packedLinesStorage_[ block.packetStorageOffset ] ),
+                          unpackedBlock.data(), block.packetBitWidth );
+            const size_t copyFromIndex = blockIndex == firstBlockIndex ? indexInFirstBlock : 0u;
+            const size_t copyToIndex
+                = blockIndex == lastBlockIndex ? indexInLastBlock + 1 : unpackedBlock.size();
+
+            std::transform( unpackedBlock.begin() + copyFromIndex,
+                            unpackedBlock.begin() + copyToIndex, std::back_inserter( result ),
+                            [ &block ]( uint32_t pos ) {
+                                return OffsetInFile( pos ) + block.firstLineOffset;
+                            } );
+        }
+
+        if ( lastBlockIndex == blocks_.size() ) {
+            std::copy( currentLinesBlock_.begin(),
+                       currentLinesBlock_.begin() + static_cast<int64_t>(indexInLastBlock + 1),
+                       std::back_inserter( result ) );
+        }
+    }
+
+    return result;
 }
