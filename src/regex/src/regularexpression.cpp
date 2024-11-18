@@ -17,6 +17,7 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <exception>
 #include <memory>
 #include <qregularexpression.h>
@@ -24,7 +25,9 @@
 #include <variant>
 
 #include "configuration.h"
+#include "containers.h"
 #include "log.h"
+#include "regularexpressionpattern.h"
 #include "uuid.h"
 
 #include "booleanevaluator.h"
@@ -58,7 +61,8 @@ parseBooleanExpressions( QString& pattern, bool isCaseSensitive, bool isPlainTex
         }
 
         while ( currentIndex < pattern.size() ) {
-            rightQuote = type_safe::narrow_cast<int>( pattern.indexOf( QChar( '"' ), currentIndex ) );
+            rightQuote
+                = type_safe::narrow_cast<int>( pattern.indexOf( QChar( '"' ), currentIndex ) );
             if ( rightQuote < 0 ) {
                 break;
             }
@@ -215,4 +219,46 @@ PatternMatcher::~PatternMatcher() = default;
 bool PatternMatcher::hasMatch( std::string_view line ) const
 {
     return hasMatchImpl_( line, matcher_, evaluator_.get() );
+}
+
+MultiRegularExpression::MultiRegularExpression(
+    const klogg::vector<RegularExpressionPattern>& patterns )
+    : patterns_( patterns )
+{
+    try {
+        hsExpression_ = HsRegularExpression( patterns_ );
+        isValid_ = hsExpression_.isValid();
+        errorString_ = hsExpression_.errorString();
+
+    } catch ( std::exception& err ) {
+        isValid_ = false;
+        errorString_ = err.what();
+    }
+}
+
+std::unique_ptr<MultiPatternMatcher> MultiRegularExpression::createMatcher() const
+{
+    return std::make_unique<MultiPatternMatcher>( *this );
+}
+
+MultiPatternMatcher::MultiPatternMatcher( const MultiRegularExpression& expression )
+    : matcher_( expression.hsExpression_.createMatcher() )
+    , patterns_( expression.patterns_ )
+{
+}
+
+MultiPatternMatcher::~MultiPatternMatcher() = default;
+
+klogg::vector<std::pair<RegularExpressionPattern, bool>>
+MultiPatternMatcher::match( std::string_view line ) const
+{
+    const auto result
+        = std::visit( [ &line ]( const auto& m ) { return m.match( line ); }, matcher_ );
+
+    klogg::vector<std::pair<RegularExpressionPattern, bool>> matchedPatterns;
+    for ( size_t i = 0u; i < result.size(); ++i ) {
+        matchedPatterns.emplace_back( patterns_[ i ], result[ i ] );
+    }
+
+    return matchedPatterns;
 }

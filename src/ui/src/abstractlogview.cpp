@@ -945,8 +945,7 @@ void AbstractLogView::wheelEvent( QWheelEvent* wheelEvent )
                 followElasticHook_.hold();
             }
             else if ( wheelEvent->phase() == Qt::ScrollEnd
-                      || wheelEvent->phase() == Qt::ScrollMomentum
-            ) {
+                      || wheelEvent->phase() == Qt::ScrollMomentum ) {
                 followElasticHook_.release();
             }
 
@@ -2136,10 +2135,9 @@ LinesCount AbstractLogView::getNbBottomWrappedVisibleLines() const
         const auto totalLines = logData_->getNbLine();
         LinesCount wrappedVisibleLines;
         LinesCount unwrappedLines;
-        LineNumber unwrappedLineNumber {logData_->getNbLine().get() - 1};
+        LineNumber unwrappedLineNumber{ logData_->getNbLine().get() - 1 };
         while ( unwrappedLines < totalLines && unwrappedLines < visibleLines ) {
-            QString expandedLine
-                = logData_->getExpandedLineString(unwrappedLineNumber  );
+            QString expandedLine = logData_->getExpandedLineString( unwrappedLineNumber );
             WrappedString wrapped{ expandedLine, visibleColumns };
             wrappedVisibleLines += LinesCount(
                 type_safe::narrow_cast<LinesCount::UnderlyingType>( wrapped.wrappedLinesCount() ) );
@@ -2207,7 +2205,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
         = static_cast<int>( std::floor( paintDevice->width() / viewport()->devicePixelRatio() ) );
 
     const QPalette& palette = viewport()->palette();
-    const auto& highlighterSet = HighlighterSetCollection::get().currentActiveSet();
+    const HighlighterSet& highlighterSet = HighlighterSetCollection::get().currentActiveSet();
     const auto& quickHighlighters = HighlighterSetCollection::get().quickHighlighters();
     QColor foreColor, backColor;
 
@@ -2353,38 +2351,35 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             painter->setPen( palette.color( QPalette::Text ) );
         }
         else {
-            const auto highlightType = highlighterSet.matchLine( logLine, highlighterMatches );
+            foreColor = palette.color( QPalette::Text );
+            backColor = palette.color( QPalette::Base );
 
-            if ( highlightType == HighlighterMatchType::LineMatch ) {
-                // color applies to whole line
-                foreColor = highlighterMatches.front().foreColor();
-                backColor = highlighterMatches.front().backColor();
+            if ( lineNumber < searchStartIndex || lineNumber >= searchEndIndex ) {
+                foreColor = palette.brush( QPalette::Disabled, QPalette::Text ).color();
             }
             else {
-                // Use the default colors
-                if ( lineNumber < searchStartIndex || lineNumber >= searchEndIndex ) {
-                    foreColor = palette.brush( QPalette::Disabled, QPalette::Text ).color();
+                const auto highlightType = highlighterSet.matchLine( logLine, highlighterMatches );
+
+                if ( highlightType == HighlighterMatchType::LineMatch ) {
+                    // color applies to whole line
+                    foreColor = highlighterMatches.front().foreColor();
+                    backColor = highlighterMatches.front().backColor();
                 }
-                else {
-                    foreColor = palette.color( QPalette::Text );
+
+                if ( patternHighlight ) {
+                    klogg::vector<HighlightedMatch> patternMatches;
+                    patternHighlight->matchLine( logLine, patternMatches );
+                    highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
+                                               patternMatches.end() );
                 }
 
-                backColor = palette.color( QPalette::Base );
-            }
-
-            if ( patternHighlight ) {
-                klogg::vector<HighlightedMatch> patternMatches;
-                patternHighlight->matchLine( logLine, patternMatches );
-                highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
-                                           patternMatches.end() );
-            }
-
-            highlighterMatches.reserve( additionalHighlighters.size() );
-            for ( const auto& highlighter : additionalHighlighters ) {
-                klogg::vector<HighlightedMatch> patternMatches;
-                highlighter.matchLine( logLine, patternMatches );
-                highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
-                                           patternMatches.end() );
+                highlighterMatches.reserve( additionalHighlighters.size() );
+                for ( const auto& highlighter : additionalHighlighters ) {
+                    klogg::vector<HighlightedMatch> patternMatches;
+                    highlighter.matchLine( logLine, patternMatches );
+                    highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
+                                               patternMatches.end() );
+                }
             }
         }
 

@@ -35,6 +35,7 @@ struct RegularExpressionPattern {
     bool isExclude = false;
     bool isBoolean = false;
     bool isPlainText = false;
+    bool isPrefilter = false;
 
     RegularExpressionPattern() = default;
 

@@ -38,6 +38,7 @@
 
 // This file implements classes Highlighter and HighlighterSet
 
+#include <algorithm>
 #include <iterator>
 #include <qcolor.h>
 #include <qnamespace.h>
@@ -46,10 +47,15 @@
 
 #include <QSettings>
 
+#include <simdutf.h>
+
+#include "containers.h"
 #include "crc32.h"
 #include "highlightersetedit.h"
 #include "linetypes.h"
 #include "log.h"
+#include "regularexpression.h"
+#include "regularexpressionpattern.h"
 #include "uuid.h"
 
 #include "highlighterset.h"
@@ -168,20 +174,38 @@ std::pair<QColor, QColor> Highlighter::vairateColors( const QString& match ) con
     return std::make_pair( color_.foreColor.darker( factor ), color_.backColor.darker( factor ) );
 }
 
+RegularExpressionPattern Highlighter::expressionPattern() const
+{
+    RegularExpressionPattern result;
+    result.pattern
+        = useRegex_ ? regexp_.pattern() : QRegularExpression::escape( regexp_.pattern() );
+    result.isCaseSensitive = !ignoreCase();
+    result.isPrefilter = true;
+
+    return result;
+}
+
+void Highlighter::compile() const {
+     const auto pattern
+        = useRegex_ ? regexp_.pattern() : QRegularExpression::escape( regexp_.pattern() );
+
+    optimizedRegexp_ = QRegularExpression( pattern, regexp_.patternOptions() );
+    optimizedRegexp_->optimize();
+}
+
 bool Highlighter::matchLine( const QString& line, klogg::vector<HighlightedMatch>& matches ) const
 {
     matches.clear();
 
-    const auto pattern
-        = useRegex_ ? regexp_.pattern() : QRegularExpression::escape( regexp_.pattern() );
+    if (!optimizedRegexp_) {
+        compile();
+    }
 
-    const auto matchingRegex = QRegularExpression( pattern, regexp_.patternOptions() );
-
-    QRegularExpressionMatchIterator matchIterator = matchingRegex.globalMatch( line );
+    QRegularExpressionMatchIterator matchIterator = optimizedRegexp_->globalMatch( line );
 
     while ( matchIterator.hasNext() ) {
         QRegularExpressionMatch match = matchIterator.next();
-        if ( matchingRegex.captureCount() > 0 ) {
+        if ( optimizedRegexp_->captureCount() > 0 ) {
             matches.reserve( static_cast<size_t>( match.lastCapturedIndex() ) );
             for ( int i = 1; i <= match.lastCapturedIndex(); ++i ) {
 
@@ -230,21 +254,51 @@ bool HighlighterSet::isEmpty() const
     return highlighterList_.isEmpty();
 }
 
+void HighlighterSet::compile() const
+{
+    klogg::vector<RegularExpressionPattern> patterns(
+        static_cast<size_t>( highlighterList_.size() ) );
+    std::transform( highlighterList_.begin(), highlighterList_.end(), patterns.begin(),
+                    []( const Highlighter& hl ) { return hl.expressionPattern(); } );
+
+    compiledExpression_ = std::make_shared<MultiRegularExpression>( patterns );
+}
+
 HighlighterMatchType HighlighterSet::matchLine( const QString& line,
                                                 klogg::vector<HighlightedMatch>& matches ) const
 {
+    if (!compiledExpression_) {
+        compile();
+    }
+
+    klogg::vector<char> utf8Data( static_cast<size_t>( line.size() * 4 ) );
+    const auto resultSize
+        = simdutf::convert_utf16_to_utf8( reinterpret_cast<const char16_t*>( line.utf16() ),
+                                          static_cast<size_t>( line.size() ), utf8Data.data() );
+
+    auto matcher = compiledExpression_->createMatcher();
+    klogg::vector<std::pair<RegularExpressionPattern, bool>> matchedPatterns
+        = matcher->match( std::string_view{ utf8Data.data(), resultSize } );
+
     auto matchType = HighlighterMatchType::NoMatch;
-    for ( auto hl = highlighterList_.rbegin(); hl != highlighterList_.rend(); ++hl ) {
-        klogg::vector<HighlightedMatch> thisMatches;
-        if ( !hl->matchLine( line, thisMatches ) ) {
+
+    for ( int index = highlighterList_.size() - 1; index >= 0; --index ) {
+        const Highlighter& hl = highlighterList_[ index ];
+        if ( !matchedPatterns[ static_cast<size_t>( index ) ].second ) {
             continue;
         }
 
-        if ( !hl->highlightOnlyMatch() ) {
+        klogg::vector<HighlightedMatch> thisMatches;
+        if ( !hl.matchLine( line, thisMatches ) ) {
+            continue;
+        }
+
+        if ( !hl.highlightOnlyMatch() ) {
             matchType = HighlighterMatchType::LineMatch;
 
             matches.clear();
-            matches.emplace_back( 0_lcol, LineLength {line.size() }, hl->foreColor(), hl->backColor() );
+            matches.emplace_back( 0_lcol, LineLength{ line.size() }, hl.foreColor(),
+                                  hl.backColor() );
         }
         else {
             if ( matchType != HighlighterMatchType::LineMatch ) {

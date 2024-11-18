@@ -42,11 +42,16 @@
 #include <QColor>
 #include <QMetaType>
 #include <QRegularExpression>
+#include <memory>
+#include <optional>
 #include <qcolor.h>
+#include <qregularexpression.h>
 
 #include "containers.h"
 #include "highlightedmatch.h"
 #include "persistable.h"
+#include "regularexpression.h"
+#include "regularexpressionpattern.h"
 
 struct HighlightColor {
     QColor foreColor;
@@ -91,11 +96,17 @@ class Highlighter {
     void saveToStorage( QSettings& settings ) const;
     void retrieveFromStorage( QSettings& settings );
 
+    RegularExpressionPattern expressionPattern() const;
+
+    void compile() const;
+
   private:
     std::pair<QColor, QColor> vairateColors( const QString& match ) const;
 
   private:
     QRegularExpression regexp_;
+    
+    mutable std::optional<QRegularExpression> optimizedRegexp_;
 
     bool useRegex_ = true;
     bool highlightOnlyMatch_ = false;
@@ -133,6 +144,8 @@ class HighlighterSet {
     void saveToStorage( QSettings& settings ) const;
     void retrieveFromStorage( QSettings& settings );
 
+    void compile() const;
+
   private:
     explicit HighlighterSet( const QString& name );
 
@@ -148,6 +161,8 @@ class HighlighterSet {
     // internal structure directly.
     friend class HighlighterSetEdit;
     friend class HighlighterSetCollection;
+
+    mutable std::shared_ptr<MultiRegularExpression> compiledExpression_;
 };
 
 struct QuickHighlighter {

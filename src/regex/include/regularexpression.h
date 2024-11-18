@@ -21,6 +21,7 @@
 #define KLOGG_PATTERN_MATHCHER_H
 
 #include <memory>
+#include <qchar.h>
 #include <string_view>
 #include <unordered_map>
 
@@ -29,14 +30,16 @@
 #include "containers.h"
 
 #include "hsregularexpression.h"
+#include "regularexpressionpattern.h"
 
 
 class PatternMatcher;
+class MultiPatternMatcher;
 class BooleanExpressionEvaluator;
 
 class RegularExpression {
   public:
-    RegularExpression( const RegularExpressionPattern& pattern );
+    explicit RegularExpression( const RegularExpressionPattern& pattern );
 
     std::unique_ptr<PatternMatcher> createMatcher() const;
 
@@ -77,6 +80,38 @@ class PatternMatcher {
 
     MatcherVariant matcher_;
     std::unique_ptr<BooleanExpressionEvaluator> evaluator_;
+};
+
+class MultiRegularExpression {
+  public:
+    explicit MultiRegularExpression( const klogg::vector<RegularExpressionPattern>& patterns );
+
+    std::unique_ptr<MultiPatternMatcher> createMatcher() const;
+
+    bool isValid() const;
+    QString errorString() const;
+
+  private:
+    klogg::vector<RegularExpressionPattern> patterns_;
+
+    bool isValid_ = false;
+    QString errorString_;
+
+    HsRegularExpression hsExpression_;
+
+    friend class MultiPatternMatcher;
+};
+
+class MultiPatternMatcher {
+  public:
+    explicit MultiPatternMatcher( const MultiRegularExpression& expression );
+    ~MultiPatternMatcher();
+
+    klogg::vector<std::pair<RegularExpressionPattern, bool>> match( std::string_view line ) const;
+
+  private:
+    MatcherVariant matcher_;
+    klogg::vector<RegularExpressionPattern> patterns_;
 };
 
 #endif
