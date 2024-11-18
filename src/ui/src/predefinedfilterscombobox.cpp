@@ -65,7 +65,7 @@ class QCheckListStyledItemDelegate : public QStyledItemDelegate {
 
 PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     : QComboBox( parent )
-    , model_( new QStandardItemModel() )
+    , model_( new QStandardItemModel(this) )
     , ignoreCollecting_( false )
 {
     setFocusPolicy( Qt::ClickFocus );
@@ -100,11 +100,6 @@ PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
 
     view()->setTextElideMode( Qt::ElideNone );
     setSizeAdjustPolicy( QComboBox::AdjustToContents );
-}
-
-PredefinedFiltersComboBox::~PredefinedFiltersComboBox()
-{
-    delete model_;
 }
 
 void PredefinedFiltersComboBox::populatePredefinedFilters()
@@ -177,7 +172,6 @@ void PredefinedFiltersComboBox::setTitle( const QString& title )
 {
     auto* titleItem = new QStandardItem( title );
     model_->insertRow( 0, titleItem );
-    delete titleItem;
 }
 
 void PredefinedFiltersComboBox::insertFilters(
