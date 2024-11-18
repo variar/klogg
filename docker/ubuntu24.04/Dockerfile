@@ -1,14 +1,15 @@
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update -y && \
-    apt install --no-install-recommends build-essential \
-                    qtbase5-dev qt5-qmake qtbase5-dev-tools qttools5-dev qttranslations5-l10n \
-                    libboost-dev libssl-dev libcurl4-openssl-dev \
+RUN apt-get update -y && \
+    apt-get install --no-install-recommends build-essential \
+                    qt6-base-dev qt6-5compat-dev qt6-translations-l10n \
+                    qt6-tools-dev-tools qt6-base-dev-tools qt6-tools-dev \
+                    libboost-dev libicu-dev libssl-dev libcurl4-openssl-dev \
                     ragel ninja-build zlib1g-dev git \
                     wget ca-certificates fuse file -y && \
-    apt clean && rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2-linux-x86_64.sh && \
     chmod 755 cmake-3.20.2-linux-x86_64.sh && \

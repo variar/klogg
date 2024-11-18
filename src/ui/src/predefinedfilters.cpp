@@ -79,7 +79,7 @@ void PredefinedFiltersCollection::saveToStorage( QSettings& settings ) const
 
     settings.beginWriteArray( "filters" );
     int arrayIndex = 0;
-    for ( const auto& filter : qAsConst( filters_ ) ) {
+    for ( const auto& filter : filters_ ) {
         settings.setArrayIndex( arrayIndex );
         settings.setValue( "name", filter.name );
         settings.setValue( "filter", filter.pattern );

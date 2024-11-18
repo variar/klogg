@@ -1276,7 +1276,7 @@ void MainWindow::encodingChanged( QAction* action )
         mib = mibData.toInt();
     }
 
-    LOG_DEBUG << "encodingChanged, encoding " << mib;
+    LOG_DEBUG << "encodingChanged, encoding " << mib.value_or(0);
     if ( auto crawler = currentCrawlerWidget() ) {
         crawler->setEncoding( mib );
         updateInfoLine();
@@ -1610,9 +1610,9 @@ void MainWindow::dragEnterEvent( QDragEnterEvent* event )
 // Tries and loads the file if the URL dropped is local
 void MainWindow::dropEvent( QDropEvent* event )
 {
-    QList<QUrl> urls = event->mimeData()->urls();
+    const QList<QUrl> urls = event->mimeData()->urls();
 
-    for ( const auto& url : qAsConst( urls ) ) {
+    for ( const auto& url : urls ) {
         auto fileName = url.toLocalFile();
         if ( fileName.isEmpty() )
             continue;
@@ -1752,7 +1752,7 @@ bool MainWindow::loadFile( const QString& fileName, bool followFile )
             const auto previousViewContext = [ &fileName ]() {
                 const auto& session = SessionInfo::getSynced();
                 const auto& windows = session.windows();
-                for ( const auto& windowId : qAsConst( windows ) ) {
+                for ( const auto& windowId : windows ) {
                     const auto openedFiles = session.openFiles( windowId );
                     const auto existingContext
                         = std::find_if( openedFiles.begin(), openedFiles.end(),

@@ -37,6 +37,12 @@ struct ShortcutAction {
     static constexpr auto CrawlerChangeVisibilityToMatches = "crawler.change_visibility_to_matches";
     static constexpr auto CrawlerIncreseTopViewSize = "crawler.increase_top_view_size";
     static constexpr auto CrawlerDecreaseTopViewSize = "crawler.decrease_top_view_size";
+    static constexpr auto CrawlerEnableCaseMatching = "crawler.enable_case_matching";
+    static constexpr auto CrawlerEnableRegex = "crawler.enable_regex";
+    static constexpr auto CrawlerEnableInverseMatching = "crawler.enable_inverse_matching";
+    static constexpr auto CrawlerEnableRegexCombining = "crawler.enable_regex_combining";
+    static constexpr auto CrawlerEnableAutoRefresh = "crawler.enable_auto_refresh";
+    static constexpr auto CrawlerKeepResults = "crawler.enable_keep_results";
 
     static constexpr auto QfFindNext = "qf.find_next";
     static constexpr auto QfFindPrev = "qf.find_prev";

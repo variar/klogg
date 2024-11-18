@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(
   klogg
-  VERSION 23.08.0
+  VERSION 24.11.0
   DESCRIPTION "klogg log viewer"
   LANGUAGES C CXX ASM
 )
@@ -116,10 +116,13 @@ if(MSVC)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W4")
   endif(CMAKE_C_FLAGS MATCHES "/W[0-4]")
 
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D __SSE4_1__=1 /D __SSE4_2__=1")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D __SSE4_1__=1 /D __SSE4_2__=1")
+
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj ")
 else()
   ucm_add_flags(CXX "-fno-sized-deallocation -fno-omit-frame-pointer")
-  ucm_add_flags(C CXX "-mmmx -msse -msse2 -msse3 -mssse3 -mpopcnt")
+  ucm_add_flags(C CXX "-mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mpopcnt")
   if(KLOGG_GENERIC_CPU)
     ucm_add_flags(C CXX "-march=x86-64 -mtune=generic")
   else()

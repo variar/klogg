@@ -44,6 +44,7 @@
 #include "highlighterset.h"
 #include "highlightersetedit.h"
 
+#include "containers.h"
 #include "dispatch_to.h"
 #include "iconloader.h"
 #include "log.h"
@@ -281,7 +282,7 @@ void HighlighterSetEdit::updateHighlighterProperties()
 void HighlighterSetEdit::populateHighlighterList()
 {
     highlighterListWidget->clear();
-    for ( const Highlighter& highlighter : qAsConst( highlighterSet_.highlighterList_ ) ) {
+    for ( const Highlighter& highlighter : klogg::as_const( highlighterSet_.highlighterList_ ) ) {
         auto* new_item = new QListWidgetItem( highlighter.pattern() );
         // new_item->setFlags( Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled );
         new_item->setForeground( QBrush( highlighter.foreColor() ) );

@@ -123,7 +123,12 @@ Section "Qt Runtime libraries" qtlibs
     SetOutPath $INSTDIR\platforms
     File release\platforms\qwindows.dll
     SetOutPath $INSTDIR\styles
+!if ${QT_MAJOR} == "Qt6"
+    File release\styles\qmodernwindowsstyle.dll
+!else
     File release\styles\qwindowsvistastyle.dll
+!endif
+
 SectionEnd
 
 Section "MSVC Runtime libraries" vcruntime

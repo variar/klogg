@@ -5,9 +5,11 @@ inputs:
     required: true
   p12-password:
     required: true
-  appstore-connect-username:
+  notarization-username:
     required: true
-  appstore-connect-password:
+  notarization-team:
+    required: true
+  notarization-password:
     required: true
     
 runs:
@@ -20,7 +22,7 @@ runs:
       with: 
         p12-file-base64: ${{ inputs.p12-file-base64 }}
         p12-password: ${{ inputs.p12-password }}
-        
+     
     - name: Mac deploy Qt
       shell: sh
       run: |
@@ -31,13 +33,13 @@ runs:
       if: "startsWith(matrix.config.qt_version, '5')"
       shell: sh
       run: |
-        python2 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt5_DIR
+        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt5_DIR
 
     - name: Mac deploy Qt fixing
       if: "startsWith(matrix.config.qt_version, '6')"
       shell: sh
       run: |
-        python2 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt6_DIR
+        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt6_DIR
     
     - name: Set packaging env
       shell: sh
@@ -82,38 +84,34 @@ runs:
         pkgutil --expand ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-product.pkg ./output/klogg_product_pkg
         pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
         productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
+    
+    - name: Setup Xcode
+      shell: sh
+      run: sudo xcode-select -s /Applications/Xcode_13.2.1.app
 
-    - name: "Mac notarize DMG"
+    - name: Mac notarize DMG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: variar/xcode-notarize@v1.0.3
-      with:
-        verbose: true
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
-        primary-bundle-id: "dev.filimonov.klogg"
-        appstore-connect-username: ${{ inputs.appstore-connect-username }}
-        appstore-connect-password: ${{ inputs.appstore-connect-password }}
+      shell: sh
+      run: |
+        xcrun notarytool submit --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
 
-    - name: "Mac staple DMG"
+    - name: Mac staple DMG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: devbotsxyz/xcode-staple@v1
-      with:
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+      shell: sh
+      run: |
+        xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
 
-    - name: "Mac notarize PKG"
+    - name: Mac notarize PKG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: variar/xcode-notarize@v1.0.3
-      with:
-        verbose: true
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
-        primary-bundle-id: "dev.filimonov.klogg"
-        appstore-connect-username: ${{ inputs.appstore-connect-username }}
-        appstore-connect-password: ${{ inputs.appstore-connect-password }}
+      shell: sh
+      run: |
+        xcrun notarytool submit  --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
 
-    - name: "Mac staple PKG"
+    - name: Mac staple PKG 
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: devbotsxyz/xcode-staple@v1
-      with:
-        product-path: "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"         
+      shell: sh 
+      run: |
+        xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
 
     - name: Mac symbols
       shell: sh

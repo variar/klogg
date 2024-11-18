@@ -4,8 +4,9 @@ include(CPM)
 
 set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
 
-cpmaddpackage("gh:simdutf/simdutf@3.2.13")
-cpmaddpackage("gh:foonathan/type_safe@0.2.3")
+cpmaddpackage("gh:simdutf/simdutf@5.6.2")
+cpmaddpackage("gh:foonathan/type_safe@0.2.4")
+cpmaddpackage("gh:RoaringBitmap/CRoaring@4.2.1")
 
 if(APPLE)
   cpmaddpackage(
@@ -14,7 +15,7 @@ if(APPLE)
     GITHUB_REPOSITORY
     arl/macdeployqtfix
     GIT_TAG
-    ffe980011dd7a08ac2bc79dbd5ac86a62b1c1f05
+    df888505849d3c06d20a4338af276dfa7d11826a
     DOWNLOAD_ONLY
     YES
   )
@@ -22,19 +23,6 @@ if(APPLE)
     configure_file(${macdeployqtfix_SOURCE_DIR}/macdeployqtfix.py ${CMAKE_BINARY_DIR}/macdeployqtfix.py COPYONLY)
   endif()
 endif()
-
-cpmaddpackage(
-  NAME
-  CRoaring
-  GITHUB_REPOSITORY
-  variar/CRoaring
-  GIT_TAG
-  80a8dcf4f683f00cc9be180f8b18de13491b7e27
-  EXCLUDE_FROM_ALL
-  YES
-  OPTIONS
-  "ENABLE_ROARING_TESTS OFF"
-)
 
 cpmaddpackage(
   NAME
@@ -47,48 +35,38 @@ cpmaddpackage(
   YES
 )
 
-if(KLOGG_USE_HYPERSCAN)
-  cpmaddpackage(
-    NAME
-    hyperscan
-    GITHUB_REPOSITORY
-    variar/hyperscan
-    GIT_TAG
-    0931a40e0cf1d7f92189bc546c3491ed5c113f8b
-    EXCLUDE_FROM_ALL
-    YES
-  )
-  if(hyperscan_ADDED)
-    message("Adding alias for hyperscan")
-    add_library(hyperscan_wrapper INTERFACE)
-    target_link_libraries(hyperscan_wrapper INTERFACE hs)
-    target_include_directories(hyperscan_wrapper INTERFACE ${hyperscan_SOURCE_DIR}/src)
-  else()
-    add_library(hyperscan_wrapper INTERFACE)
-    target_link_libraries(hyperscan_wrapper INTERFACE ${HYPERSCAN_LIBRARY})
-    target_include_directories(hyperscan_wrapper INTERFACE ${HYPERSCAN_INCLUDE_DIR})
-  endif()
-elseif(KLOGG_USE_VECTORSCAN)
+if(KLOGG_USE_VECTORSCAN)
   cpmaddpackage(
     NAME
     vectorscan
     GITHUB_REPOSITORY
     VectorCamp/vectorscan
     GIT_TAG
-    b4bba94b1a250603b0b198e0394946e32f6c3f30
+    d29730e1cb9daaa66bda63426cdce83505d2c809
     EXCLUDE_FROM_ALL
     YES
+    OPTIONS
+    "BUILD_STATIC_LIBS ON"
+    "BUILD_UNIT OFF"
+    "BUILD_TOOLS OFF"
+    "BUILD_EXAMPLES OFF"
+    "BUILD_BENCHMARKS OFF"
+    "BUILD_DOC OFF"
+    "BUILD_CHIMERA OFF"
+    "BUIlD_AVX2 OFF"
+    "BUIlD_AVX512 OFF"
+    "BUIlD_AVX512VBMI OFF"
+    "FAT_RUNTIME OFF"
   )
-  if(vectorscan_ADDED)
-    message("Adding alias for vectorscan")
-    add_library(vectorscan_wrapper INTERFACE)
-    target_link_libraries(vectorscan_wrapper INTERFACE hs)
-    target_include_directories(vectorscan_wrapper INTERFACE ${vectorscan_SOURCE_DIR}/src)
-  else()
-    add_library(vectorscan_wrapper INTERFACE)
-    target_link_libraries(vectorscan_wrapper INTERFACE ${VECTORSCAN_LIBRARY})
-    target_include_directories(vectorscan_wrapper INTERFACE ${VECTORSCAN_INCLUDE_DIR})
-  endif()
+ 
+  message("Adding alias for vectorscan")
+  add_library(klogg_vectorscan INTERFACE)
+  target_link_libraries(klogg_vectorscan INTERFACE hs)
+  target_include_directories(klogg_vectorscan INTERFACE 
+    ${vectorscan_SOURCE_DIR}/src
+    ${vectorscan_BINARY_DIR}
+  )
+
 endif()
 
 cpmaddpackage(
@@ -220,7 +198,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   gpakosz/whereami
   GIT_TAG
-  ba364cd54fd431c76c045393b6522b4bff547f50
+  dcb52a058dc14530ba9ae05e4339bd3ddfae0e0e
   DOWNLOAD_ONLY
   YES
 )
@@ -262,7 +240,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   KDAB/KDToolBox
   GIT_TAG
-  253a6c087c626cd477e15c9dae4b0e3ec27afaee
+  6468867d1a46eabe1bcb2cd342f338fe66f06675
   DOWNLOAD_ONLY
   YES
 )
@@ -283,7 +261,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   SpartanJ/efsw
   GIT_TAG
-  2e73f8e96779a2895c6242d66cadb3a15aa5e192
+  1.4.1
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
@@ -302,7 +280,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   variar/oneTBB
   GIT_TAG
-  281c5b4ae2f1a610a13ba9e812350bb01bb88365
+  c9be1ac2930f02dea523003ed801b4489f3e6b6e
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
@@ -322,7 +300,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   microsoft/mimalloc
   VERSION
-  2.1.2
+  2.1.7
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
@@ -374,7 +352,7 @@ if(KLOGG_USE_SENTRY)
     GITHUB_REPOSITORY
     getsentry/sentry-native
     GIT_TAG
-    79899a808a4675a66db6b76a144cecea954506ea
+    a3d58622a807b9dda174cb9fc18fa0f98c89d043
     EXCLUDE_FROM_ALL
     YES
   )
@@ -385,6 +363,29 @@ if(KLOGG_USE_SENTRY)
     set_target_properties(crashpad_handler PROPERTIES OUTPUT_NAME "klogg_crashpad_handler")
   endif()
 endif(KLOGG_USE_SENTRY)
+
+cpmaddpackage(
+  NAME
+  simdcomp
+  GITHUB_REPOSITORY
+  lemire/simdcomp
+  GIT_TAG
+  009c67807670d16f8984c0534aef0e630e5465a4
+  DOWNLOAD_ONLY
+  YES
+)
+if(simdcomp_ADDED)
+  add_library(simdcomp STATIC 
+    ${simdcomp_SOURCE_DIR}/src/avxbitpacking.c
+    ${simdcomp_SOURCE_DIR}/src/simdfor.c
+    ${simdcomp_SOURCE_DIR}/src/simdcomputil.c
+    ${simdcomp_SOURCE_DIR}/src/simdbitpacking.c
+    ${simdcomp_SOURCE_DIR}/src/simdintegratedbitpacking.c
+    ${simdcomp_SOURCE_DIR}/src/simdpackedsearch.c
+    ${simdcomp_SOURCE_DIR}/src/simdpackedselect.c
+  )
+  target_include_directories(simdcomp PUBLIC ${simdcomp_SOURCE_DIR}/include)
+endif()
 
 set(klogg_cpm_targets
     xxhash
@@ -407,6 +408,7 @@ set(klogg_cpm_targets
     crashpad_compat
     crashpad_util
     mini_chromium
+    simdcomp
 )
 foreach(target ${klogg_cpm_targets})
   if(TARGET ${target})

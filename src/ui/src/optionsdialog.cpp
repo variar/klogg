@@ -128,7 +128,7 @@ void OptionsDialog::setupTabs()
 void OptionsDialog::setupFontList()
 {
     const auto families = FontUtils::availableFonts();
-    for ( const QString& str : qAsConst( families ) ) {
+    for ( const QString& str : families ) {
         fontFamilyBox->addItem( str );
     }
 }
@@ -361,6 +361,7 @@ void OptionsDialog::updateDialogFromConfig()
     indexReadBufferSpinBox->setValue( config.indexReadBufferSizeMb() );
     searchReadBufferSpinBox->setValue( config.searchReadBufferSizeLines() );
     keepFileClosedCheckBox->setChecked( config.keepFileClosed() );
+    compressedIndexCheckBox->setChecked( config.useCompressedIndex() );
     optimizeForNotLatinEncodingsCheckBox->setChecked( config.optimizeForNotLatinEncodings() );
 
     // version checking
@@ -528,6 +529,7 @@ void OptionsDialog::updateConfigFromDialog()
     config.setIndexReadBufferSizeMb( indexReadBufferSpinBox->value() );
     config.setSearchReadBufferSizeLines( searchReadBufferSpinBox->value() );
     config.setKeepFileClosed( keepFileClosedCheckBox->isChecked() );
+    config.setUseCompressedIndex( compressedIndexCheckBox->isChecked() );
     config.setOptimizeForNotLatinEncodings( optimizeForNotLatinEncodingsCheckBox->isChecked() );
 
     // version checking

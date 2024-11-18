@@ -50,44 +50,41 @@ jobs:
     - name: Upload symbols linux
       shell: sh
       run: |
-        xz -d ./packages-bionic/klogg_bionic.debug.xz
         xz -d ./packages-focal/klogg_focal.debug.xz
         xz -d ./packages-jammy/klogg_jammy.debug.xz
+        xz -d ./packages-noble/klogg_noble.debug.xz
         xz -d ./packages-oracle/klogg_oracle.debug.xz
         xz -d ./packages-appimage/klogg_appimage.debug.xz
-        sentry-cli upload-dif ./packages-bionic/klogg_bionic.debug  ./packages-bionic/klogg_bionic
         sentry-cli upload-dif ./packages-focal/klogg_focal.debug ./packages-focal/klogg_focal
         sentry-cli upload-dif ./packages-jammy/klogg_jammy.debug ./packages-jammy/klogg_jammy
+        sentry-cli upload-dif ./packages-noble/klogg_noble.debug  ./packages-noble/klogg_noble
         sentry-cli upload-dif ./packages-oracle/klogg_oracle.debug ./packages-oracle/klogg_oracle
         sentry-cli upload-dif ./packages-appimage/klogg_appimage.debug  ./packages-appimage/klogg_appimage
 
     - name: Upload symbols mac
       shell: sh
       run: |
-        sentry-cli upload-dif ./packages-macos-qt5/klogg-Qt5.app/Contents/MacOS/klogg ./packages-macos-qt5/klogg-Qt5.dSym
         sentry-cli upload-dif ./packages-macos-qt6/klogg-Qt6.app/Contents/MacOS/klogg ./packages-macos-qt6/klogg-Qt6.dSym
 
     - name: Upload symbols win
       shell: sh
       run: |
-        sentry-cli upload-dif ./packages-windows-x64-qt5/klogg-$KLOGG_VERSION-x64-Qt5-pdb.zip
         sentry-cli upload-dif ./packages-windows-x86-qt5/klogg-$KLOGG_VERSION-x86-Qt5-pdb.zip 
         sentry-cli upload-dif ./packages-windows-x64-qt6/klogg-$KLOGG_VERSION-x64-Qt6-pdb.zip
 
     - name: Cleanup release artifacts
       shell: sh
       run: |
-        rm -rf ./packages-bionic/klogg_bionic
         rm -rf ./packages-focal/klogg_focal
         rm -rf ./packages-jammy/klogg_jammy
+        rm -rf ./packages-noble/klogg_noble
         rm -rf ./packages-oracle/klogg_oracle
         rm -rf ./packages-appimage/klogg_appimage
-        rm -rf ./packages-macos-qt5/klogg-Qt5.app
         rm -rf ./packages-macos-qt6/klogg-Qt6.app
         mkdir ./linux-debug
-        mv ./packages-bionic/klogg_bionic.debug ./linux-debug
         mv ./packages-focal/klogg_focal.debug ./linux-debug
         mv ./packages-jammy/klogg_jammy.debug ./linux-debug
+        mv ./packages-noble/klogg_noble.debug ./linux-debug
         mv ./packages-oracle/klogg_oracle.debug ./linux-debug
         mv ./packages-appimage/klogg_appimage.debug ./linux-debug
         tar -cJf ./linux-debug/klogg-$KLOGG_VERSION-symbols.tar.xz ./linux-debug/*
@@ -104,7 +101,7 @@ jobs:
     - name: Prepare checksums
       shell: sh
       run: |
-        sha256sum --binary ./packages-bin/* ./packages-bionic/* ./packages-focal/* ./packages-jammy/* ./packages-oracle/* ./packages-appimage/*  > ./packages-bin/klogg-$KLOGG_VERSION-sha256.txt
+        sha256sum --binary ./packages-bin/* ./packages-focal/* ./packages-jammy/* ./packages-noble/* ./packages-oracle/* ./packages-appimage/*  > ./packages-bin/klogg-$KLOGG_VERSION-sha256.txt
         
     - name: Release win
       uses: "marvinpinto/action-automatic-releases@latest"
@@ -113,7 +110,6 @@ jobs:
         automatic_release_tag: continuous-win
         prerelease: true
         files: |
-          ./packages-windows-x64-qt5/*
           ./packages-windows-x86-qt5/*
           ./packages-windows-x64-qt6/*
 
@@ -124,9 +120,9 @@ jobs:
         automatic_release_tag: continuous-linux
         prerelease: true
         files: |
-          ./packages-bionic/*
           ./packages-focal/*
           ./packages-jammy/*
+          ./packages-noble/*
           ./packages-oracle/*
           ./packages-appimage/*
           ./packages-bin/*
@@ -139,7 +135,6 @@ jobs:
         automatic_release_tag: continuous-osx
         prerelease: true
         files: |
-          ./packages-macos-qt5/*
           ./packages-macos-qt6/*
 
     - name: Discord notification

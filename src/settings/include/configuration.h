@@ -231,6 +231,14 @@ class Configuration final : public Persistable<Configuration> {
     {
         keepFileClosed_ = shouldKeepClosed;
     }
+    bool useCompressedIndex() const
+    {
+        return useCompressedIndex_;
+    }
+    void setUseCompressedIndex( bool useCompressedIndex )
+    {
+        useCompressedIndex_ = useCompressedIndex;
+    }
 
     RegexpEngine regexpEngine() const
     {
@@ -552,6 +560,7 @@ class Configuration final : public Persistable<Configuration> {
     int searchReadBufferSizeLines_ = 10000;
     int searchThreadPoolSize_ = 0;
     bool keepFileClosed_ = false;
+    bool useCompressedIndex_ = true;
 
     bool enableLogging_ = false;
     int loggingLevel_ = 4;
