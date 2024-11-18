@@ -152,12 +152,12 @@ jobs:
       matrix:
         config:
           - os: macos
-            os_version: 12
+            os_version: 13
             qt_version: 6.7.3
             qt_modules: qt5compat
             arch: x64
             artifacts_id: macos-qt6
-            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=11.7
+            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=13.0
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
