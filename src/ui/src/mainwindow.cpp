@@ -1098,8 +1098,10 @@ void MainWindow::find()
 void MainWindow::clearLog()
 {
     const auto current_file = session_.getFilename( currentCrawlerWidget() );
-    if ( QMessageBox::question( this, tr( "klogg - clear file" ),
-                                tr( "Clear file %1?" ).arg( current_file ) )
+    if ( QMessageBox::warning(
+             this, tr( "klogg - clear file" ),
+             tr( "Clear file %1? File content will be removed from disk, this is irreversible" )
+                 .arg( current_file ) )
          == QMessageBox::Yes ) {
         QFile::resize( current_file, 0 );
     }
@@ -1276,7 +1278,7 @@ void MainWindow::encodingChanged( QAction* action )
         mib = mibData.toInt();
     }
 
-    LOG_DEBUG << "encodingChanged, encoding " << mib.value_or(0);
+    LOG_DEBUG << "encodingChanged, encoding " << mib.value_or( 0 );
     if ( auto crawler = currentCrawlerWidget() ) {
         crawler->setEncoding( mib );
         updateInfoLine();
