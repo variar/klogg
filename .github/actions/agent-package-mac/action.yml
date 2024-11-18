@@ -46,8 +46,8 @@ runs:
       run: |
         echo "KLOGG_CODESIGN=Developer ID Application: Anton Filimonov (GAW773U324)" >> $GITHUB_ENV
         echo "KLOGG_INSTALLERSIGN=Developer ID Installer: Anton Filimonov (GAW773U324)" >> $GITHUB_ENV
-        echo "KLOGG_DMG=klogg-${{ env.KLOGG_VERSION }}-OSX-${{ env.KLOGG_QT }}.dmg" >> $GITHUB_ENV
-        echo "KLOGG_PKG=klogg-${{ env.KLOGG_VERSION }}-OSX-${{ env.KLOGG_QT }}.pkg" >> $GITHUB_ENV
+        echo "KLOGG_DMG=klogg-${{ env.KLOGG_VERSION }}-mac-${{ env.KLOGG_ARCH }}.dmg" >> $GITHUB_ENV
+        echo "KLOGG_PKG=klogg-${{ env.KLOGG_VERSION }}-mac-${{ env.KLOGG_ARCH }}.pkg" >> $GITHUB_ENV
 
     - name: Mac codesign binaries
       if: ${{ github.event_name != 'pull_request' }}
@@ -85,10 +85,6 @@ runs:
         pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
         productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
     
-    - name: Setup Xcode
-      shell: sh
-      run: sudo xcode-select -s /Applications/Xcode_15.2.app
-
     - name: Mac notarize DMG 
       if: ${{ github.event_name != 'pull_request' }} 
       shell: sh
@@ -117,5 +113,5 @@ runs:
       shell: sh
       run: |
         cd $KLOGG_BUILD_ROOT
-        cp -a ./output/klogg.dSym ./packages/klogg-${{ env.KLOGG_QT }}.dSym
-        cp -a ./output/klogg.app ./packages/klogg-${{ env.KLOGG_QT }}.app
+        cp -a ./output/klogg.dSym ./packages/klogg-${{ env.KLOGG_ARCH }}.dSym
+        cp -a ./output/klogg.app ./packages/klogg-${{ env.KLOGG_ARCH }}.app
