@@ -90,6 +90,7 @@ runs:
       shell: sh
       run: |
         cd $KLOGG_BUILD_ROOT
+        mkdir -p packages
         mkdir -p pkg_resources/en.lproj
         cp ../COPYING pkg_resources/en.lproj
         cp ../packaging/description.txt pkg_resources/en.lproj
