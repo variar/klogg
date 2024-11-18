@@ -162,7 +162,7 @@ jobs:
             qt_version: 6.7.3
             arch: arm64
             artifacts_id: macos-arm-qt6
-            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=14.0
+            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=14.0 -DKLOGG_GENERIC_CPU=OFF
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
