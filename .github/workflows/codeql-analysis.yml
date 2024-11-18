@@ -16,13 +16,13 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
       matrix:
         language: ['cpp']
-        qt_version: [5.15.2]
+        qt_version: [6.7.3]
 
     steps:
     - name: Checkout repository
@@ -39,7 +39,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
+      uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -47,37 +47,22 @@ jobs:
         # Prefix the list here with "+" to use these queries and those in the config file.
         # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
-    - name: Cache Qt
-      id: cache-qt
-      uses: actions/cache@v1
-      with:
-        path: ../Qt
-        key: ${{ matrix.config.qt_version }}-QtCache
-
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v3
-      with:
-        version: ${{ matrix.config.qt_version }}
-        cached: ${{ steps.cache-qt.outputs.cache-hit }}
-        archives: qtbase qtimageformats qtsvg qttools qttranslations icu
-
-    - name: Install ninja
-      uses: seanmiddleditch/gha-setup-ninja@master
+    - uses: ./.github/actions/agent-setup
 
     - name: Prepare compiler env
       run: |
-        echo "CC=gcc-9" >> $GITHUB_ENV
-        echo "CXX=g++-9" >> $GITHUB_ENV
+        echo "CC=gcc-13" >> $GITHUB_ENV
+        echo "CXX=g++-13" >> $GITHUB_ENV
 
     - name: configure
       run: |
         mkdir build
         cd build
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_USE_SENTRY=OFF -DKLOGG_USE_HYPERSCAN=OFF ..
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_GENERIC_CPU=ON -DKLOGG_USE_SENTRY=OFF -DKLOGG_USE_VECTORSCAN=OFF ..
 
     - name: build
       run: |
         cmake --build build -t klogg
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
+      uses: github/codeql-action/analyze@v2
