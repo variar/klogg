@@ -30,7 +30,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   variar/maddy
   GIT_TAG
-  67d331c59d3abc4e92eecc5874836a600dbfaf58
+  602e26613e624535e2de883b3f2c98a16729d1d4
   EXCLUDE_FROM_ALL
   YES
 )
