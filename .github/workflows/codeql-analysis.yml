@@ -22,9 +22,10 @@ jobs:
       fail-fast: false
       matrix:
         language: ['cpp']
-        arch: x64
-        qt_version: 6.7.3
-        qt_modules: qt5compat
+        config:
+          arch: x64
+          qt_version: 6.7.3
+          qt_modules: qt5compat
 
     steps:
     - name: Checkout repository
