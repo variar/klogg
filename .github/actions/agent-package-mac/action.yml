@@ -56,20 +56,35 @@ runs:
         cd $KLOGG_BUILD_ROOT
         codesign -v -f -o runtime --deep --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./output/klogg.app;
     
-    - name: Mac pack dmg
-      shell: sh
-      run: |
-        cd $KLOGG_BUILD_ROOT
-        cpack --verbose -G "DragNDrop"
+    # - name: Mac pack dmg
+    #   shell: sh
+    #   run: |
+    #     cd $KLOGG_BUILD_ROOT
+    #     cpack --verbose -G "DragNDrop"
 
-    - name: Mac codesign dmg
-      if: ${{ github.event_name != 'pull_request' }}
-      shell: sh
-      run: |
-        cd $KLOGG_BUILD_ROOT
-        mv ./packages/klogg-${{ env.KLOGG_VERSION }}-OSX.dmg ./packages/${{ env.KLOGG_DMG }}
-        codesign -v -f -o runtime --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./packages/${{ env.KLOGG_DMG }}
+    # - name: Mac codesign dmg
+    #   if: ${{ github.event_name != 'pull_request' }}
+    #   shell: sh
+    #   run: |
+    #     cd $KLOGG_BUILD_ROOT
+    #     mv ./packages/klogg-${{ env.KLOGG_VERSION }}-OSX.dmg ./packages/${{ env.KLOGG_DMG }}
+    #     codesign -v -f -o runtime --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./packages/${{ env.KLOGG_DMG }}
     
+    #- name: Mac notarize DMG 
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  shell: sh
+    #  run: |
+    #    xcrun notarytool submit --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}" | tee dmg_notary.log
+    #    dmg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' dmg_notary.log)
+    #    xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$dmg_notary_id" "dmg_notary.log.json"
+    #    cat "dmg_notary.log.json"
+#
+    #- name: Mac staple DMG 
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  shell: sh
+    #  run: |
+    #    xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+
     - name: "Mac build pkg"
       if: ${{ github.event_name != 'pull_request' }}
       shell: sh
@@ -84,21 +99,6 @@ runs:
         pkgutil --expand ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-product.pkg ./output/klogg_product_pkg
         pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
         productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
-    
-    - name: Mac notarize DMG 
-      if: ${{ github.event_name != 'pull_request' }} 
-      shell: sh
-      run: |
-        xcrun notarytool submit --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}" | tee dmg_notary.log
-        dmg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' dmg_notary.log)
-        xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$dmg_notary_id" "dmg_notary.log.json"
-        cat "dmg_notary.log.json"
-
-    - name: Mac staple DMG 
-      if: ${{ github.event_name != 'pull_request' }} 
-      shell: sh
-      run: |
-        xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
 
     - name: Mac notarize PKG 
       if: ${{ github.event_name != 'pull_request' }} 
@@ -107,7 +107,7 @@ runs:
         xcrun notarytool submit  --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}" | tee pkg_notary.log
         pkg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' pkg_notary.log)
         xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$pkg_notary_id" "pkg_notary.log.json"
-        cat "pkg_notary.log.json"
+        cat "pkg_notary.log.json"gi
 
     - name: Mac staple PKG 
       if: ${{ github.event_name != 'pull_request' }} 
