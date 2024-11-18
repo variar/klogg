@@ -108,7 +108,7 @@ runs:
         xcrun notarytool submit  --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}" | tee pkg_notary.log
         pkg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' pkg_notary.log)
         xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$pkg_notary_id" "pkg_notary.log.json"
-        cat "pkg_notary.log.json"gi
+        cat "pkg_notary.log.json"
 
     - name: Mac staple PKG 
       if: ${{ github.event_name != 'pull_request' }} 

@@ -64,7 +64,8 @@ jobs:
     - name: Upload symbols mac
       shell: sh
       run: |
-        sentry-cli upload-dif ./packages-macos-qt6/klogg-Qt6.app/Contents/MacOS/klogg ./packages-macos-qt6/klogg-Qt6.dSym
+        sentry-cli upload-dif ./packages-macos-intel-qt6/klogg-x64.app/Contents/MacOS/klogg ./packages-macos-intel-qt6/klogg-x64.dSym
+        sentry-cli upload-dif ./packages-macos-arm-qt6/klogg-arm64.app/Contents/MacOS/klogg ./packages-macos-arm-qt6/klogg-arm64.dSym
 
     - name: Upload symbols win
       shell: sh
@@ -80,7 +81,8 @@ jobs:
         rm -rf ./packages-noble/klogg_noble
         rm -rf ./packages-oracle/klogg_oracle
         rm -rf ./packages-appimage/klogg_appimage
-        rm -rf ./packages-macos-qt6/klogg-Qt6.app
+        rm -rf ./packages-macos-intel-qt6/klogg-x64.app
+        rm -rf ./packages-macos-arm-qt6/klogg-arm64.app
         mkdir ./linux-debug
         mv ./packages-focal/klogg_focal.debug ./linux-debug
         mv ./packages-jammy/klogg_jammy.debug ./linux-debug
@@ -135,7 +137,8 @@ jobs:
         automatic_release_tag: continuous-osx
         prerelease: true
         files: |
-          ./packages-macos-qt6/*
+          ./packages-macos-intel-qt6/*
+          ./packages-macos-arm-qt6/*
 
     - name: Discord notification
       env:
