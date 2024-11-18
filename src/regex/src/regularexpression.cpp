@@ -94,10 +94,11 @@ parseBooleanExpressions( QString& pattern, bool isCaseSensitive, bool isPlainTex
         throw std::runtime_error( "Pattern has unmatched quotes" );
     }
 
+    pattern = pattern.toLower();
     LOG_INFO << "Parsed pattern: " << pattern;
     QRegularExpression finalPatternCheck( "^(and|nand|or|nor|xor|xnor|not|[ ()!|&]|p_[0-9]+)+$" );
     if ( !finalPatternCheck.match( pattern ).hasMatch() ) {
-        throw std::runtime_error( "Patterns must be enclosed in quotes" );
+        throw std::runtime_error( "Sub-patterns must be enclosed in quotes" );
     }
 
     return subPatterns;
