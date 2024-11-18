@@ -179,6 +179,7 @@ jobs:
         run: |
           brew install ragel qt6
           echo "Qt6_Dir=$HOMEBREW_PREFIX/opt/qt@6" >> $GITHUB_ENV
+          echo "Qt6_DIR=$HOMEBREW_PREFIX/opt/qt@6" >> $GITHUB_ENV
 
       - uses: ./.github/actions/agent-setup
       - uses: ./.github/actions/klogg-version
@@ -209,6 +210,7 @@ jobs:
             os_version: 2022
             qt_version: 6.7.3
             qt_modules: qt5compat
+            qt_arch: win64_msvc2019_64
             arch: x64
             ssl_arch: -x64
             cmake_opts:
@@ -217,8 +219,8 @@ jobs:
           - os: windows
             os_version: 2022
             qt_version: 5.15.2
-            arch: x86
             qt_arch: win32_msvc2019
+            arch: x86
             cmake_opts:
             artifacts_id: windows-x86-qt5
 
