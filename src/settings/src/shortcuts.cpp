@@ -85,6 +85,18 @@ const std::map<std::string, QStringList>& ShortcutAction::defaultShortcuts()
                            QStringList() << QKeySequence( Qt::Key_Plus ).toString() );
         shortcuts.emplace( CrawlerDecreaseTopViewSize,
                            QStringList() << QKeySequence( Qt::Key_Minus ).toString() );
+        shortcuts.emplace( CrawlerEnableCaseMatching,
+                           QStringList() << QKeySequence( Qt::Key_4 ).toString() );
+        shortcuts.emplace( CrawlerEnableRegex,
+                           QStringList() << QKeySequence( Qt::Key_5 ).toString() );
+        shortcuts.emplace( CrawlerEnableInverseMatching,
+                           QStringList() << QKeySequence( Qt::Key_6 ).toString() );
+        shortcuts.emplace( CrawlerEnableRegexCombining,
+                           QStringList() << QKeySequence( Qt::Key_7 ).toString() );
+        shortcuts.emplace( CrawlerEnableAutoRefresh,
+                           QStringList() << QKeySequence( Qt::Key_8 ).toString() );
+        shortcuts.emplace( CrawlerKeepResults,
+                           QStringList() << QKeySequence( Qt::Key_9 ).toString() );
 
         // shortcuts.emplace( QfFindNext, getKeyBindings( QKeySequence::FindNext ) );
         // shortcuts.emplace( QfFindPrev, getKeyBindings( QKeySequence::FindPrevious ) );
@@ -220,6 +232,12 @@ QString ShortcutAction::actionName( const std::string& action )
                           QApplication::tr( "Change filtered lines visibility to matches" ) );
         shortcuts.emplace( CrawlerIncreseTopViewSize, QApplication::tr( "Increase main view" ) );
         shortcuts.emplace( CrawlerDecreaseTopViewSize, QApplication::tr( "Decrease main view" ) );
+        shortcuts.emplace( CrawlerEnableCaseMatching, QApplication::tr( "Enable case matching" ) );
+        shortcuts.emplace( CrawlerEnableRegex, QApplication::tr( "Enable regex" ) );
+        shortcuts.emplace( CrawlerEnableInverseMatching, QApplication::tr( "Enable inverse matching" ) );
+        shortcuts.emplace( CrawlerEnableRegexCombining, QApplication::tr( "Enable regex combining" ) );
+        shortcuts.emplace( CrawlerEnableAutoRefresh, QApplication::tr( "Enable auto refresh" ) );
+        shortcuts.emplace( CrawlerKeepResults, QApplication::tr( "Keep search results" ) );
 
         shortcuts.emplace( QfFindNext, QApplication::tr( "QuickFind: Find next" ) );
         shortcuts.emplace( QfFindPrev, QApplication::tr( "QuickFind: Find previous" ) );
