@@ -184,6 +184,7 @@ class HighlighterSetCollection final : public Persistable<HighlighterSetCollecti
     HighlighterSet currentActiveSet() const;
 
     bool hasSet( const QString& setId ) const;
+    bool hasSetByName( const QString& name ) const;
 
     QStringList activeSetIds() const;
     void activateSet( const QString& setId );

@@ -211,14 +211,20 @@ void HighlightersDialog::importHighlighters()
         this, tr( "Select one or more files to open" ), "", tr( "Highlighters (*.conf)" ) );
 
     for ( const auto& file : files ) {
-        LOG_DEBUG << "Loading highlighters from " << file;
+        LOG_INFO << "Loading highlighters from " << file;
         QSettings settings{ file, QSettings::IniFormat };
         HighlighterSetCollection collection;
         collection.retrieveFromStorage( settings );
         for ( const auto& set : klogg::as_const( collection.highlighters_ ) ) {
-            if ( highlighterSetCollection_.hasSet( set.id() ) ) {
+            if ( highlighterSetCollection_.hasSet( set.id() )
+                 || highlighterSetCollection_.hasSetByName( set.name() ) ) {
+
+                LOG_INFO << "Skipping set " << set.name() << " (" << set.id() << ")";
+
                 continue;
             }
+
+            LOG_INFO << "Adding set " << set.name() << " (" << set.id() << ")";
 
             highlighterSetCollection_.highlighters_.append( set );
             highlighterListWidget->addItem( set.name() );

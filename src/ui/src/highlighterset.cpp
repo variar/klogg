@@ -480,6 +480,12 @@ bool HighlighterSetCollection::hasSet( const QString& setId ) const
                         [ setId ]( const auto& s ) { return s.id() == setId; } );
 }
 
+bool HighlighterSetCollection::hasSetByName( const QString& setName ) const
+{
+    return std::any_of( highlighters_.begin(), highlighters_.end(),
+                        [ setName ]( const auto& s ) { return s.name() == setName; } );
+}
+
 QList<QuickHighlighter> HighlighterSetCollection::quickHighlighters() const
 {
     return quickHighlighters_;
