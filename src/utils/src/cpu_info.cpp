@@ -85,7 +85,7 @@ CpuInstructions supportedCpuInstructions()
 
     return cpuInstructions;
 }
-#else
+#elif defined (Q_OS_LINUX)
 CpuInstructions supportedCpuInstructions()
 {
     CpuInstructions cpuInstructions = CpuInstructions::NONE;
@@ -136,5 +136,14 @@ CpuInstructions supportedCpuInstructions()
     }
     return cpuInstructions;
 }
-
+#else
+CpuInstructions supportedCpuInstructions()
+{
+    CpuInstructions cpuInstructions = CpuInstructions::NONE;
+    cpuInstructions |= CpuInstructions::SSE2;
+    cpuInstructions |= CpuInstructions::SSSE3;
+    cpuInstructions |= CpuInstructions::SSE41;
+    cpuInstructions |= CpuInstructions::POPCNT;
+    return cpuInstructions;
+}
 #endif
