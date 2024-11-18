@@ -160,6 +160,8 @@ include(StaticAnalyzers)
 
 ucm_print_flags()
 
+find_package(Threads) 
+
 find_package(
   QT
   NAMES
