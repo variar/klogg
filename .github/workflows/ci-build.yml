@@ -155,6 +155,7 @@ jobs:
             os_version: 13
             qt_version: 6.7.3
             qt_arch: clang_64
+            qt_modules: qt5compat
             arch: x64
             artifacts_id: macos-intel-qt6
             cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=13.0
@@ -162,6 +163,7 @@ jobs:
             os_version: 14
             qt_version: 6.7.3
             qt_arch: clang_64
+            qt_modules: qt5compat
             arch: arm64
             artifacts_id: macos-arm-qt6
             cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=14.0 -DKLOGG_GENERIC_CPU=OFF
