@@ -275,6 +275,10 @@ void Configuration::retrieveFromStorage( QSettings& settings )
         = settings
               .value( "view.hideAnsiColorSequences", DefaultConfiguration.hideAnsiColorSequences_ )
               .toBool();
+    displayAnsiColorSequences_ = settings
+                                     .value( "view.displayAnsiColorSequences",
+                                             DefaultConfiguration.displayAnsiColorSequences_ )
+                                     .toBool();
 
     useTextWrap_ = settings.value( "view.textWrap", DefaultConfiguration.useTextWrap() ).toBool();
 
@@ -410,6 +414,7 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "view.scaleFactorRounding", scaleFactorRounding_ );
 
     settings.setValue( "view.hideAnsiColorSequences", hideAnsiColorSequences_ );
+    settings.setValue( "view.displayAnsiColorSequences", displayAnsiColorSequences_ );
 
     settings.setValue( "defaultView.searchAutoRefresh", searchAutoRefresh_ );
     settings.setValue( "defaultView.searchIgnoreCase", searchIgnoreCase_ );

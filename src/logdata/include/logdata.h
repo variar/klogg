@@ -61,8 +61,7 @@
 class LogFilteredData;
 
 // Thrown when trying to attach an already attached LogData
-class CantReattachErr {
-};
+class CantReattachErr {};
 
 // Represents a complete set of data to be displayed (ie. a log file content)
 // This class is thread-safe.
@@ -102,7 +101,7 @@ class LogData : public AbstractLogData {
     // Get the auto-detected encoding for the indexed text.
     QTextCodec* getDetectedEncoding() const;
 
-    void setPrefilter(const QString& prefilterPattern);
+    void setPrefilter( const QString& prefilterPattern );
 
     struct RawLines {
         LineNumber startLine;
@@ -116,6 +115,8 @@ class LogData : public AbstractLogData {
 
       public:
         klogg::vector<QString> decodeLines() const;
+        using OneLineLogConstructor = std::function<OneLineLog( const char*, OneLineLog::Length )>;
+        klogg::vector<OneLineLog> splitLines( OneLineLogConstructor makeOneLineLog ) const;
         klogg::vector<std::string_view> buildUtf8View() const;
 
       private:
@@ -144,6 +145,9 @@ class LogData : public AbstractLogData {
 
   private:
     // Implementation of virtual functions
+    OneLineLog doGetOneLineLog( LineNumber line ) const override;
+    klogg::vector<OneLineLog> doGetOneLineLogs( LineNumber firstLine,
+                                                LinesCount number ) const override;
     QString doGetLineString( LineNumber line ) const override;
     QString doGetExpandedLineString( LineNumber line ) const override;
     klogg::vector<QString> doGetLines( LineNumber first, LinesCount number ) const override;
@@ -160,7 +164,7 @@ class LogData : public AbstractLogData {
     void reOpenFile() const;
 
     klogg::vector<QString> getLinesFromFile( LineNumber first, LinesCount number,
-                                           QString ( *processLine )( QString&& ) ) const;
+                                             QString ( *processLine )( QString&& ) ) const;
 
   private:
     mutable std::unique_ptr<FileHolder> attached_file_;

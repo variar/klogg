@@ -499,6 +499,15 @@ class Configuration final : public Persistable<Configuration> {
         hideAnsiColorSequences_ = hide;
     }
 
+    bool displayAnsiColorSequences() const
+    {
+        return displayAnsiColorSequences_;
+    }
+    void setDisplayAnsiColorSequences( bool display )
+    {
+        displayAnsiColorSequences_ = display;
+    }
+
     int defaultEncodingMib() const
     {
         return defaultEncodingMib_;
@@ -508,7 +517,8 @@ class Configuration final : public Persistable<Configuration> {
         defaultEncodingMib_ = mib;
     }
 
-    std::map<QString, QString> darkPalette() const {
+    std::map<QString, QString> darkPalette() const
+    {
         return darkPalette_;
     }
 
@@ -590,6 +600,7 @@ class Configuration final : public Persistable<Configuration> {
     bool optimizeForNotLatinEncodings_ = false;
 
     bool hideAnsiColorSequences_ = false;
+    bool displayAnsiColorSequences_ = false;
 
     int defaultEncodingMib_ = -1;
 

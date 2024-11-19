@@ -95,6 +95,11 @@ OptionsDialog::OptionsDialog( QWidget* parent )
             buildShortcutsTable( true );
     } );
 
+    connect( displayAnsiColorsCheckBox, &QCheckBox::clicked, [ this ]( bool clicked ) {
+        hideAnsiColorsCheckBox->setChecked( clicked );
+        hideAnsiColorsCheckBox->setDisabled( clicked );
+    } );
+
     updateDialogFromConfig();
 
     setupPolling();
@@ -319,7 +324,10 @@ void OptionsDialog::updateDialogFromConfig()
         styleComboBox->setCurrentText( style );
     }
 
-    hideAnsiColorsCheckBox->setChecked( config.hideAnsiColorSequences() );
+    displayAnsiColorsCheckBox->setChecked( config.displayAnsiColorSequences() );
+    hideAnsiColorsCheckBox->setDisabled( config.displayAnsiColorSequences() );
+    hideAnsiColorsCheckBox->setChecked( config.hideAnsiColorSequences()
+                                        || config.displayAnsiColorSequences() );
 
     // Regexp types
     mainSearchBox->setCurrentIndex( getRegexpTypeIndex( config.mainRegexpType() ) );
@@ -540,7 +548,9 @@ void OptionsDialog::updateConfigFromDialog()
     restartAppMessage = config.style() != styleComboBox->currentText();
 
     config.setStyle( styleComboBox->currentText() );
-    config.setHideAnsiColorSequences( hideAnsiColorsCheckBox->isChecked() );
+    config.setDisplayAnsiColorSequences( displayAnsiColorsCheckBox->isChecked() );
+    config.setHideAnsiColorSequences( hideAnsiColorsCheckBox->isChecked()
+                                      || displayAnsiColorsCheckBox->isChecked() );
 
     config.setDefaultEncodingMib( encodingComboBox->currentData().toInt() );
 

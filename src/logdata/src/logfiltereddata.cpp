@@ -482,6 +482,28 @@ LineNumber LogFilteredData::findFilteredLine( LineNumber lineNum ) const
 }
 
 // Implementation of the virtual function.
+klogg::vector<OneLineLog> LogFilteredData::doGetOneLineLogs( LineNumber firstLine,
+                                                             LinesCount number ) const
+{
+    klogg::vector<LineNumber::UnderlyingType> lineNumbers( number.get() );
+    std::iota( lineNumbers.begin(), lineNumbers.end(), firstLine.get() );
+
+    klogg::vector<OneLineLog> logs( number.get() );
+    std::transform(
+        lineNumbers.cbegin(), lineNumbers.cend(), logs.begin(),
+        [ this ]( const auto& idx ) -> auto { return doGetOneLineLog( LineNumber{ idx } ); } );
+
+    return logs;
+}
+
+// Implementation of the virtual function.
+OneLineLog LogFilteredData::doGetOneLineLog( LineNumber index ) const
+{
+    const auto line = findLogDataLine( index );
+    return sourceLogData_->getOneLineLog( line );
+}
+
+// Implementation of the virtual function.
 QString LogFilteredData::doGetLineString( LineNumber index ) const
 {
     const auto line = findLogDataLine( index );
@@ -504,7 +526,7 @@ klogg::vector<QString> LogFilteredData::doGetLines( LineNumber first_line, Lines
 
 // Implementation of the virtual function.
 klogg::vector<QString> LogFilteredData::doGetExpandedLines( LineNumber first_line,
-                                                          LinesCount number ) const
+                                                            LinesCount number ) const
 {
     return doGetLines( first_line, number,
                        [ this ]( const auto& line ) { return doGetExpandedLineString( line ); } );
@@ -525,9 +547,9 @@ LogFilteredData::doGetLines( LineNumber first_line, LinesCount number,
     return lines;
 }
 
-LineNumber LogFilteredData::doGetLineNumber(LineNumber index) const
+LineNumber LogFilteredData::doGetLineNumber( LineNumber index ) const
 {
-    return getMatchingLineNumber(index);
+    return getMatchingLineNumber( index );
 }
 
 // Implementation of the virtual function.
