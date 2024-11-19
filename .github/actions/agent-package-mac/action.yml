@@ -56,65 +56,65 @@ runs:
         cd $KLOGG_BUILD_ROOT
         codesign -v -f -o runtime --deep --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./output/klogg.app;
     
-    # - name: Mac pack dmg
-    #   shell: sh
-    #   run: |
-    #     cd $KLOGG_BUILD_ROOT
-    #     cpack --verbose -G "DragNDrop"
+    - name: Mac pack dmg
+      shell: sh
+      run: |
+        cd $KLOGG_BUILD_ROOT
+        cpack --verbose -G "DragNDrop"
 
-    # - name: Mac codesign dmg
-    #   if: ${{ github.event_name != 'pull_request' }}
-    #   shell: sh
-    #   run: |
-    #     cd $KLOGG_BUILD_ROOT
-    #     mv ./packages/klogg-${{ env.KLOGG_VERSION }}-OSX.dmg ./packages/${{ env.KLOGG_DMG }}
-    #     codesign -v -f -o runtime --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./packages/${{ env.KLOGG_DMG }}
-    
-    #- name: Mac notarize DMG 
-    #  if: ${{ github.event_name != 'pull_request' }} 
-    #  shell: sh
-    #  run: |
-    #    xcrun notarytool submit --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}" | tee dmg_notary.log
-    #    dmg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' dmg_notary.log)
-    #    xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$dmg_notary_id" "dmg_notary.log.json"
-    #    cat "dmg_notary.log.json"
-#
-    #- name: Mac staple DMG 
-    #  if: ${{ github.event_name != 'pull_request' }} 
-    #  shell: sh
-    #  run: |
-    #    xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
-
-    - name: "Mac build pkg"
+    - name: Mac codesign dmg
       if: ${{ github.event_name != 'pull_request' }}
       shell: sh
       run: |
         cd $KLOGG_BUILD_ROOT
-        mkdir -p packages
-        mkdir -p pkg_resources/en.lproj
-        cp ../COPYING pkg_resources/en.lproj
-        cp ../packaging/description.txt pkg_resources/en.lproj
-        sed -e s/%klogg_version%/${{ env.KLOGG_VERSION }}/ -e s/%klogg_pkg%/klogg-${{ env.KLOGG_VERSION }}-OSX.pkg/ ../packaging/osx/distribution.xml > distribution.xml
-        pkgbuild --component ./output/klogg.app --install-location /Applications --version ${{ env.KLOGG_VERSION }} --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX.pkg
-        productbuild --package-path ./output --distribution distribution.xml --resources ./pkg_resources --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-product.pkg
-        pkgutil --expand ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-product.pkg ./output/klogg_product_pkg
-        pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
-        productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
-
-    - name: Mac notarize PKG 
+        mv ./packages/klogg-${{ env.KLOGG_VERSION }}-OSX.dmg ./packages/${{ env.KLOGG_DMG }}
+        codesign -v -f -o runtime --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./packages/${{ env.KLOGG_DMG }}
+    
+    - name: Mac notarize DMG 
       if: ${{ github.event_name != 'pull_request' }} 
       shell: sh
       run: |
-        xcrun notarytool submit  --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}" | tee pkg_notary.log
-        pkg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' pkg_notary.log)
-        xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$pkg_notary_id" "pkg_notary.log.json"
-        cat "pkg_notary.log.json"
+        xcrun notarytool submit --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}" | tee dmg_notary.log
+        dmg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' dmg_notary.log)
+        xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$dmg_notary_id" "dmg_notary.log.json"
+        cat "dmg_notary.log.json"
 
-    - name: Mac staple PKG 
+    - name: Mac staple DMG 
       if: ${{ github.event_name != 'pull_request' }} 
-      shell: sh 
+      shell: sh
       run: |
-        xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
+        xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"
+
+    #- name: "Mac build pkg"
+    #  if: ${{ github.event_name != 'pull_request' }}
+    #  shell: sh
+    #  run: |
+    #    cd $KLOGG_BUILD_ROOT
+    #    mkdir -p packages
+    #    mkdir -p pkg_resources/en.lproj
+    #    cp ../COPYING pkg_resources/en.lproj
+    #    cp ../packaging/description.txt pkg_resources/en.lproj
+    #    sed -e s/%klogg_version%/${{ env.KLOGG_VERSION }}/ -e s/%klogg_pkg%/klogg-${{ env.KLOGG_VERSION }}-OSX.pkg/ ../packaging/osx/distribution.xml > distribution.xml
+    #    pkgbuild --component ./output/klogg.app --install-location /Applications --version ${{ env.KLOGG_VERSION }} --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX.pkg
+    #    productbuild --package-path ./output --distribution distribution.xml --resources ./pkg_resources --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-product.pkg
+    #    pkgutil --expand ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-product.pkg ./output/klogg_product_pkg
+    #    pkgutil --flatten ./output/klogg_product_pkg ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg
+    #    productsign --sign "${{ env.KLOGG_INSTALLERSIGN }}" --timestamp ./output/klogg-${{ env.KLOGG_VERSION }}-OSX-flatten.pkg ./packages/${{ env.KLOGG_PKG }}
+
+    #- name: Mac notarize PKG 
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  shell: sh
+    #  run: |
+    #    xcrun notarytool submit  --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}" | tee pkg_notary.log
+    #    pkg_notary_id=$(awk '$1=="id:"{id=$2} END{print id}' pkg_notary.log)
+    #    xcrun notarytool log --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "$pkg_notary_id" "pkg_notary.log.json"
+    #    cat "pkg_notary.log.json"
+
+    #- name: Mac staple PKG 
+    #  if: ${{ github.event_name != 'pull_request' }} 
+    #  shell: sh 
+    #  run: |
+    #    xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_PKG }}"
 
     - name: Mac symbols
       shell: sh

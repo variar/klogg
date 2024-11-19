@@ -154,12 +154,14 @@ jobs:
           - os: macos
             os_version: 13
             qt_version: 6.7.3
+            qt_arch: clang_64
             arch: x64
             artifacts_id: macos-intel-qt6
             cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=13.0
           - os: macos
             os_version: 14
             qt_version: 6.7.3
+            qt_arch: clang_64
             arch: arm64
             artifacts_id: macos-arm-qt6
             cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=14.0 -DKLOGG_GENERIC_CPU=OFF
@@ -181,9 +183,7 @@ jobs:
 
       - name: Brew deps
         run: |
-          brew install ragel qt6
-          echo "Qt6_Dir=$HOMEBREW_PREFIX/opt/qt@6" >> $GITHUB_ENV
-          echo "Qt6_DIR=$HOMEBREW_PREFIX/opt/qt@6" >> $GITHUB_ENV
+          brew install ragel
 
       - uses: ./.github/actions/agent-setup
       - uses: ./.github/actions/klogg-version
