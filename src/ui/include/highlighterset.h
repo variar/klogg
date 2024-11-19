@@ -181,7 +181,7 @@ class HighlighterSetCollection final : public Persistable<HighlighterSetCollecti
     QList<HighlighterSet> highlighterSets() const;
     void setHighlighterSets( const QList<HighlighterSet>& highlighters );
 
-    HighlighterSet currentActiveSet() const;
+    const HighlighterSet& currentActiveSet() const;
 
     bool hasSet( const QString& setId ) const;
     bool hasSetByName( const QString& name ) const;
@@ -201,9 +201,12 @@ class HighlighterSetCollection final : public Persistable<HighlighterSetCollecti
   private:
     static constexpr int HighlighterSetCollection_VERSION = 2;
 
+    void updateCombinedSet();
+
   private:
     QList<HighlighterSet> highlighters_;
     QStringList activeSets_;
+    HighlighterSet combinedActiveSet_;
 
     QList<QuickHighlighter> quickHighlighters_;
 

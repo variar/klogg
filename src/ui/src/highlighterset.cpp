@@ -267,6 +267,10 @@ void HighlighterSet::compile() const
 HighlighterMatchType HighlighterSet::matchLine( const QString& line,
                                                 klogg::vector<HighlightedMatch>& matches ) const
 {
+    if (highlighterList_.empty()) {
+        return HighlighterMatchType::NoMatch;
+    }
+
     if (!compiledExpression_) {
         compile();
     }
@@ -429,21 +433,25 @@ void HighlighterSetCollection::setHighlighterSets( const QList<HighlighterSet>& 
     activeSets_.erase( std::remove_if( activeSets_.begin(), activeSets_.end(),
                                        [ this ]( const auto& setId ) { return !hasSet( setId ); } ),
                        activeSets_.end() );
+    updateCombinedSet();
 }
 
-HighlighterSet HighlighterSetCollection::currentActiveSet() const
+const HighlighterSet& HighlighterSetCollection::currentActiveSet() const {
+    return combinedActiveSet_;
+}
+
+void HighlighterSetCollection::updateCombinedSet()
 {
-    HighlighterSet combinedSet;
+    combinedActiveSet_.highlighterList_.clear();
 
-    std::vector<HighlighterSet> activeSetsInOrder{ static_cast<size_t>( activeSets_.size() ) };
-    std::copy_if( highlighters_.begin(), highlighters_.end(), activeSetsInOrder.begin(),
-                  [ this ]( const auto& set ) { return activeSets_.contains( set.id() ); } );
-
-    for ( auto& set : activeSetsInOrder ) {
-        combinedSet.highlighterList_.append( set.highlighterList_ );
+    for (const HighlighterSet& set : klogg::as_const(highlighters_)) {
+        if (!activeSets_.contains(set.id())) {
+            continue;
+        }
+        combinedActiveSet_.highlighterList_.append( set.highlighterList_ );
     }
 
-    return combinedSet;
+    combinedActiveSet_.compile();
 }
 
 QStringList HighlighterSetCollection::activeSetIds() const
@@ -460,18 +468,21 @@ void HighlighterSetCollection::activateSet( const QString& setId )
     }
 
     activeSets_.append( setId );
+    updateCombinedSet();
 }
 
 void HighlighterSetCollection::deactivateSet( const QString& setId )
 {
     LOG_INFO << "deactivating set " << setId;
     activeSets_.removeAll( setId );
+    updateCombinedSet();
 }
 
 void HighlighterSetCollection::deactivateAll()
 {
     LOG_INFO << "deactivating all sets";
     activeSets_.clear();
+    updateCombinedSet();
 }
 
 bool HighlighterSetCollection::hasSet( const QString& setId ) const
@@ -631,4 +642,5 @@ void HighlighterSetCollection::retrieveFromStorage( QSettings& settings )
     }
 
     LOG_INFO << "Loaded " << highlighters_.size() << " highlighter sets";
+    updateCombinedSet();
 }
