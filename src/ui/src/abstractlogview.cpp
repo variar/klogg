@@ -80,6 +80,7 @@
 
 #include "abstractlogview.h"
 #include "containers.h"
+#include "highlightedmatch.h"
 #include "linetypes.h"
 
 #include "active_screen.h"
@@ -273,6 +274,16 @@ public:
         }
 
         // LOG_INFO << "added Chunk of  " << length;
+    }
+
+    LineColumn endColumn() const
+    {
+        return chunks_.empty() ? 0_lcol : chunks_.back().end();
+    }
+
+    bool empty() const
+    {
+        return chunks_.empty();
     }
 
     // Draw the current line of text using the given painter,
@@ -2336,13 +2347,14 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
     // Position in pixel of the base line of the line to print
     int yPos = 0;
     wrappedLinesInfo_.clear();
+    klogg::vector<std::pair<QColor, QColor>> highlightColors;
     for ( auto currentLine = 0_lcount; currentLine < nbLines; ++currentLine ) {
         const auto lineNumber = firstLine_ + currentLine;
         QString logLine = logLines[ currentLine.get() ];
 
         const int xPos = contentStartPosX + ContentMarginWidth;
 
-        klogg::vector<HighlightedMatch> highlighterMatches;
+        HighlightedMatchRanges highlighterMatches;
 
         if ( selection_.isLineSelected( lineNumber ) && !selection_.isSingleLine() ) {
             // Reverse the selected line
@@ -2369,16 +2381,14 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                 if ( patternHighlight ) {
                     klogg::vector<HighlightedMatch> patternMatches;
                     patternHighlight->matchLine( logLine, patternMatches );
-                    highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
-                                               patternMatches.end() );
+                    highlighterMatches.addMatches( patternMatches );
                 }
 
-                highlighterMatches.reserve( additionalHighlighters.size() );
+                // highlighterMatches.reserve( additionalHighlighters.size() );
                 for ( const auto& highlighter : additionalHighlighters ) {
                     klogg::vector<HighlightedMatch> patternMatches;
                     highlighter.matchLine( logLine, patternMatches );
-                    highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
-                                               patternMatches.end() );
+                    highlighterMatches.addMatches( patternMatches );
                 }
             }
         }
@@ -2408,27 +2418,27 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                                      match.foreColor(), match.backColor() };
         };
 
-        klogg::vector<HighlightedMatch> allHighlights;
-        allHighlights.reserve( highlighterMatches.size() );
-        std::transform( highlighterMatches.cbegin(), highlighterMatches.cend(),
-                        std::back_inserter( allHighlights ), untabifyHighlight );
+        klogg::vector<HighlightedMatch> sortedHighlights = highlighterMatches.matches();
+        std::transform( sortedHighlights.begin(), sortedHighlights.end(), sortedHighlights.begin(),
+                        untabifyHighlight );
+
+        HighlightedMatchRanges allHighlights{ std::move( sortedHighlights ) };
 
         // string to print, cut to fit the length and position of the view
-        const QString& expandedLine = untabify(std::move(logLine));
+        const QString& expandedLine = untabify( std::move( logLine ) );
 
         // Has the line got elements to be highlighted
         klogg::vector<HighlightedMatch> quickFindMatches;
         quickFindPattern_->matchLine( expandedLine, quickFindMatches );
-        allHighlights.insert( allHighlights.end(),
-                              std::make_move_iterator( quickFindMatches.begin() ),
-                              std::make_move_iterator( quickFindMatches.end() ) );
+        allHighlights.addMatches( quickFindMatches );
 
         // Is there something selected in the line?
         const auto selectionPortion = selection_.getPortionForLine( lineNumber );
         if ( selectionPortion.isValid() ) {
-            allHighlights.emplace_back( selectionPortion.startColumn(), selectionPortion.size(),
-                                        palette.color( QPalette::HighlightedText ),
-                                        palette.color( QPalette::Highlight ) );
+            allHighlights.addMatch( HighlightedMatch{ selectionPortion.startColumn(),
+                                                      selectionPortion.size(),
+                                                      palette.color( QPalette::HighlightedText ),
+                                                      palette.color( QPalette::Highlight ) } );
         }
 
         const auto wrappedLineLength
@@ -2442,64 +2452,46 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                            backColor );
 
         LineDrawer lineDrawer( backColor );
-        if ( !allHighlights.empty() && !expandedLine.isEmpty() ) {
-            auto highlightColors = klogg::vector<std::pair<QColor, QColor>>(
-                static_cast<size_t>( expandedLine.size() ),
-                std::make_pair( foreColor, backColor ) );
+        const auto firstVisibleColumn = std::clamp( useTextWrap_ ? 0_lcol : firstCol_, 0_lcol,
+                                                    LineColumn{ klogg::isize( expandedLine ) } );
+        const auto lastVisibleColumn
+            = useTextWrap_ ? LineColumn{ klogg::isize( expandedLine ) } : firstCol_ + nbVisibleCols;
+        allHighlights.clamp( firstVisibleColumn, lastVisibleColumn );
 
-            for ( const auto& match : allHighlights ) {
-                auto matchEnd = match.startColumn() + match.size();
+        if ( !allHighlights.empty() && !expandedLine.isEmpty() ) {
+            // first part without highlight
+            if ( allHighlights.front().startColumn() > firstVisibleColumn ) {
+                lineDrawer.addChunk( firstVisibleColumn,
+                                     allHighlights.front().startColumn() - 1_length, foreColor,
+                                     backColor );
+            }
+
+            for ( const auto& match : allHighlights.matches() ) {
+                const auto matchStart = match.startColumn();
+
+                // a part between two highlight regions
+                if ( !lineDrawer.empty() && matchStart - lineDrawer.endColumn() > 1_length ) {
+                    lineDrawer.addChunk( lineDrawer.endColumn() + 1_length, matchStart - 1_length,
+                                         foreColor, backColor );
+                }
+
+                const auto matchEnd = match.endColumn();
                 auto matchLengthInString = match.size();
                 if ( matchEnd >= LineColumn{ expandedLine.size() } ) {
                     matchLengthInString
                         = LineLength{ klogg::isize( expandedLine ) - match.startColumn().get() };
                 }
                 if ( matchLengthInString > 0_length ) {
-                    std::fill_n( highlightColors.begin() + match.startColumn().get(),
-                                 matchLengthInString.get(),
-                                 std::make_pair( match.foreColor(), match.backColor() ) );
+                    lineDrawer.addChunk( match.startColumn(), matchEnd, match.foreColor(),
+                                         match.backColor() );
                 }
             }
 
-            klogg::vector<LineColumn> columnIndexes( highlightColors.size() );
-            std::iota( columnIndexes.begin(), columnIndexes.end(), 0_lcol );
-
-            auto columnIndexIt = columnIndexes.begin();
-
-            const auto firstVisibleColumn
-                = std::clamp( useTextWrap_ ? 0_lcol : firstCol_, 0_lcol,
-                              LineColumn{ klogg::isize( expandedLine ) } );
-            std::advance( columnIndexIt, firstVisibleColumn.get() );
-            while ( columnIndexIt != columnIndexes.end() ) {
-                auto highlightDiffColumnIt = std::adjacent_find(
-                    columnIndexIt, columnIndexes.end(),
-                    [ &highlightColors ]( LineColumn lhsColumn, LineColumn rhsColumn ) {
-                        return highlightColors[ lhsColumn.get<size_t>() ]
-                               != highlightColors[ rhsColumn.get<size_t>() ];
-                    } );
-
-                if ( highlightDiffColumnIt != columnIndexes.end() ) {
-                    auto highlightChunkStart = *columnIndexIt;
-                    auto highlightChunkEnd = *highlightDiffColumnIt;
-                    lineDrawer.addChunk(
-                        highlightChunkStart, highlightChunkEnd,
-                        highlightColors[ highlightChunkStart.get<size_t>() ].first,
-                        highlightColors[ highlightChunkStart.get<size_t>() ].second );
-
-                    columnIndexIt = highlightDiffColumnIt + 1;
-                }
-                else {
-                    break;
-                }
-            }
-            if ( columnIndexIt != columnIndexes.end() && !columnIndexes.empty() ) {
-                const auto lastHighlightChunkStart = *columnIndexIt;
-                const auto lastHighlightChunkEnd = *columnIndexes.rbegin();
-                if ( lastHighlightChunkEnd >= lastHighlightChunkStart ) {
-                    lineDrawer.addChunk( lastHighlightChunkStart, lastHighlightChunkEnd,
-                                         highlightColors.back().first,
-                                         highlightColors.back().second );
-                }
+            // last part without highlight
+            const auto lastHighlightColumn = allHighlights.back().endColumn();
+            if ( lastHighlightColumn < lastVisibleColumn ) {
+                lineDrawer.addChunk( lastHighlightColumn + 1_length, lastVisibleColumn, foreColor,
+                                     backColor );
             }
         }
         else {

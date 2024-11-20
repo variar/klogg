@@ -185,8 +185,9 @@ RegularExpressionPattern Highlighter::expressionPattern() const
     return result;
 }
 
-void Highlighter::compile() const {
-     const auto pattern
+void Highlighter::compile() const
+{
+    const auto pattern
         = useRegex_ ? regexp_.pattern() : QRegularExpression::escape( regexp_.pattern() );
 
     optimizedRegexp_ = QRegularExpression( pattern, regexp_.patternOptions() );
@@ -197,7 +198,7 @@ bool Highlighter::matchLine( const QString& line, klogg::vector<HighlightedMatch
 {
     matches.clear();
 
-    if (!optimizedRegexp_) {
+    if ( !optimizedRegexp_ ) {
         compile();
     }
 
@@ -265,13 +266,13 @@ void HighlighterSet::compile() const
 }
 
 HighlighterMatchType HighlighterSet::matchLine( const QString& line,
-                                                klogg::vector<HighlightedMatch>& matches ) const
+                                                HighlightedMatchRanges& matches ) const
 {
-    if (highlighterList_.empty()) {
+    if ( highlighterList_.empty() ) {
         return HighlighterMatchType::NoMatch;
     }
 
-    if (!compiledExpression_) {
+    if ( !compiledExpression_ ) {
         compile();
     }
 
@@ -286,7 +287,7 @@ HighlighterMatchType HighlighterSet::matchLine( const QString& line,
 
     auto matchType = HighlighterMatchType::NoMatch;
 
-    for ( int index = static_cast<int>(highlighterList_.size()) - 1; index >= 0; --index ) {
+    for ( int index = static_cast<int>( highlighterList_.size() ) - 1; index >= 0; --index ) {
         const Highlighter& hl = highlighterList_[ index ];
         if ( !matchedPatterns[ static_cast<size_t>( index ) ].second ) {
             continue;
@@ -297,20 +298,17 @@ HighlighterMatchType HighlighterSet::matchLine( const QString& line,
             continue;
         }
 
-        if ( !hl.highlightOnlyMatch() ) {
-            matchType = HighlighterMatchType::LineMatch;
-
-            matches.clear();
-            matches.emplace_back( 0_lcol, LineLength{ line.size() }, hl.foreColor(),
-                                  hl.backColor() );
-        }
-        else {
+        if (hl.highlightOnlyMatch()) {
             if ( matchType != HighlighterMatchType::LineMatch ) {
                 matchType = HighlighterMatchType::WordMatch;
             }
-
-            matches.insert( matches.end(), std::make_move_iterator( thisMatches.begin() ),
-                            std::make_move_iterator( thisMatches.end() ) );
+            matches.addMatches( thisMatches );
+        }
+        else {
+            matchType = HighlighterMatchType::LineMatch;
+            matches.clear();
+            matches.addMatch(
+                { 0_lcol, LineLength{ line.size() }, hl.foreColor(), hl.backColor() } );
         }
     }
 
@@ -436,7 +434,8 @@ void HighlighterSetCollection::setHighlighterSets( const QList<HighlighterSet>& 
     updateCombinedSet();
 }
 
-const HighlighterSet& HighlighterSetCollection::currentActiveSet() const {
+const HighlighterSet& HighlighterSetCollection::currentActiveSet() const
+{
     return combinedActiveSet_;
 }
 
@@ -444,8 +443,8 @@ void HighlighterSetCollection::updateCombinedSet()
 {
     combinedActiveSet_.highlighterList_.clear();
 
-    for (const HighlighterSet& set : klogg::as_const(highlighters_)) {
-        if (!activeSets_.contains(set.id())) {
+    for ( const HighlighterSet& set : klogg::as_const( highlighters_ ) ) {
+        if ( !activeSets_.contains( set.id() ) ) {
             continue;
         }
         combinedActiveSet_.highlighterList_.append( set.highlighterList_ );

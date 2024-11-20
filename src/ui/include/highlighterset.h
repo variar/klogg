@@ -136,7 +136,7 @@ class HighlighterSet {
     // Returns weither the passed line match a filter of the set,
     // if so, it returns the fore/back colors the line should use.
     HighlighterMatchType matchLine( const QString& line,
-                                    klogg::vector<HighlightedMatch>& matches ) const;
+                                    HighlightedMatchRanges& matches ) const;
 
     bool isEmpty() const;
 
