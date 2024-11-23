@@ -728,6 +728,7 @@ void CrawlerWidget::loadingFinishedHandler( LoadingStatus status )
         for ( const auto& m : savedMarkedLines_ ) {
             logFilteredData_->addMark( m );
         }
+        logMainView_->setFocus();
     }
 
     loadingInProgress_ = false;
