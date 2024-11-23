@@ -99,6 +99,9 @@ void Configuration::retrieveFromStorage( QSettings& settings )
     forceFontAntialiasing_
         = settings.value( "mainFont.antialiasing", DefaultConfiguration.forceFontAntialiasing_ )
               .toBool();
+    useBoldFont_
+        = settings.value( "mainFont.bold", DefaultConfiguration.useBoldFont_ )
+              .toBool();
 
     language_ = settings.value( "view.language", DefaultConfiguration.language_ ).toString();
 
@@ -295,6 +298,9 @@ void Configuration::retrieveFromStorage( QSettings& settings )
     searchIgnoreCase_
         = settings.value( "defaultView.searchIgnoreCase", DefaultConfiguration.searchIgnoreCase_ )
               .toBool();
+    searchLogicalCombining_
+        = settings.value( "defaultView.searchLogicalCombining", DefaultConfiguration.searchLogicalCombining_ )
+              .toBool();
 
     defaultEncodingMib_
         = settings.value( "defaultView.encodingMib", DefaultConfiguration.defaultEncodingMib_ )
@@ -353,6 +359,7 @@ void Configuration::saveToStorage( QSettings& settings ) const
     settings.setValue( "mainFont.family", fi.family() );
     settings.setValue( "mainFont.size", fi.pointSize() );
     settings.setValue( "mainFont.antialiasing", forceFontAntialiasing_ );
+    settings.setValue( "mainFont.bold", useBoldFont_ );
 
     settings.setValue( "regexpType.engine", static_cast<int>( regexpEngine_ ) );
 
@@ -413,6 +420,7 @@ void Configuration::saveToStorage( QSettings& settings ) const
 
     settings.setValue( "defaultView.searchAutoRefresh", searchAutoRefresh_ );
     settings.setValue( "defaultView.searchIgnoreCase", searchIgnoreCase_ );
+    settings.setValue( "defaultView.searchLogicalCombining", searchLogicalCombining_ );
     settings.setValue( "defaultView.encodingMib", defaultEncodingMib_ );
 
     QList<QVariant> splitterSizes;

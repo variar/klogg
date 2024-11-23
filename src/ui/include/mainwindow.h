@@ -160,11 +160,6 @@ class MainWindow : public QMainWindow {
     // or an error recovery when loading is finished
     void handleLoadingFinished( LoadingStatus status );
 
-    // Save the new state as default setting when a crawler
-    // is changing their view options.
-    void handleSearchRefreshChanged( bool isRefreshing );
-    void handleMatchCaseChanged( bool matchCase );
-
     // Update quick find searchable
     void handleFilteredViewChanged();
 

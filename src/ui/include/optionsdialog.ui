@@ -47,34 +47,10 @@
          <layout class="QVBoxLayout" name="verticalLayout_4">
           <item>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="4" column="2">
-             <widget class="QPushButton" name="quickFindColorButton">
+            <item row="0" column="2">
+             <widget class="QPushButton" name="mainSearchColorButton">
               <property name="text">
                <string/>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QComboBox" name="mainSearchBox">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="label_11">
-              <property name="text">
-               <string>Search history size:</string>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="label_4">
-              <property name="text">
-               <string>QuickFind search type: </string>
               </property>
              </widget>
             </item>
@@ -95,17 +71,10 @@
               </property>
              </widget>
             </item>
-            <item row="8" column="1">
-             <widget class="QSpinBox" name="searchHistorySpinBox">
-              <property name="maximum">
-               <number>999</number>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
-             <widget class="QPushButton" name="mainSearchColorButton">
+            <item row="8" column="0">
+             <widget class="QLabel" name="label_11">
               <property name="text">
-               <string/>
+               <string>Search history size:</string>
               </property>
              </widget>
             </item>
@@ -123,6 +92,44 @@
               </property>
              </widget>
             </item>
+            <item row="9" column="0" colspan="2">
+             <widget class="QCheckBox" name="autoRunSearchOnAddCheckBox">
+              <property name="text">
+               <string>Run search on add or replace pattern</string>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>QuickFind search type: </string>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1">
+             <widget class="QSpinBox" name="searchHistorySpinBox">
+              <property name="maximum">
+               <number>999</number>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="mainSearchBox">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QPushButton" name="quickFindColorButton">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
             <item row="4" column="1">
              <widget class="QComboBox" name="quickFindSearchBox">
               <property name="sizePolicy">
@@ -133,10 +140,24 @@
               </property>
              </widget>
             </item>
-            <item row="9" column="0" colspan="2">
-             <widget class="QCheckBox" name="autoRunSearchOnAddCheckBox">
+            <item row="2" column="0">
+             <widget class="QCheckBox" name="caseSensitiveCheckBox">
               <property name="text">
-               <string>Run search on add or replace pattern</string>
+               <string>Case sensitive</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="logicalCombiningCheckBox">
+              <property name="text">
+               <string>Logical combining</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QCheckBox" name="autoRefreshCheckBox">
+              <property name="text">
+               <string>Auto refresh</string>
               </property>
              </widget>
             </item>
@@ -277,6 +298,13 @@
              <widget class="QCheckBox" name="fontSmoothCheckBox">
               <property name="text">
                <string>Force font anti-aliasing</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="boldFontCheckBox">
+              <property name="text">
+               <string>Use bold font (if supported by selected font)</string>
               </property>
              </widget>
             </item>
@@ -713,6 +741,9 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="maximum">
+                 <number>256</number>
                 </property>
                </widget>
               </item>

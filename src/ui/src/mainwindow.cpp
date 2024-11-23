@@ -181,12 +181,6 @@ MainWindow::MainWindow( WindowSession session )
     signalMux_.connect( SIGNAL( loadingFinished( LoadingStatus ) ), this,
                         SLOT( handleLoadingFinished( LoadingStatus ) ) );
 
-    // Register for checkbox changes
-    signalMux_.connect( SIGNAL( searchRefreshChanged( bool ) ), this,
-                        SLOT( handleSearchRefreshChanged( bool ) ) );
-    signalMux_.connect( SIGNAL( matchCaseChanged( bool ) ), this,
-                        SLOT( handleMatchCaseChanged( bool ) ) );
-
     signalMux_.connect( SIGNAL( filteredViewChanged() ), this,
                         SLOT( handleFilteredViewChanged() ) );
 
@@ -1420,20 +1414,6 @@ void MainWindow::handleLoadingFinished( LoadingStatus status )
     }
 
     // mainTabWidget_.setEnabled( true );
-}
-
-void MainWindow::handleSearchRefreshChanged( bool isRefreshing )
-{
-    auto& config = Configuration::get();
-    config.setSearchAutoRefreshDefault( isRefreshing );
-    config.save();
-}
-
-void MainWindow::handleMatchCaseChanged( bool matchCase )
-{
-    auto& config = Configuration::get();
-    config.setSearchIgnoreCaseDefault( !matchCase );
-    config.save();
 }
 
 void MainWindow::handleFilteredViewChanged()

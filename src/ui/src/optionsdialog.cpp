@@ -300,6 +300,7 @@ void OptionsDialog::updateDialogFromConfig()
         fontSizeBox->setCurrentIndex( sizeIndex );
 
     fontSmoothCheckBox->setChecked( config.forceFontAntialiasing() );
+    boldFontCheckBox->setChecked( config.useBoldFont() );
     wrapTextCheckBox->setChecked( config.useTextWrap() );
     enableQtHiDpiCheckBox->setChecked( config.enableQtHighDpi() );
     scaleRoundingComboBox->setCurrentIndex( config.scaleFactorRounding() - 1 );
@@ -334,6 +335,9 @@ void OptionsDialog::updateDialogFromConfig()
     highlightMainSearchCheckBox->setChecked( config.mainSearchHighlight() );
     variateHighlightCheckBox->setChecked( config.variateMainSearchHighlight() );
     incrementalCheckBox->setChecked( config.isQuickfindIncremental() );
+    caseSensitiveCheckBox->setChecked( !config.isSearchIgnoreCaseDefault() );
+    logicalCombiningCheckBox->setChecked( config.isSearchLogicalCombiningDefault() );
+    autoRefreshCheckBox->setChecked( config.isSearchAutoRefreshDefault() );
 
     // Polling
     nativeFileWatchCheckBox->setChecked( config.nativeFileWatchEnabled() );
@@ -487,6 +491,7 @@ void OptionsDialog::updateConfigFromDialog()
     QFont font = QFont( fontFamilyBox->currentText(), ( fontSizeBox->currentText() ).toInt() );
     config.setMainFont( font );
     config.setForceFontAntialiasing( fontSmoothCheckBox->isChecked() );
+    config.setUseBoldFont( boldFontCheckBox->isChecked() );
     config.setUseTextWrap( wrapTextCheckBox->isChecked() );
     config.setEnableQtHighDpi( enableQtHiDpiCheckBox->isChecked() );
     config.setScaleFactorRounding( scaleRoundingComboBox->currentIndex() + 1 );
@@ -495,6 +500,9 @@ void OptionsDialog::updateConfigFromDialog()
     config.setMainSearchBackColor( mainSearchColor_ );
     config.setEnableMainSearchHighlight( highlightMainSearchCheckBox->isChecked() );
     config.setVariateMainSearchHighlight( variateHighlightCheckBox->isChecked() );
+    config.setSearchIgnoreCaseDefault( !caseSensitiveCheckBox->isChecked() );
+    config.setSearchAutoRefreshDefault( autoRefreshCheckBox->isChecked() );
+    config.setSearchLogicalCombiningDefault( logicalCombiningCheckBox->isChecked() );
     config.setQuickfindRegexpType( getRegexpTypeFromIndex( quickFindSearchBox->currentIndex() ) );
     config.setQfBackColor( qfSearchColor_ );
     config.setQuickfindIncremental( incrementalCheckBox->isChecked() );

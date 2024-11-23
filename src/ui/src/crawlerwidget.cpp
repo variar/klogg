@@ -84,7 +84,7 @@ const QPalette CrawlerWidget::ErrorPalette( Qt::darkYellow );
 
 // Implementation of the view context for the CrawlerWidget
 class CrawlerWidgetContext : public ViewContextInterface {
-  public:
+public:
     // Construct from the stored string representation
     explicit CrawlerWidgetContext( const QString& string );
     // Construct from the value passsed
@@ -142,11 +142,11 @@ class CrawlerWidgetContext : public ViewContextInterface {
         return marks_;
     }
 
-  private:
+private:
     void loadFromString( const QString& string );
     void loadFromJson( const QString& json );
 
-  private:
+private:
     QList<int> sizes_;
 
     bool ignoreCase_;
@@ -630,6 +630,8 @@ void CrawlerWidget::applyConfiguration()
     if ( config.forceFontAntialiasing() ) {
         font.setStyleStrategy( QFont::PreferAntialias );
     }
+
+    font.setBold( config.useBoldFont() );
 
     if ( config.hideAnsiColorSequences() ) {
         logData_->setPrefilter( AnsiColorSequenceRegex );
@@ -1159,6 +1161,7 @@ void CrawlerWidget::setup()
     searchRefreshButton_->setChecked( config.isSearchAutoRefreshDefault() );
     matchCaseButton_->setChecked( !config.isSearchIgnoreCaseDefault() );
     useRegexpButton_->setChecked( config.mainRegexpType() == SearchRegexpType::ExtendedRegexp );
+    booleanButton_->setChecked( config.isSearchLogicalCombiningDefault() );
 
     // Manually call the handler as it is not called when changing the state programmatically
     searchRefreshChangedHandler( searchRefreshButton_->isChecked() );
@@ -1440,39 +1443,27 @@ void CrawlerWidget::registerShortcuts()
 
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
-        ShortcutAction::CrawlerEnableCaseMatching, [ this ]() {
-            matchCaseButton_->toggle();
-        } );
+        ShortcutAction::CrawlerEnableCaseMatching, [ this ]() { matchCaseButton_->toggle(); } );
 
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
-        ShortcutAction::CrawlerEnableRegex, [ this ]() {
-            useRegexpButton_->toggle();
-        } );
+        ShortcutAction::CrawlerEnableRegex, [ this ]() { useRegexpButton_->toggle(); } );
 
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
-        ShortcutAction::CrawlerEnableInverseMatching, [ this ]() {
-            inverseButton_->toggle();
-        } );
+        ShortcutAction::CrawlerEnableInverseMatching, [ this ]() { inverseButton_->toggle(); } );
 
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
-        ShortcutAction::CrawlerEnableRegexCombining, [ this ]() {
-            booleanButton_->toggle();
-        } );
+        ShortcutAction::CrawlerEnableRegexCombining, [ this ]() { booleanButton_->toggle(); } );
 
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
-        ShortcutAction::CrawlerEnableAutoRefresh, [ this ]() {
-            searchRefreshButton_->toggle();
-        } );
+        ShortcutAction::CrawlerEnableAutoRefresh, [ this ]() { searchRefreshButton_->toggle(); } );
 
     ShortcutAction::registerShortcut(
         configuredShortcuts, shortcuts_, this, Qt::WidgetWithChildrenShortcut,
-        ShortcutAction::CrawlerKeepResults, [ this ]() {
-            keepSearchResultsButton_->toggle();
-        } );
+        ShortcutAction::CrawlerKeepResults, [ this ]() { keepSearchResultsButton_->toggle(); } );
 
     ShortcutAction::registerShortcut( configuredShortcuts, shortcuts_, this,
                                       Qt::WidgetWithChildrenShortcut,
