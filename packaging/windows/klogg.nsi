@@ -82,7 +82,7 @@ Section "klogg" klogg
     File release\documentation.html
 
     ; Create the 'sendto' link
-    CreateShortCut "$SENDTO\klogg.lnk" "$INSTDIR\klogg,exe" "" "$INSTDIR\klogg.exe" 0
+    CreateShortCut "$SENDTO\klogg.lnk" "$INSTDIR\klogg.exe" "" "$INSTDIR\klogg.exe" 0
 
     ; Register as an otion (but not main handler) for some files (.txt, .Log, .cap)
     WriteRegStr HKCR "Applications\klogg.exe" "" ""
