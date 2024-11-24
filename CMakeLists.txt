@@ -29,12 +29,12 @@ endif()
 
 if(WIN32)
   if(KLOGG_ARCH EQUAL 64)
-    option(KLOGG_USE_HYPERSCAN "Use Hyperscan" ON)
+    option(KLOGG_USE_VECTORSCAN "Use Hyperscan" ON)
   else()
-    option(KLOGG_USE_HYPERSCAN "Use Hyperscan" OFF)
+    option(KLOGG_USE_VECTORSCAN "Use Hyperscan" OFF)
   endif()
 else()
-  option(KLOGG_USE_HYPERSCAN "Use Hyperscan" ON)
+  option(KLOGG_USE_VECTORSCAN "Use Hyperscan" ON)
 endif()
 
 set(BUILD_VERSION
