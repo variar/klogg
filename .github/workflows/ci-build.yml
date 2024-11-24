@@ -68,7 +68,7 @@ jobs:
             check_container: oraclelinux:8
             container_root: docker/oracle8
             container: variar/klogg_oracle8
-            cmake_opts: -DCMAKE_BUILD_WITH_INSTALL_RPATH=on
+            cmake_opts: -DCMAKE_BUILD_WITH_INSTALL_RPATH=on -DKLOGG_USE_VECTORSCAN=OFF -DKLOGG_USE_HYPERSCAN=ON
 
           - os: ubuntu_focal
             os_version: 20.04

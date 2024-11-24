@@ -36,13 +36,8 @@ if(WIN32)
     option(KLOGG_USE_VECTORSCAN "Use Vectorscan" OFF)
   endif()
 else()
-  if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64")
     option(KLOGG_USE_HYPERSCAN "Use Hyperscan" OFF)
     option(KLOGG_USE_VECTORSCAN "Use Vectorscan" ON)
-  else()
-    option(KLOGG_USE_HYPERSCAN "Use Hyperscan" ON)
-    option(KLOGG_USE_VECTORSCAN "Use Vectorscan" OFF)
-  endif()
 endif()
 
 set(BUILD_VERSION
