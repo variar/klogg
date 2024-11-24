@@ -6,8 +6,10 @@ RUN yum update -y && \
     yum install -y ragel make wget python38 rpm-build git \
     qt5-qtbase-devel qt5-linguist qt5-qttranslations \
     openssl-devel boost-devel zlib-devel libcurl-devel \
-    gcc gcc-c++ elfutils-devel && \
+    elfutils-devel && \
     yum clean all
+
+RUN dnf install gcc-toolset-12
 
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2-linux-x86_64.sh && \
     chmod 755 cmake-3.20.2-linux-x86_64.sh && \
