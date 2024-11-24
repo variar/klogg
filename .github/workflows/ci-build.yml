@@ -216,7 +216,7 @@ jobs:
             qt_arch: win64_msvc2019_64
             arch: x64
             ssl_arch: -x64
-            cmake_opts:
+            cmake_opts: -DRAGEL_ROOT=${{ github.workspace }}/3rdparty/ragel
             artifacts_id: windows-x64-qt6
 
           - os: windows
@@ -259,14 +259,18 @@ jobs:
         with:
           arch: ${{ matrix.config.arch }}
 
-      - name: Install winget
-        uses: Cyberboss/install-winget@v1
-
       - name: Add pkg-config
         shell: sh
         run: |
           choco install pkgconfiglite
-          winget install ragel
+
+      - name: Add ragel
+        shell: sh
+        run: |
+          mkdir -p ${{ github.workspace }}/3rdparty/ragel
+          curl --progress-bar --location --output ${{ github.workspace }}/3rdparty/ragel/ragel.zip https://github.com/PolarGoose/Ragel-for-Windows/releases/download/ragel-6.10/Ragel.zip
+          cd ${{ github.workspace }}/3rdparty/ragel
+          7z x ragel.zip
 
       - uses: ./.github/actions/agent-build
       - uses: ./.github/actions/agent-run-tests
