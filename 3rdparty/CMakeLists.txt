@@ -36,7 +36,9 @@ cpmaddpackage(
   YES
 )
 
-if(KLOGG_USE_VECTORSCAN)
+if(KLOGG_USE_HYPERSCAN)
+
+elseif(KLOGG_USE_VECTORSCAN)
   cpmaddpackage(
     NAME
     vectorscan
@@ -67,7 +69,6 @@ if(KLOGG_USE_VECTORSCAN)
     ${vectorscan_SOURCE_DIR}/src
     ${vectorscan_BINARY_DIR}
   )
-
 endif()
 
 cpmaddpackage(

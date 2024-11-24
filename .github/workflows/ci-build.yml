@@ -58,17 +58,17 @@ jobs:
           #  container: variar/klogg_oracle7
           #  cmake_opts: -DKLOGG_USE_SENTRY=OFF -DKLOGG_USE_LTO=OFF -DKLOGG_USE_HYPERSCAN=OFF
 
-          # - os: oraclelinux
-          #   os_version: 8
-          #   arch: x64
-          #   check_command: yum install -y --setopt tsflags=test /usr/local/klogg*.rpm
-          #   cpack_gen: RPM
-          #   artifacts_id: oracle
-          #   package_suffix: rpm
-          #   check_container: oraclelinux:8
-          #   container_root: docker/oracle8
-          #   container: variar/klogg_oracle8
-          #   cmake_opts: -DCMAKE_BUILD_WITH_INSTALL_RPATH=on
+          - os: oraclelinux
+            os_version: 8
+            arch: x64
+            check_command: yum install -y --setopt tsflags=test /usr/local/klogg*.rpm
+            cpack_gen: RPM
+            artifacts_id: oracle
+            package_suffix: rpm
+            check_container: oraclelinux:8
+            container_root: docker/oracle8
+            container: variar/klogg_oracle8
+            cmake_opts: -DCMAKE_BUILD_WITH_INSTALL_RPATH=on
 
           - os: ubuntu_focal
             os_version: 20.04
@@ -163,7 +163,7 @@ jobs:
             qt_modules: qt5compat
             arch: arm64
             artifacts_id: macos-arm-qt6
-            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=14.0 -DKLOGG_GENERIC_CPU=OFF
+            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=14.0
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
@@ -249,20 +249,6 @@ jobs:
         run: |
           echo "SSL_DIR=${{ github.workspace }}\openssl-1.1\${{ matrix.config.arch }}\bin" >> $GITHUB_ENV
           echo "SSL_ARCH=${{ matrix.config.ssl_arch }}" >> $GITHUB_ENV 
-
-      - name: Add pkg-config
-        shell: sh
-        run: |
-          choco install pkgconfiglite
-
-      - name: Add ragel
-        shell: sh
-        run: |
-          mkdir -p ./3rdparty/ragel
-          curl --progress-bar --location --output ./3rdparty/ragel/ragel.zip https://github.com/PolarGoose/Ragel-for-Windows/releases/download/ragel-6.10/Ragel.zip
-          cd ./3rdparty/ragel
-          7z x ragel.zip
-          echo "RAGEL_ROOT=${{ github.workspace }}\3rdparty\ragel" >> $GITHUB_ENV
 
       - uses: ./.github/actions/agent-setup
       - uses: ./.github/actions/klogg-version
