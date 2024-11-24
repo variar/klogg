@@ -6,7 +6,7 @@ RUN apt update -y && \
     apt install --no-install-recommends build-essential \
                     qtbase5-dev qt5-qmake qtbase5-dev-tools qttools5-dev qttranslations5-l10n \
                     libboost-dev libssl-dev libcurl4-openssl-dev \
-                    ragel ninja-build zlib1g-dev git \
+                    ragel ninja-build zlib1g-dev git pkg-config \
                     wget ca-certificates fuse file -y && \
     apt clean && rm -rf /var/lib/apt/lists/*
 

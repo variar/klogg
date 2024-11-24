@@ -259,6 +259,11 @@ jobs:
         with:
           arch: ${{ matrix.config.arch }}
 
+      - name: Add pkg-config
+        shell: sh
+        run: |
+          choco install pkgconfiglite
+
       - uses: ./.github/actions/agent-build
       - uses: ./.github/actions/agent-run-tests
       - uses: ./.github/actions/agent-package-win
