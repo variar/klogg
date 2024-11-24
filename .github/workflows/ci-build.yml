@@ -259,6 +259,9 @@ jobs:
         with:
           arch: ${{ matrix.config.arch }}
 
+      - name: Install winget
+        uses: Cyberboss/install-winget@v1
+
       - name: Add pkg-config
         shell: sh
         run: |
