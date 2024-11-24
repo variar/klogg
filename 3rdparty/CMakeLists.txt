@@ -37,7 +37,20 @@ cpmaddpackage(
 )
 
 if(KLOGG_USE_HYPERSCAN)
-
+  cpmaddpackage(
+    NAME
+    hyperscan
+    GITHUB_REPOSITORY
+    variar/hyperscan
+    GIT_TAG
+    0931a40e0cf1d7f92189bc546c3491ed5c113f8b
+    EXCLUDE_FROM_ALL
+    YES
+  )
+  message("Adding alias for hyperscan")
+  add_library(klogg_hyperscan INTERFACE)
+  target_link_libraries(klogg_hyperscan INTERFACE hs)
+  target_include_directories(klogg_hyperscan INTERFACE ${hyperscan_SOURCE_DIR}/src)
 elseif(KLOGG_USE_VECTORSCAN)
   cpmaddpackage(
     NAME
