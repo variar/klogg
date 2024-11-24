@@ -250,15 +250,6 @@ jobs:
           echo "SSL_DIR=${{ github.workspace }}\openssl-1.1\${{ matrix.config.arch }}\bin" >> $GITHUB_ENV
           echo "SSL_ARCH=${{ matrix.config.ssl_arch }}" >> $GITHUB_ENV 
 
-      - uses: ./.github/actions/agent-setup
-      - uses: ./.github/actions/klogg-version
-      - uses: ./.github/actions/prepare-workspace-env
-      
-      - name: Prepare dev cmd
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.config.arch }}
-
       - name: Add pkg-config
         shell: sh
         run: |
@@ -267,10 +258,19 @@ jobs:
       - name: Add ragel
         shell: sh
         run: |
-          mkdir -p ${{ github.workspace }}/3rdparty/ragel
-          curl --progress-bar --location --output ${{ github.workspace }}/3rdparty/ragel/ragel.zip https://github.com/PolarGoose/Ragel-for-Windows/releases/download/ragel-6.10/Ragel.zip
-          cd ${{ github.workspace }}/3rdparty/ragel
+          mkdir -p ./3rdparty/ragel
+          curl --progress-bar --location --output ./3rdparty/ragel/ragel.zip https://github.com/PolarGoose/Ragel-for-Windows/releases/download/ragel-6.10/Ragel.zip
+          cd ./3rdparty/ragel
           7z x ragel.zip
+
+      - uses: ./.github/actions/agent-setup
+      - uses: ./.github/actions/klogg-version
+      - uses: ./.github/actions/prepare-workspace-env
+      
+      - name: Prepare dev cmd
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.config.arch }}
 
       - uses: ./.github/actions/agent-build
       - uses: ./.github/actions/agent-run-tests

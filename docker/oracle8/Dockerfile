@@ -19,5 +19,7 @@ RUN wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2
 RUN wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-linux.zip && \
     unzip ninja-linux.zip && chmod 755 ninja && mv ninja /opt/bin && rm ninja-linux.zip
 
+RUN echo "source /opt/rh/devtoolset-12/enable" >> ~/.bashrc
+
 ENV PATH=/opt/bin:$PATH
 

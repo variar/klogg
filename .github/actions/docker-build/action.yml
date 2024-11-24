@@ -4,16 +4,9 @@ runs:
   using: "composite"
   steps:
     - name: configure
-      if: ${{ matrix.config.os != 'oraclelinux' }}
       shell: sh
       run: |
         docker run --env KLOGG_VERSION=$KLOGG_VERSION --env KLOGG_BUILD_ROOT=$KLOGG_BUILD_ROOT --env KLOGG_CMAKE_OPTS="$KLOGG_CMAKE_OPTS" -v "$KLOGG_WORKSPACE":/usr/local ${{ matrix.config.container }} /bin/bash -c "cmake -B /usr/local/$KLOGG_BUILD_ROOT $KLOGG_CMAKE_OPTS -DCPM_SOURCE_CACHE=/usr/local/cpm_cache /usr/local"
-
-    - name: configure
-      if: ${{ matrix.config.os == 'oraclelinux' }}
-      shell: sh
-      run: |
-        docker run --env KLOGG_VERSION=$KLOGG_VERSION --env KLOGG_BUILD_ROOT=$KLOGG_BUILD_ROOT --env KLOGG_CMAKE_OPTS="$KLOGG_CMAKE_OPTS" -v "$KLOGG_WORKSPACE":/usr/local ${{ matrix.config.container }} scl enable gcc-toolset-12 bash -c "cmake -B /usr/local/$KLOGG_BUILD_ROOT $KLOGG_CMAKE_OPTS -DCPM_SOURCE_CACHE=/usr/local/cpm_cache /usr/local"
 
     - name: build
       shell: sh
