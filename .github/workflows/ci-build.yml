@@ -263,6 +263,7 @@ jobs:
         shell: sh
         run: |
           choco install pkgconfiglite
+          winget install ragel
 
       - uses: ./.github/actions/agent-build
       - uses: ./.github/actions/agent-run-tests
