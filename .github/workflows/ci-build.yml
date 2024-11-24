@@ -216,7 +216,7 @@ jobs:
             qt_arch: win64_msvc2019_64
             arch: x64
             ssl_arch: -x64
-            cmake_opts: -DRAGEL_ROOT=$KLOGG_WORKSPACE/3rdparty/ragel
+            cmake_opts:
             artifacts_id: windows-x64-qt6
 
           - os: windows
@@ -262,6 +262,7 @@ jobs:
           curl --progress-bar --location --output ./3rdparty/ragel/ragel.zip https://github.com/PolarGoose/Ragel-for-Windows/releases/download/ragel-6.10/Ragel.zip
           cd ./3rdparty/ragel
           7z x ragel.zip
+          echo "RAGEL_ROOT=${{ github.workspace }}\3rdparty\ragel" >> $GITHUB_ENV
 
       - uses: ./.github/actions/agent-setup
       - uses: ./.github/actions/klogg-version
