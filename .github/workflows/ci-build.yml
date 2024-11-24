@@ -216,7 +216,7 @@ jobs:
             qt_arch: win64_msvc2019_64
             arch: x64
             ssl_arch: -x64
-            cmake_opts: -DRAGEL_ROOT=${{ env.KLOGG_WORKSPACE }}/3rdparty/ragel
+            cmake_opts: -DRAGEL_ROOT=$KLOGG_WORKSPACE/3rdparty/ragel
             artifacts_id: windows-x64-qt6
 
           - os: windows
