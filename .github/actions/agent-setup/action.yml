@@ -27,7 +27,7 @@ runs:
       shell: sh
       run: |
         echo "BOOST_ROOT=${{github.workspace}}/3rdparty/boost" >> $GITHUB_ENV
-        echo "BOOST_URL=https://sourceforge.net/projects/boost/files/boost/1.75.0/boost_1_75_0.tar.bz2/download" >> $GITHUB_ENV
+        echo "BOOST_URL=https://sourceforge.net/projects/boost/files/boost/1.86.0/boost_1_86_0.tar.bz2/download" >> $GITHUB_ENV
 
     - name: Restore Boost cache
       uses: actions/cache@v2
