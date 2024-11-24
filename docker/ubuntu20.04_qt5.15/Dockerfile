@@ -6,7 +6,7 @@ RUN apt-get update -y && \
     apt-get install --no-install-recommends software-properties-common -y && \
     add-apt-repository ppa:beineri/opt-qt-5.15.3-focal -y && \
     apt-get update -y && \
-    apt-get install --no-install-recommends build-essential \
+    apt-get install --no-install-recommends build-essential python3 python-is-python3 \
                     qt515base qt515svg qt515tools qt515imageformats qt515translations \
                     mesa-common-dev libglu1-mesa-dev \
                     libboost-dev libicu-dev libssl-dev libcurl4-openssl-dev \

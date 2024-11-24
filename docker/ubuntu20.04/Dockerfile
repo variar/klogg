@@ -3,7 +3,7 @@ FROM ubuntu:focal
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
-    apt-get install --no-install-recommends build-essential \
+    apt-get install --no-install-recommends build-essential python3 python-is-python3 \
                     qtbase5-dev qt5-qmake qtbase5-dev-tools qttools5-dev qttranslations5-l10n\
                     libboost-dev libssl-dev libicu-dev libcurl4-openssl-dev \
                     ragel ninja-build zlib1g-dev git pkg-config \
