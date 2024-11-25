@@ -107,13 +107,13 @@ jobs:
             cmake_opts:
 
           - os: ubuntu_appimage
-            os_version: 20.04
+            os_version: 18.04
             arch: x64
             artifacts_id: appimage
             package_suffix: AppImage
-            container_root: docker/ubuntu20.04
-            container: variar/klogg_ubuntu20.04
-            cmake_opts:
+            container_root: docker/ubuntu18.04_qt5.15
+            container: variar/klogg_ubuntu18.04
+            cmake_opts: -DKLOGG_USE_VECTORSCAN=OFF -DKLOGG_USE_HYPERSCAN=ON
 
 
     runs-on: ubuntu-22.04
