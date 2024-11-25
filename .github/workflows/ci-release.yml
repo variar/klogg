@@ -21,7 +21,7 @@ jobs:
 
     - name: Download artifacts for CI workflow with provided run id
       if: ${{ github.event.inputs.ci-run-id }}
-      uses: dawidd6/action-download-artifact@v2
+      uses: dawidd6/action-download-artifact@v6
       with:
         workflow: ci-build.yml
         run_id: ${{ github.event.inputs.ci-run-id }}
