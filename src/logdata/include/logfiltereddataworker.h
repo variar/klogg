@@ -101,6 +101,7 @@ public:
     // Atomically add to all the existing search data.
     void addAll( LineLength length, const SearchResultArray& matches, LinesCount nbMatches,
                  LinesCount nbLinesProcessed );
+
     // Get the number of matches
     LinesCount getNbMatches() const;
     // Get the last matched line number

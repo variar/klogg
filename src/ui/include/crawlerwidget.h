@@ -198,11 +198,11 @@ class CrawlerWidget : public QSplitter,
     void updateFilteredView( LinesCount nbMatches, int progress, LineNumber initialPosition );
     // Called when a new line has been selected in the filtered view,
     // to instruct the main view to jump to the matching line.
-    void jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nLines, LineColumn startCol,
-                             LineLength nSymbols );
+    void jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nLines, const LineColumn& startCol,
+                             const LineLength& nSymbols );
     // Called when the main view is on a new line number
-    void updateLineNumberHandler( LineNumber line, LinesCount nLines, LineColumn startCol,
-                                  LineLength nSymbols );
+    void updateLineNumberHandler( LineNumber line, LinesCount nLines, const LineColumn& startCol,
+                                  const LineLength& nSymbols );
     // Mark a line that has been clicked on the main (top) view.
     void markLinesFromMain( const klogg::vector<LineNumber>& lines );
     // Mark a line that has been clicked on the filtered (bottom) view.

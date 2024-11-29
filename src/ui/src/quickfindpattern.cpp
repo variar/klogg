@@ -52,7 +52,7 @@
 
 constexpr Qt::GlobalColor QfForeColor = Qt::black;
 
-bool QuickFindMatcher::isLineMatching( const QString& line, LineColumn column ) const
+bool QuickFindMatcher::isLineMatching( const QString& line, const LineColumn& column ) const
 {
     if ( !isActive_ )
         return false;
@@ -68,7 +68,7 @@ bool QuickFindMatcher::isLineMatching( const QString& line, LineColumn column ) 
     }
 }
 
-bool QuickFindMatcher::isLineMatchingBackward( const QString& line, LineColumn column ) const
+bool QuickFindMatcher::isLineMatchingBackward( const QString& line, const LineColumn& column ) const
 {
     if ( !isActive_ )
         return false;

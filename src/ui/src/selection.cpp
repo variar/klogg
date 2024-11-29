@@ -39,7 +39,7 @@ Selection::Selection()
     selectedRange_.endLine = 0_lnum;
 }
 
-void Selection::selectPortion( LineNumber line, LineColumn startColumn, LineColumn endColumn )
+void Selection::selectPortion( LineNumber line, const LineColumn& startColumn, const LineColumn& endColumn )
 {
     // First unselect any whole line or range
     selectedLine_ = {};
@@ -113,8 +113,8 @@ bool Selection::isLineSelected( LineNumber line ) const
         return false;
 }
 
-bool Selection::isPortionSelected( LineNumber line, LineColumn startColumn,
-                                   LineColumn endColumn ) const
+bool Selection::isPortionSelected( LineNumber line, const LineColumn& startColumn,
+                                   const LineColumn& endColumn ) const
 {
     if ( isLineSelected( line ) ) {
         return true;

@@ -152,7 +152,7 @@ class QuickFind : public QObject {
 
     class LastMatchPosition {
       public:
-        void set( LineNumber line, LineColumn column );
+        void set( LineNumber line, const LineColumn& column );
         void set( const FilePosition& position );
         void reset()
         {
@@ -160,10 +160,10 @@ class QuickFind : public QObject {
             column_ = LineColumn{-1};
         }
         // Does the passed position come after the recorded one
-        bool isLater( OptionalLineNumber line, LineColumn column ) const;
+        bool isLater( OptionalLineNumber line, const LineColumn& column ) const;
         bool isLater( const FilePosition& position ) const;
         // Does the passed position come before the recorded one
-        bool isSooner( OptionalLineNumber line, LineColumn column ) const;
+        bool isSooner( OptionalLineNumber line, const LineColumn& column ) const;
         bool isSooner( const FilePosition& position ) const;
 
       private:

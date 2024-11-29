@@ -94,7 +94,7 @@ class Selection {
         selectedLine_ = line;
     }
     // Select a portion of line (both start and end included)
-    void selectPortion( LineNumber line, LineColumn startColumn, LineColumn endColumn );
+    void selectPortion( LineNumber line, const LineColumn& startColumn, const LineColumn& endColumn );
     void selectPortion( const Portion& selection )
     {
         selectPortion( selection.line(), selection.startColumn(), selection.endColumn() );
@@ -145,7 +145,7 @@ class Selection {
     bool isLineSelected( LineNumber line ) const;
 
     // Returns wether the line passed is selected in certain range.
-    bool isPortionSelected( LineNumber line, LineColumn startColumn, LineColumn endColumn ) const;
+    bool isPortionSelected( LineNumber line, const LineColumn& startColumn, const LineColumn& endColumn ) const;
 
     // Returns the line selected or -1 if not a single line selection
     OptionalLineNumber selectedLine() const;

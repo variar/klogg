@@ -10,7 +10,7 @@
  * (at your option) any later version.
  *
  * glogg is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * but WITHOUT ANY WARRANTY; without even the implied warranty o
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
@@ -1696,7 +1696,7 @@ void AbstractLogView::selectAndDisplayLine( LineNumber line )
 }
 
 void AbstractLogView::selectPortionAndDisplayLine( LineNumber line, LinesCount nLines,
-                                                   LineColumn startCol, LineLength nSymbols )
+                                                   const LineColumn& startCol, const LineLength& nSymbols )
 {
     disableFollow();
     selection_.selectLine( line );
@@ -1991,7 +1991,7 @@ void AbstractLogView::updateGlobalSelection()
     }
 }
 
-void AbstractLogView::selectAndDisplayRange( FilePosition pos )
+void AbstractLogView::selectAndDisplayRange( const FilePosition& pos )
 {
     disableFollow();
     selection_.selectRange( selectionStartPos_.line(), pos.line() );

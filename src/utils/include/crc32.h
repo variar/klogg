@@ -24,7 +24,7 @@
 
 class Crc32 {
   public:
-    static quint32 calculate( QByteArray text )
+    static quint32 calculate( const QByteArray& text )
     {
         quint32 crc32 = 0xffffffff;
         for ( auto i = 0; i < text.size(); ++i ) {

@@ -126,7 +126,6 @@ QTextCodec* IndexingData::getForcedEncoding() const
 
 void IndexingData::addAll( const klogg::vector<char>& block, LineLength length,
                            const FastLinePositionArray& newLinePosition, QTextCodec* encoding )
-
 {
     maxLength_ = std::max( maxLength_, length );
     std::visit(
