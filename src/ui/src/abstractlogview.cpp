@@ -2562,6 +2562,8 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             painter->drawText( lineNumberAreaStartX + LineNumberPadding, yPos + fontAscent,
                                lineNumberStr );
         }
+
+        wrappedLinesInfo_.reserve(wrappedLinesInfo_.size() + wrappedLineView.wrappedLinesCount());
         for ( size_t i = 0u; i < wrappedLineView.wrappedLinesCount(); ++i ) {
             wrappedLinesInfo_.emplace_back( WrappedLineData{ lineNumber, i, wrappedLineView } );
         }
