@@ -1106,7 +1106,7 @@ void MainWindow::clearLog()
              this, tr( "klogg - clear file" ),
              tr( "Clear file %1? File content will be removed from disk, this is irreversible" )
                  .arg( current_file ) )
-         == QMessageBox::Yes ) {
+         == QMessageBox::Ok ) {
         QFile::resize( current_file, 0 );
     }
 }
