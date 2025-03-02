@@ -327,17 +327,13 @@ text rendering.
 Font size can be changed from either main or filtered view using `Ctrl+Mouse wheel`
 to zoom in/out.
 
-#### Style
+#### Style 
 
-Qt usually comes with several options for drawing application widgets.
-By default, *klogg* uses a style that matches current operating systems.
-Other styles can be chosen from the dropdown menu.
+Qt provides multiple options for rendering application widgets. By default, *klogg* adopts a style that aligns with the current operating system's appearance. Users can select alternative styles from the dropdown menu.
 
-*klogg* will try to respect current display manager theme and to
-use white icons for dark themes. 
+Additionally, *klogg* attempts to match the active display manager theme, automatically using white icons for dark themes to ensure visibility.
 
-Another option is to select Dark or Windows Dark style. In this case *klogg*
-will use a custom dark mode stylesheet. 
+For a more customized dark mode experience, users can choose either the "Dark" or "Windows Dark" style. When selected, *klogg* applies a tailored dark mode stylesheet for a consistent appearance.
 
 #### High DPI
 
