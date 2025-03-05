@@ -128,6 +128,8 @@ else()
 
   if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64")
     ucm_add_flags(C CXX "-march=native -mtune=generic")
+  elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "loongarch64")
+    ucm_add_flags(C CXX "-march=native -mtune=generic")
   else()
     ucm_add_flags(C CXX "-mmmx -msse -msse2 -msse3 -mssse3 -msse4.1 -msse4.2 -mpopcnt")
     if(KLOGG_GENERIC_CPU)

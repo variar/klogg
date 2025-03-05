@@ -89,7 +89,8 @@ CpuInstructions supportedCpuInstructions()
 CpuInstructions supportedCpuInstructions()
 {
     CpuInstructions cpuInstructions = CpuInstructions::NONE;
-
+#if defined(__loongarch__)
+#else
     if ( __builtin_cpu_supports( "avx512f" ) ) {
         cpuInstructions |= CpuInstructions::SSE2;
         cpuInstructions |= CpuInstructions::SSE3;
@@ -134,6 +135,7 @@ CpuInstructions supportedCpuInstructions()
     if ( __builtin_cpu_supports( "popcnt" ) ) {
         cpuInstructions |= CpuInstructions::POPCNT;
     }
+#endif
     return cpuInstructions;
 }
 #else
