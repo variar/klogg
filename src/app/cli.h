@@ -54,7 +54,12 @@ struct CliParameters {
         QCommandLineParser parser;
         parser.setApplicationDescription( "Klogg log viewer" );
         const auto helpOption = parser.addHelpOption();
-        const auto versionOption = parser.addVersionOption();
+
+        const QCommandLineOption versionOption(
+            QStringList() << "v"
+                          << "version",
+            "Displays version information");
+        parser.addOption(versionOption);
 
         const QCommandLineOption multiInstanceOption(
             QStringList() << "m"
