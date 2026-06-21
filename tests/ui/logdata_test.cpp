@@ -82,8 +82,6 @@ class WriteFileThread : public QThread {
     int result_{};
 };
 
-#include "logdata_test.moc"
-
 #ifdef _WIN32
 void writeDataToFileBackground( QFile& file, int numberOfLines = 200,
                                 WriteFileModification flag = WriteFileModification::None )
@@ -103,6 +101,11 @@ void writeDataToFile( QFile& file, int numberOfLines = 200,
     thread->deleteLater();
 }
 } // namespace
+
+// Included at file scope (not inside the anonymous namespace above): Qt 6.9+
+// moc helpers pull in headers that reopen namespace q20, which breaks if nested
+// in an unnamed namespace. The Q_OBJECT classes remain visible here.
+#include "logdata_test.moc"
 
 TEST_CASE( "Logdata decoding lines", "[logdata]" )
 {

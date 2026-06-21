@@ -289,7 +289,7 @@ void ScratchPad::fileTime()
         const auto time = text.toUtf8().toLongLong( &isOk );
         if ( isOk ) {
             QDateTime dateTime;
-            dateTime.setTimeSpec( Qt::UTC );
+            dateTime.setTimeZone( QTimeZone::UTC );
             dateTime.setSecsSinceEpoch( windowsTickToUnixSeconds( time ) );
             return dateTime.toString( Qt::ISODate );
         }

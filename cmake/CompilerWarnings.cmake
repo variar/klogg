@@ -80,6 +80,29 @@ function(set_project_warnings project_name)
                    # probably wanted
   )
 
+  # Keep -Werror, but don't let brand-new Clang/Qt diagnostics (which older
+  # klogg sources trip on under very recent toolchains) break the build. They
+  # stay visible as warnings. Scoped to Clang so GCC builds are unaffected.
+  if(WARNINGS_AS_ERRORS AND CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+    list(
+      APPEND
+      CLANG_WARNINGS
+      -Wno-unknown-warning-option
+      -Wno-error=unnecessary-virtual-specifier
+      -Wno-error=unused-result
+      -Wno-error=deprecated-declarations
+      -Wno-error=deprecated-literal-operator
+      -Wno-error=deprecated-this-capture
+      -Wno-error=deprecated-copy
+      -Wno-error=deprecated-copy-with-user-provided-copy
+      -Wno-error=deprecated-enum-enum-conversion
+      -Wno-error=deprecated-volatile
+      -Wno-error=enum-constexpr-conversion
+      -Wno-error=vexing-parse
+      -Wno-error=missing-template-arg-list-after-template-kw
+    )
+  endif()
+
   if(MSVC)
     set(PROJECT_WARNINGS ${MSVC_WARNINGS})
   elseif(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")

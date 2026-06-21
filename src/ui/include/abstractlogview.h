@@ -130,6 +130,9 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     // Instructs the widget to update it's content geometry,
     // used when the font is changed.
     void updateDisplaySize();
+
+    // Dim the view (drawn faded) to indicate it does not hold focus.
+    void setDimmed( bool dimmed );
     // Return the line number of the top line of the view
     LineNumber getTopLine() const;
     // Return the text of the current selection.
@@ -165,6 +168,8 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     void mouseDoubleClickEvent( QMouseEvent* mouseEvent ) override;
     void timerEvent( QTimerEvent* timerEvent ) override;
     void changeEvent( QEvent* changeEvent ) override;
+    void focusInEvent( QFocusEvent* focusEvent ) override;
+    void focusOutEvent( QFocusEvent* focusEvent ) override;
     void paintEvent( QPaintEvent* paintEvent ) override;
     void resizeEvent( QResizeEvent* resizeEvent ) override;
     void scrollContentsBy( int dx, int dy ) override;
@@ -228,6 +233,9 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     // Sent up when the user want to exit this view
     // (switch to the next one)
     void exitView();
+
+    // Sent up when this view gains or loses keyboard focus.
+    void focusChanged();
 
     void changeSearchLimits( LineNumber startLine, LineNumber endLine );
     void clearSearchLimits();
@@ -367,6 +375,8 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     LineNumber firstLine_;
     bool lastLineAligned_ = false;
     bool useTextWrap_ = false;
+    // When true the view is drawn faded to show it does not hold focus.
+    bool dimmed_ = false;
     LineColumn firstCol_ = 0_lcol;
 
     struct WrappedLineData {

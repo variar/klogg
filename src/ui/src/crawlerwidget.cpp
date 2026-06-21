@@ -47,8 +47,8 @@
 #include "log.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
-#include <chrono>
 
 #include <QAction>
 #include <QApplication>
@@ -78,6 +78,30 @@
 #include "shortcuts.h"
 
 static constexpr char AnsiColorSequenceRegex[] = "\\x1B\\[([0-9]{1,4}((;|:)[0-9]{1,3})*)?[mK]";
+
+static constexpr char SearchOptionButtonStyle[] = R"(
+QToolButton {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 2px;
+  margin: 1px;
+  background: transparent;
+}
+QToolButton:hover {
+  background: rgba(128, 128, 128, 0.25);
+}
+QToolButton:checked {
+  border: 1px solid #007ACC;
+  background: rgba(0, 122, 204, 0.35);
+}
+QToolButton:checked:hover {
+  border: 1px solid #007ACC;
+  background: rgba(0, 122, 204, 0.45);
+}
+QToolButton:pressed {
+  background: rgba(0, 122, 204, 0.55);
+}
+)";
 
 // Palette for error signaling (yellow background)
 const QPalette CrawlerWidget::ErrorPalette( Qt::darkYellow );
@@ -449,11 +473,7 @@ void CrawlerWidget::editSearchHistory()
 
     if ( ok ) {
         savedSearches_->clear();
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 15, 0 )
         auto items = newHistory.split( QChar::LineFeed, Qt::SkipEmptyParts );
-#else
-        auto items = newHistory.split( QChar::LineFeed, QString::SkipEmptyParts );
-#endif
         std::for_each( items.rbegin(), items.rend(), [ this ]( const auto& item ) {
             savedSearches_->addRecent( item );
             LOG_INFO << item;
@@ -775,6 +795,15 @@ AbstractLogView* CrawlerWidget::activeView() const
     }
 }
 
+void CrawlerWidget::updateInactiveViewDimming()
+{
+    const bool filteredFocused = filteredView_->hasFocus();
+    logMainView_->setDimmed( filteredFocused );
+
+    const bool mainFocused = logMainView_->hasFocus();
+    filteredView_->setDimmed( mainFocused );
+}
+
 void CrawlerWidget::searchForward()
 {
     LOG_DEBUG << "CrawlerWidget::searchForward";
@@ -1074,6 +1103,17 @@ void CrawlerWidget::setup()
     searchRefreshButton_->setFocusPolicy( Qt::NoFocus );
     searchRefreshButton_->setContentsMargins( 2, 2, 2, 2 );
 
+    const std::array filterOptButtons{
+        matchCaseButton_,     //
+        useRegexpButton_,     //
+        inverseButton_,       //
+        booleanButton_,       //
+        searchRefreshButton_, //
+    };
+    for ( QToolButton* optionButton : filterOptButtons ) {
+        optionButton->setStyleSheet( SearchOptionButtonStyle );
+    }
+
     // Construct the Search line
     searchLineCompleter_ = new QCompleter( savedSearches_->recentSearches(), this );
     searchLineEdit_ = new QComboBox;
@@ -1232,6 +1272,10 @@ void CrawlerWidget::setup()
 
     // Detect activity in the views
     connect( logMainView_, &LogMainView::activity, this, &CrawlerWidget::activityDetected );
+
+    // Keep the inactive view dimmed as focus moves between the views.
+    connect( logMainView_, &LogMainView::focusChanged, this,
+             &CrawlerWidget::updateInactiveViewDimming );
 
     connect( logMainView_, &LogMainView::changeSearchLimits, this,
              &CrawlerWidget::setSearchLimits );
@@ -1417,6 +1461,9 @@ void CrawlerWidget::connectAllFilteredViewSlots( FilteredView* view )
              QOverload<>::of( &LogMainView::setFocus ) );
 
     connect( view, &AbstractLogView::clearColorLabels, this, &CrawlerWidget::clearColorLabels );
+
+    connect( view, &AbstractLogView::focusChanged, this,
+             &CrawlerWidget::updateInactiveViewDimming );
 
     connect( logMainView_, &LogMainView::exitView, view,
              QOverload<>::of( &FilteredView::setFocus ) );

@@ -85,14 +85,14 @@ void VersionCheckerConfig::retrieveFromStorage( QSettings& settings )
     LOG_DEBUG << "VersionCheckerConfig::retrieveFromStorage";
 
     if ( settings.contains( "VersionChecker/nextDeadline" ) )
-        next_deadline_ = settings.value( "VersionChecker/nextDeadline" ).toLongLong();
+        nextDeadline_ = settings.value( "VersionChecker/nextDeadline" ).toLongLong();
 }
 
 void VersionCheckerConfig::saveToStorage( QSettings& settings ) const
 {
     LOG_DEBUG << "VersionCheckerConfig::saveToStorage";
 
-    settings.setValue( "VersionChecker/nextDeadline", static_cast<long long>( next_deadline_ ) );
+    settings.setValue( "VersionChecker/nextDeadline", static_cast<long long>( nextDeadline_ ) );
 }
 
 VersionChecker::VersionChecker()

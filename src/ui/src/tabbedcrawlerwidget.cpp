@@ -274,6 +274,51 @@ void TabbedCrawlerWidget::showContextMenu( int tab, QPoint globalPoint )
     menu.exec( globalPoint );
 }
 
+void TabbedCrawlerWidget::selectNextTab()
+{
+    const int tabCount = count();
+    if ( tabCount <= 1 ) {
+        return;
+    }
+
+    const int currTabIdx = currentIndex();
+    const int nextTabIdx = ( currTabIdx + 1 ) % tabCount;
+    setCurrentIndex( nextTabIdx );
+}
+
+void TabbedCrawlerWidget::selectPreviousTab()
+{
+    const int tabCount = count();
+    if ( tabCount <= 1 ) {
+        return;
+    }
+
+    const int currTabIdx = currentIndex();
+    const int prevTabIdx = ( currTabIdx + ( tabCount - 1 ) ) % tabCount;
+    setCurrentIndex( prevTabIdx );
+}
+
+void TabbedCrawlerWidget::moveCurrentTabLeft()
+{
+    const int currTabIdx = currentIndex();
+    if ( currTabIdx <= 0 ) {
+        return;
+    }
+
+    tabBar()->moveTab( currTabIdx, currTabIdx - 1 );
+}
+
+void TabbedCrawlerWidget::moveCurrentTabRight()
+{
+    const int tabCount = count();
+    const int currTabIdx = currentIndex();
+    if ( !( 0 <= currTabIdx && currTabIdx + 1 < tabCount ) ) {
+        return;
+    }
+
+    tabBar()->moveTab( currTabIdx, currTabIdx + 1 );
+}
+
 void TabbedCrawlerWidget::keyPressEvent( QKeyEvent* event )
 {
     const auto mod = event->modifiers();
@@ -286,14 +331,14 @@ void TabbedCrawlerWidget::keyPressEvent( QKeyEvent* event )
          || ( mod == Qt::ControlModifier && key == Qt::Key_PageDown )
          || ( mod == ( Qt::ControlModifier | Qt::AltModifier | Qt::KeypadModifier )
               && key == Qt::Key_Right ) ) {
-        setCurrentIndex( ( currentIndex() + 1 ) % count() );
+        selectNextTab();
     }
     // Ctrl + shift + tab
     else if ( ( mod == ( Qt::ControlModifier | Qt::ShiftModifier ) && key == Qt::Key_Tab )
               || ( mod == Qt::ControlModifier && key == Qt::Key_PageUp )
               || ( mod == ( Qt::ControlModifier | Qt::AltModifier | Qt::KeypadModifier )
                    && key == Qt::Key_Left ) ) {
-        setCurrentIndex( ( currentIndex() - 1 >= 0 ) ? currentIndex() - 1 : count() - 1 );
+        selectPreviousTab();
     }
     // Ctrl + numbers
     else if ( mod == Qt::ControlModifier && ( key >= Qt::Key_1 && key <= Qt::Key_8 ) ) {

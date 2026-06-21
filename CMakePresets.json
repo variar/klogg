@@ -1,0 +1,153 @@
+{
+    "$schema": "https://raw.githubusercontent.com/Kitware/CMake/master/Help/manual/presets/schema.json",
+    "version": 11,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "hidden": true,
+            "name": "__base",
+            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "CMAKE_CONFIGURATION_TYPES": "Debug;Release;RelWithDebInfo",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+                "CMAKE_POLICY_VERSION_MINIMUM": "3.5"
+            },
+            "binaryDir": "${sourceDir}/build"
+        },
+        {
+            "inherits": "__base",
+            "name": "mac",
+            "displayName": "macOS",
+            "generator": "Ninja Multi-Config",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            }
+        },
+        {
+            "inherits": "__base",
+            "name": "linux",
+            "displayName": "Linux",
+            "generator": "Ninja Multi-Config",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+        },
+        {
+            "inherits": "__base",
+            "name": "windows",
+            "displayName": "Windows",
+            "generator": "Visual Studio 18 2026",
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "hidden": true,
+            "name": "__base",
+            "jobs": 0
+        },
+        {
+            "hidden": true,
+            "inherits": "__base",
+            "name": "__mac_base",
+            "configurePreset": "mac"
+        },
+        {
+            "hidden": true,
+            "inherits": "__base",
+            "name": "__linux_base",
+            "configurePreset": "linux"
+        },
+        {
+            "hidden": true,
+            "inherits": "__base",
+            "name": "__windows_base",
+            "configurePreset": "windows"
+        },
+        {
+            "inherits": "__mac_base",
+            "name": "mac-debug",
+            "configuration": "Debug"
+        },
+        {
+            "inherits": "__mac_base",
+            "name": "mac-release",
+            "configuration": "Release"
+        },
+        {
+            "inherits": "__mac_base",
+            "name": "mac-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "inherits": "__linux_base",
+            "name": "linux-debug",
+            "configuration": "Debug"
+        },
+        {
+            "inherits": "__linux_base",
+            "name": "linux-release",
+            "configuration": "Release"
+        },
+        {
+            "inherits": "__linux_base",
+            "name": "linux-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "inherits": "__windows_base",
+            "name": "windows-debug",
+            "configuration": "Debug"
+        },
+        {
+            "inherits": "__windows_base",
+            "name": "windows-release",
+            "configuration": "Release"
+        },
+        {
+            "inherits": "__windows_base",
+            "name": "windows-relwithdebinfo",
+            "configuration": "RelWithDebInfo"
+        }
+    ],
+    "packagePresets": [
+        {
+            "hidden": true,
+            "name": "__package_base",
+            "configurations": [
+                "Release"
+            ],
+            "packageDirectory": "packages"
+        },
+        {
+            "inherits": "__package_base",
+            "name": "mac-package",
+            "displayName": "macOS DMG (Release)",
+            "configurePreset": "mac",
+            "generators": [
+                "DragNDrop"
+            ]
+        },
+        {
+            "inherits": "__package_base",
+            "name": "linux-package",
+            "displayName": "Linux DEB (Release)",
+            "configurePreset": "linux",
+            "generators": [
+                "DEB"
+            ]
+        }
+    ]
+}

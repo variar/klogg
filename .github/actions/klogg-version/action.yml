@@ -6,4 +6,9 @@ runs:
     - name: Set klogg version
       shell: sh
       run: |
-        echo "KLOGG_VERSION=24.11.0.$((${{ github.run_number }} + 717))" >> $GITHUB_ENV 
+        if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+          # Tag release: derive version from the tag name, e.g. v1.0.0 -> 1.0.0
+          echo "KLOGG_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+        else
+          echo "KLOGG_VERSION=24.11.0.$((${{ github.run_number }} + 717))" >> $GITHUB_ENV
+        fi

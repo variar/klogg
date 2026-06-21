@@ -24,17 +24,7 @@
 #include <QScreen>
 
 static inline QScreen* activeScreen(QWidget* widget) {
-    if (widget == nullptr) return nullptr;
-    
-    QScreen* screen = nullptr;
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 14, 0 )
-        screen = widget->screen();
-#else
-        (void) widget->winId(); // make Qt create native window
-        QWindow* window = widget->windowHandle();
-        screen = window ? window->screen() : nullptr;
-#endif
-    return screen;
+    return widget == nullptr ? nullptr : widget->screen();
 }
 
 #endif

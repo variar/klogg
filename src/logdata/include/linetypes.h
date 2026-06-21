@@ -172,23 +172,23 @@ struct LineColumn : type_safe::strong_typedef<LineColumn, decltype( QString{}.si
 };
 Q_DECLARE_METATYPE( LineColumn )
 
-inline constexpr OffsetInFile operator"" _offset( unsigned long long int value )
+inline constexpr OffsetInFile operator""_offset( unsigned long long int value )
 {
     return OffsetInFile( static_cast<OffsetInFile::UnderlyingType>( value ) );
 }
-inline constexpr LineNumber operator"" _lnum( unsigned long long int value )
+inline constexpr LineNumber operator""_lnum( unsigned long long int value )
 {
     return LineNumber( static_cast<LineNumber::UnderlyingType>( value ) );
 }
-inline constexpr LinesCount operator"" _lcount( unsigned long long int value )
+inline constexpr LinesCount operator""_lcount( unsigned long long int value )
 {
     return LinesCount( static_cast<LinesCount::UnderlyingType>( value ) );
 }
-inline constexpr LineLength operator"" _length( unsigned long long int value )
+inline constexpr LineLength operator""_length( unsigned long long int value )
 {
     return LineLength( static_cast<LineLength::UnderlyingType>( value ) );
 }
-inline constexpr LineColumn operator"" _lcol( unsigned long long int value )
+inline constexpr LineColumn operator""_lcol( unsigned long long int value )
 {
     return LineColumn( static_cast<LineColumn::UnderlyingType>( value ) );
 }

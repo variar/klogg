@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "builtin-baseline": "32305df7d0b9a308e6ac454dd98ebfe550342c09",
+  "dependencies": [
+    "simdutf",
+    "type-safe",
+    "roaring",
+    "uchardet",
+    "robin-hood-hashing",
+    "xxhash",
+    "whereami",
+    "exprtk",
+    "efsw",
+    "tbb",
+    "mimalloc",
+    "qtbase",
+    {
+      "name": "qt5compat",
+      "default-features": false,
+      "features": [
+        "big-codecs",
+        "codecs",
+        "textcodec"
+      ]
+    },
+    {
+      "name": "qttools",
+      "host": true,
+      "default-features": false,
+      "features": [
+        "linguist"
+      ]
+    },
+    {
+      "name": "vectorscan",
+      "platform": "!windows"
+    },
+    {
+      "name": "hyperscan",
+      "platform": "windows"
+    }
+  ],
+  "default-features": [
+    "tests"
+  ],
+  "features": {
+    "tests": {
+      "description": "Build unit and integration tests",
+      "dependencies": [
+        "catch2",
+        "backward-cpp"
+      ]
+    },
+    "sentry": {
+      "description": "Crash reporting via sentry-native",
+      "dependencies": [
+        "sentry-native"
+      ]
+    }
+  },
+  "overrides": [
+    {
+      "name": "catch2",
+      "version": "2.13.9"
+    },
+    {
+      "name": "efsw",
+      "version": "1.4.1"
+    }
+  ]
+}

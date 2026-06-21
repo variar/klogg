@@ -2,12 +2,154 @@ set(QAPPLICATION_CLASS QApplication)
 
 include(CPM)
 
-set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
+# Imported targets from find_package() are directory-scoped by default; the rest
+# of the tree (src/, tests/) links them from sibling directories, so promote
+# them to global scope.
+set(CMAKE_FIND_PACKAGE_TARGETS_GLOBAL ON)
 
-cpmaddpackage("gh:simdutf/simdutf@5.6.2")
-cpmaddpackage("gh:foonathan/type_safe@0.2.4")
-cpmaddpackage("gh:RoaringBitmap/CRoaring@4.2.1")
-cpmaddpackage("gh:lemire/streamvbyte@1.0.0")
+# ---------------------------------------------------------------------------
+# Dependencies provided by vcpkg (see ../vcpkg.json)
+#
+# Each find_package() below resolves to a vcpkg-installed config package. Thin
+# INTERFACE "wrapper" targets re-expose them under the exact names the rest of
+# the source tree already links against, so no changes are needed in src/.
+#
+# A few dependencies have no usable vcpkg port and stay on CPM (see the bottom
+# of this file): streamvbyte, kdtoolbox (KDSignalThrottler), maddy (used as a
+# doc-generation executable), macdeployqtfix, and KArchive (vcpkg only ships a
+# Qt5 build which conflicts with klogg's Qt6).
+# ---------------------------------------------------------------------------
+
+# Create an INTERFACE target named ${alias} forwarding to ${real}, unless a
+# target named ${alias} already exists (e.g. the config package defined it).
+macro(klogg_alias alias real)
+  if(NOT TARGET ${alias})
+    add_library(${alias} INTERFACE)
+    target_link_libraries(${alias} INTERFACE ${real})
+  endif()
+endmacro()
+
+# --- simdutf ---------------------------------------------------------------
+find_package(simdutf CONFIG REQUIRED)
+klogg_alias(simdutf simdutf::simdutf)
+
+# --- type_safe (foonathan) -------------------------------------------------
+find_package(type_safe CONFIG REQUIRED)
+if(NOT TARGET type_safe AND TARGET foonathan::type_safe)
+  klogg_alias(type_safe foonathan::type_safe)
+endif()
+
+# --- CRoaring --------------------------------------------------------------
+# klogg includes the C++ headers without the roaring/ prefix (<roaring.hh>),
+# so expose the roaring subdirectory on the include path.
+find_package(roaring CONFIG REQUIRED)
+find_path(KLOGG_ROARING_INCLUDE_DIR NAMES roaring.hh PATH_SUFFIXES roaring)
+foreach(roaring_target roaring roaring-headers roaring-headers-cpp)
+  if(NOT TARGET ${roaring_target})
+    add_library(${roaring_target} INTERFACE)
+    target_link_libraries(${roaring_target} INTERFACE roaring::roaring)
+    if(KLOGG_ROARING_INCLUDE_DIR)
+      target_include_directories(${roaring_target} SYSTEM INTERFACE ${KLOGG_ROARING_INCLUDE_DIR})
+    endif()
+  endif()
+endforeach()
+
+# --- uchardet --------------------------------------------------------------
+find_package(uchardet CONFIG REQUIRED)
+add_library(klogg_uchardet_wrapper INTERFACE)
+if(TARGET uchardet::libuchardet)
+  target_link_libraries(klogg_uchardet_wrapper INTERFACE uchardet::libuchardet)
+elseif(TARGET uchardet::uchardet)
+  target_link_libraries(klogg_uchardet_wrapper INTERFACE uchardet::uchardet)
+elseif(TARGET uchardet)
+  target_link_libraries(klogg_uchardet_wrapper INTERFACE uchardet)
+endif()
+find_path(KLOGG_UCHARDET_INCLUDE_DIR NAMES uchardet.h PATH_SUFFIXES uchardet)
+if(KLOGG_UCHARDET_INCLUDE_DIR)
+  target_include_directories(klogg_uchardet_wrapper SYSTEM INTERFACE ${KLOGG_UCHARDET_INCLUDE_DIR})
+endif()
+
+# --- robin_hood ------------------------------------------------------------
+find_package(robin_hood CONFIG REQUIRED)
+klogg_alias(robin_hood robin_hood::robin_hood)
+
+# --- xxHash ----------------------------------------------------------------
+find_package(xxHash CONFIG REQUIRED)
+klogg_alias(xxhash xxHash::xxhash)
+
+# --- whereami --------------------------------------------------------------
+find_package(unofficial-whereami CONFIG REQUIRED)
+klogg_alias(whereami unofficial::whereami::whereami)
+
+# --- efsw ------------------------------------------------------------------
+find_package(efsw CONFIG REQUIRED)
+klogg_alias(efsw efsw::efsw)
+
+# --- oneTBB ----------------------------------------------------------------
+find_package(TBB CONFIG REQUIRED)
+klogg_alias(tbb TBB::tbb)
+
+# --- mimalloc --------------------------------------------------------------
+find_package(mimalloc CONFIG REQUIRED)
+add_library(klogg_mimalloc_wrapper INTERFACE)
+if(TARGET mimalloc-static)
+  target_link_libraries(klogg_mimalloc_wrapper INTERFACE mimalloc-static)
+elseif(TARGET mimalloc)
+  target_link_libraries(klogg_mimalloc_wrapper INTERFACE mimalloc)
+endif()
+
+# --- exprtk (header only, no CMake config) ---------------------------------
+add_library(exprtk INTERFACE)
+target_link_libraries(exprtk INTERFACE robin_hood)
+find_path(KLOGG_EXPRTK_INCLUDE_DIR NAMES exprtk.hpp)
+if(KLOGG_EXPRTK_INCLUDE_DIR)
+  target_include_directories(exprtk SYSTEM INTERFACE ${KLOGG_EXPRTK_INCLUDE_DIR})
+endif()
+target_compile_definitions(
+  exprtk
+  INTERFACE -Dexprtk_disable_caseinsensitivity
+            -Dexprtk_disable_comments
+            -Dexprtk_disable_break_continue
+            -Dexprtk_disable_return_statement
+            -Dexprtk_disable_superscalar_unroll
+            -Dexprtk_disable_rtl_io_file
+            -Dexprtk_disable_rtl_vecops
+            -Dexprtk_disable_string_capabilities
+)
+
+# --- hyperscan / vectorscan (no CMake config, pkg-config/lib only) ---------
+if(KLOGG_USE_HYPERSCAN)
+  message("Adding alias for hyperscan (vcpkg)")
+  find_library(KLOGG_HS_LIBRARY NAMES hs libhs REQUIRED)
+  find_path(KLOGG_HS_INCLUDE_DIR NAMES hs.h PATH_SUFFIXES hs REQUIRED)
+  add_library(klogg_hyperscan INTERFACE)
+  target_link_libraries(klogg_hyperscan INTERFACE ${KLOGG_HS_LIBRARY})
+  target_include_directories(klogg_hyperscan SYSTEM INTERFACE ${KLOGG_HS_INCLUDE_DIR})
+elseif(KLOGG_USE_VECTORSCAN)
+  message("Adding alias for vectorscan (vcpkg)")
+  find_library(KLOGG_HS_LIBRARY NAMES hs libhs REQUIRED)
+  find_path(KLOGG_HS_INCLUDE_DIR NAMES hs.h PATH_SUFFIXES hs REQUIRED)
+  add_library(klogg_vectorscan INTERFACE)
+  target_link_libraries(klogg_vectorscan INTERFACE ${KLOGG_HS_LIBRARY})
+  target_include_directories(klogg_vectorscan SYSTEM INTERFACE ${KLOGG_HS_INCLUDE_DIR})
+endif()
+
+# --- tests: Catch2 (pinned to 2.x) + backward-cpp --------------------------
+if(KLOGG_BUILD_TESTS)
+  find_package(Catch2 CONFIG REQUIRED)
+  klogg_alias(Catch2 Catch2::Catch2)
+  # Provides the add_backward() helper used by tests/ui.
+  find_package(Backward CONFIG REQUIRED)
+endif()
+
+# --- sentry (optional, off by default) -------------------------------------
+if(KLOGG_USE_SENTRY)
+  find_package(sentry CONFIG REQUIRED)
+endif()
+
+# ---------------------------------------------------------------------------
+# Dependencies that stay on CPM (no usable vcpkg port)
+# ---------------------------------------------------------------------------
 
 if(APPLE)
   cpmaddpackage(
@@ -25,6 +167,8 @@ if(APPLE)
   endif()
 endif()
 
+# maddy is consumed as a documentation-conversion executable ($<TARGET_FILE:maddy>),
+# so the header-only vcpkg port cannot replace it.
 cpmaddpackage(
   NAME
   maddy
@@ -36,81 +180,10 @@ cpmaddpackage(
   YES
 )
 
-if(KLOGG_USE_HYPERSCAN)
-  cpmaddpackage(
-    NAME
-    hyperscan
-    GITHUB_REPOSITORY
-    variar/hyperscan
-    GIT_TAG
-    0931a40e0cf1d7f92189bc546c3491ed5c113f8b
-    EXCLUDE_FROM_ALL
-    YES
-  )
-  message("Adding alias for hyperscan")
-  add_library(klogg_hyperscan INTERFACE)
-  target_link_libraries(klogg_hyperscan INTERFACE hs)
-  target_include_directories(klogg_hyperscan INTERFACE ${hyperscan_SOURCE_DIR}/src)
-elseif(KLOGG_USE_VECTORSCAN)
-  cpmaddpackage(
-    NAME
-    vectorscan
-    GITHUB_REPOSITORY
-    VectorCamp/vectorscan
-    GIT_TAG
-    d29730e1cb9daaa66bda63426cdce83505d2c809
-    EXCLUDE_FROM_ALL
-    YES
-    OPTIONS
-    "BUILD_STATIC_LIBS ON"
-    "BUILD_UNIT OFF"
-    "BUILD_TOOLS OFF"
-    "BUILD_EXAMPLES OFF"
-    "BUILD_BENCHMARKS OFF"
-    "BUILD_DOC OFF"
-    "BUILD_CHIMERA OFF"
-    "BUIlD_AVX2 OFF"
-    "BUIlD_AVX512 OFF"
-    "BUIlD_AVX512VBMI OFF"
-    "FAT_RUNTIME OFF"
-  )
- 
-  message("Adding alias for vectorscan")
-  add_library(klogg_vectorscan INTERFACE)
-  target_link_libraries(klogg_vectorscan INTERFACE hs)
-  target_include_directories(klogg_vectorscan INTERFACE 
-    ${vectorscan_SOURCE_DIR}/src
-    ${vectorscan_BINARY_DIR}
-  )
-endif()
-
-cpmaddpackage(
-  NAME
-  Uchardet
-  GIT_REPOSITORY
-  https://gitlab.freedesktop.org/uchardet/uchardet
-  VERSION
-  0.0.8
-  EXCLUDE_FROM_ALL
-  YES
-  OPTIONS
-  "BUILD_BINARY OFF"
-)
-if(Uchardet_ADDED)
-  message("Adding alias for uchardet")
-  add_library(klogg_uchardet_wrapper INTERFACE)
-  target_link_libraries(klogg_uchardet_wrapper INTERFACE libuchardet)
-  target_include_directories(klogg_uchardet_wrapper INTERFACE ${Uchardet_SOURCE_DIR}/src)
-else()
-  add_library(klogg_uchardet_wrapper INTERFACE)
-  target_link_libraries(klogg_uchardet_wrapper INTERFACE ${UCHARDET_LIBRARY})
-  target_include_directories(klogg_uchardet_wrapper INTERFACE ${UCHARDET_INCLUDE_DIR})
-endif()
-
-if(${QT_VERSION_MAJOR} EQUAL 6) 
-set(CPM_USE_LOCAL_PACKAGES OFF)
-endif()
-
+# KArchive: vcpkg only ships a Qt5 build (kf5archive) which conflicts with the
+# Qt6 application, so keep the standalone fork on CPM. The fork predates Qt 6.9,
+# where QString::arg() no longer accepts a QIODevice::OpenMode implicitly; apply
+# a small, idempotent source fix after fetching.
 cpmaddpackage(
   NAME
   KF5Archive
@@ -121,52 +194,22 @@ cpmaddpackage(
   EXCLUDE_FROM_ALL
   YES
 )
-if(NOT KF5Archive_ADDED)
-  find_package(KF5Archive)
-  add_library(klogg_karchive INTERFACE)
-  target_link_libraries(klogg_karchive INTERFACE KF5::Archive)
+if(KF5Archive_ADDED)
+  file(GLOB_RECURSE _klogg_karchive_sources "${KF5Archive_SOURCE_DIR}/karchive/src/*.cpp")
+  foreach(_src ${_klogg_karchive_sources})
+    file(READ "${_src}" _contents)
+    string(REPLACE ".arg(mode)" ".arg(static_cast<int>(mode))" _patched "${_contents}")
+    string(REPLACE ".arg(d->mode)" ".arg(static_cast<int>(d->mode))" _patched "${_patched}")
+    if(NOT _patched STREQUAL _contents)
+      file(WRITE "${_src}" "${_patched}")
+    endif()
+  endforeach()
 endif()
 
-if(${QT_VERSION_MAJOR} EQUAL 6)
-message("Resetting CPM_USE_LOCAL_PACKAGES to ${_TMP_CPM_USE_LOCAL_PACKAGES}")
-set(CPM_USE_LOCAL_PACKAGES ${_TMP_CPM_USE_LOCAL_PACKAGES})
-endif()
+cpmaddpackage("gh:lemire/streamvbyte@1.0.0")
 
-cpmaddpackage(
-  NAME
-  robin_hood
-  GITHUB_REPOSITORY
-  martinus/robin-hood-hashing
-  GIT_TAG
-  3.11.2
-  EXCLUDE_FROM_ALL
-  YES
-)
-if(NOT TARGET robin_hood)
-  message("Adding imported target for robin_hood")
-  add_library(robin_hood INTERFACE)
-  target_include_directories(robin_hood INTERFACE ${ROBIN_HOOD_INCLUDE_DIRS})
-endif(NOT TARGET robin_hood)
-
-if(KLOGG_BUILD_TESTS)
-  cpmaddpackage("gh:bombela/backward-cpp@1.6")
-  cpmaddpackage(
-    NAME
-    Catch2
-    GITHUB_REPOSITORY
-    catchorg/Catch2
-    VERSION
-    2.13.8
-    EXCLUDE_FROM_ALL
-    YES
-  )
-  if(NOT TARGET Catch2)
-    message("Adding imported target for catch2")
-    add_library(Catch2 INTERFACE)
-    target_include_directories(Catch2 INTERFACE ${CATCH2_INCLUDE_DIRS})
-  endif(NOT TARGET Catch2)
-endif()
-
+# KDSingleApplication links Qt, so it is compiled against the application's own
+# (system) Qt rather than pulling a second Qt through vcpkg.
 cpmaddpackage(
   NAME
   KDSingleApplication
@@ -190,65 +233,6 @@ if(KDSingleApplication_ADDED)
   set_target_properties(kdsingleapp PROPERTIES AUTOMOC ON)
 endif()
 
-
-cpmaddpackage(
-  NAME
-  xxHash
-  GITHUB_REPOSITORY
-  Cyan4973/xxHash
-  VERSION
-  0.8.1
-  DOWNLOAD_ONLY
-  YES
-)
-if(xxHash_ADDED)
-  set(XXHASH_BUILD_ENABLE_INLINE_API OFF)
-  set(XXHASH_BUILD_XXHSUM OFF)
-  add_subdirectory(${xxHash_SOURCE_DIR}/cmake_unofficial ${CMAKE_BINARY_DIR}/xxhash EXCLUDE_FROM_ALL)
-endif()
-
-cpmaddpackage(
-  NAME
-  whereami
-  GITHUB_REPOSITORY
-  gpakosz/whereami
-  GIT_TAG
-  dcb52a058dc14530ba9ae05e4339bd3ddfae0e0e
-  DOWNLOAD_ONLY
-  YES
-)
-if(whereami_ADDED)
-  add_library(whereami STATIC ${whereami_SOURCE_DIR}/src/whereami.h ${whereami_SOURCE_DIR}/src/whereami.c)
-  target_include_directories(whereami PUBLIC ${whereami_SOURCE_DIR}/src)
-endif()
-
-cpmaddpackage(
-  NAME
-  exprtk
-  GITHUB_REPOSITORY
-  variar/klogg_exprtk
-  GIT_TAG
-  1f9f4cd7d2620b7b24232de9ea22908d63913459
-  DOWNLOAD_ONLY
-  YES
-)
-if(exprtk_ADDED)
-  add_library(exprtk INTERFACE)
-  target_link_libraries(exprtk INTERFACE robin_hood)
-  target_include_directories(exprtk SYSTEM INTERFACE ${exprtk_SOURCE_DIR})
-  target_compile_definitions(
-    exprtk
-    INTERFACE -Dexprtk_disable_caseinsensitivity
-              -Dexprtk_disable_comments
-              -Dexprtk_disable_break_continue
-              -Dexprtk_disable_return_statement
-              -Dexprtk_disable_superscalar_unroll
-              -Dexprtk_disable_rtl_io_file
-              -Dexprtk_disable_rtl_vecops
-              -Dexprtk_disable_string_capabilities
-  )
-endif()
-
 cpmaddpackage(
   NAME
   KDToolBox
@@ -270,138 +254,13 @@ if(KDToolBox_ADDED)
   set_target_properties(kdtoolbox PROPERTIES AUTOMOC ON)
 endif()
 
-cpmaddpackage(
-  NAME
-  efsw
-  GITHUB_REPOSITORY
-  SpartanJ/efsw
-  GIT_TAG
-  1.4.1
-  EXCLUDE_FROM_ALL
-  YES
-  OPTIONS
-  "BUILD_TEST_APP OFF"
-)
-if(efsw_ADDED)
-  target_compile_definitions(efsw PRIVATE EFSW_FSEVENTS_NOT_SUPPORTED)
-endif()
-
-if(WIN32)
-  set(BUILD_SHARED_LIBS ON)
-endif()
-cpmaddpackage(
-  NAME
-  tbb
-  GITHUB_REPOSITORY
-  variar/oneTBB
-  GIT_TAG
-  c9be1ac2930f02dea523003ed801b4489f3e6b6e
-  EXCLUDE_FROM_ALL
-  YES
-  OPTIONS
-  "TBB_TEST OFF"
-  "TBB_EXAMPLES OFF"
-  "TBB_STRICT OFF"
-)
-
-if(WIN32)
-  set(BUILD_SHARED_LIBS OFF)
-endif()
-
-set(CPM_USE_LOCAL_PACKAGES OFF)
-cpmaddpackage(
-  NAME
-  mimalloc
-  GITHUB_REPOSITORY
-  microsoft/mimalloc
-  VERSION
-  2.1.7
-  EXCLUDE_FROM_ALL
-  YES
-  OPTIONS
-  "MI_BUILD_TESTS OFF"
-  "MI_SECURE OFF"
-  "MI_BUILD_SHARED OFF"
-  "MI_BUILD_STATIC ON"
-  "MI_BUILD_OBJECT OFF"
-  "MI_OVERRIDE OFF"
-)
-if(mimalloc_ADDED)
-  message("Adding alias for mimalloc")
-  add_library(klogg_mimalloc_wrapper INTERFACE)
-  target_link_libraries(klogg_mimalloc_wrapper INTERFACE mimalloc-static)
-  target_include_directories(klogg_mimalloc_wrapper INTERFACE ${mimalloc_SOURCE_DIR}/include)
-else()
-  add_library(klogg_mimalloc_wrapper INTERFACE)
-  target_link_libraries(klogg_mimalloc_wrapper INTERFACE ${MIMALLOC_LIBRARY})
-  target_include_directories(klogg_mimalloc_wrapper INTERFACE ${MIMALLOC_INCLUDE_DIR})
-endif()
-
-set(CPM_USE_LOCAL_PACKAGES ${_TMP_CPM_USE_LOCAL_PACKAGES})
-
-if(KLOGG_USE_SENTRY)
-  set(SENTRY_BACKEND
-     "crashpad"
-     CACHE INTERNAL "" FORCE
-  )
-  set(SENTRY_TRANSPORT
-     "none"
-     CACHE INTERNAL "" FORCE
-  )
-  set(SENTRY_BUILD_EXAMPLES
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-  set(CRASHPAD_ENABLE_INSTALL
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-  set(CRASHPAD_ENABLE_INSTALL_DEV
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-
-  cpmaddpackage(
-    NAME
-    sentry
-    GITHUB_REPOSITORY
-    getsentry/sentry-native
-    GIT_TAG
-    a3d58622a807b9dda174cb9fc18fa0f98c89d043
-    EXCLUDE_FROM_ALL
-    YES
-  )
-
-  if(WIN32)
-    set_target_properties(crashpad_handler PROPERTIES OUTPUT_NAME "klogg_crashpad_handler.exe")
-  else()
-    set_target_properties(crashpad_handler PROPERTIES OUTPUT_NAME "klogg_crashpad_handler")
-  endif()
-endif(KLOGG_USE_SENTRY)
-
+# ---------------------------------------------------------------------------
+# Mark remaining CPM-built dependency includes as system to silence warnings.
+# (vcpkg config packages already export their includes as SYSTEM.)
+# ---------------------------------------------------------------------------
 set(klogg_cpm_targets
-    xxhash
-    Catch2
-    roaring
-    roaring-headers-cpp
-    libuchardet
-    robin_hood
-    whereami
-    simdutf
-    efsw
-    SingleApplication
-    hs
-    tbb
-    exprtk
-    type_safe
-    mimalloc-static
-    sentry
-    crashpad_client
-    crashpad_compat
-    crashpad_util
-    mini_chromium
     streamvbyte
-    FastPFor
+    kdtoolbox
 )
 foreach(target ${klogg_cpm_targets})
   if(TARGET ${target})
@@ -410,9 +269,6 @@ foreach(target ${klogg_cpm_targets})
       TARGET ${target}
       PROPERTY INTERFACE_INCLUDE_DIRECTORIES
     )
-    #message("Marking ${${target}_include_dirs} as system incldue")
     set_property(TARGET ${target} PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${${target}_include_dirs})
   endif()
 endforeach()
-
-

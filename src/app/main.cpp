@@ -83,32 +83,8 @@ void setApplicationAttributes( bool enableQtHdpi, int scaleFactorRounding )
     // - https://bugreports.qt.io/browse/QTBUG-46015
     qputenv( "QT_BEARER_POLL_TIMEOUT", QByteArray::number( std::numeric_limits<int>::max() ) );
 
-#if QT_VERSION < QT_VERSION_CHECK( 6, 0, 0 )
-#ifdef Q_OS_WIN
-    QCoreApplication::setAttribute( Qt::AA_DisableWindowContextHelpButton );
-#endif
-
-    if ( !enableQtHdpi ) {
-        QCoreApplication::setAttribute( Qt::AA_DisableHighDpiScaling );
-    }
-    else {
-
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 14, 0 )
-        QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
-            static_cast<Qt::HighDpiScaleFactorRoundingPolicy>( scaleFactorRounding ) );
-#else
-        Q_UNUSED( scaleFactorRounding );
-#endif
-
-        // This attribute must be set before QGuiApplication is constructed:
-        QCoreApplication::setAttribute( Qt::AA_EnableHighDpiScaling );
-        // We support high-dpi (aka Retina) displays
-        QCoreApplication::setAttribute( Qt::AA_UseHighDpiPixmaps );
-    }
-#else
     Q_UNUSED( enableQtHdpi );
     Q_UNUSED( scaleFactorRounding );
-#endif
 
     QCoreApplication::setAttribute( Qt::AA_DontShowIconsInMenus );
 }

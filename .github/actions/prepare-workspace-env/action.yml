@@ -9,7 +9,7 @@ runs:
         echo "KLOGG_WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV 
         echo "KLOGG_BUILD_ROOT=build_root" >> $GITHUB_ENV 
         echo "KLOGG_ARCH=${{ matrix.config.arch }}" >> $GITHUB_ENV 
-        echo "KLOGG_CMAKE_OPTS=-G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_GENERIC_CPU=ON -DKLOGG_USE_SENTRY=ON -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.config.cmake_opts }}" >> $GITHUB_ENV
+        echo "KLOGG_CMAKE_OPTS=-G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_GENERIC_CPU=ON -DKLOGG_USE_SENTRY=OFF -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.config.cmake_opts }}" >> $GITHUB_ENV
 
     - name: Set qt env var
       if: "startsWith(matrix.config.qt_version, '5')"

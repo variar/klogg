@@ -136,6 +136,10 @@ inline int countLeadingZeroes( uint64_t value )
 
 namespace {
 
+// Opacity of the overlay painted over a view that does not hold focus, so the
+// inactive view fades toward the background. Tunable: higher = more dimming.
+constexpr int InactiveViewDimAlpha = 100; // out of 255 (~0.4)
+
 int mapPullToFollowLength( int length );
 
 int intLog2( uint64_t x )
@@ -464,6 +468,30 @@ void AbstractLogView::changeEvent( QEvent* changeEvent )
         if ( !isActiveWindow() )
             autoScrollTimer_.stop();
     }
+    viewport()->update();
+}
+
+void AbstractLogView::focusInEvent( QFocusEvent* focusEvent )
+{
+    QAbstractScrollArea::focusInEvent( focusEvent );
+    Q_EMIT focusChanged();
+}
+
+void AbstractLogView::focusOutEvent( QFocusEvent* focusEvent )
+{
+    QAbstractScrollArea::focusOutEvent( focusEvent );
+    Q_EMIT focusChanged();
+}
+
+void AbstractLogView::setDimmed( bool dimmed )
+{
+    if ( dimmed_ == dimmed ) {
+        return;
+    }
+
+    dimmed_ = dimmed;
+    // The dim overlay is painted on top of the cached pixmap, so a repaint of
+    // the viewport is enough; the text cache does not need invalidating.
     viewport()->update();
 }
 
@@ -1157,6 +1185,13 @@ void AbstractLogView::paintEvent( QPaintEvent* paintEvent )
         devicePainter.drawPixmap( 0, drawingPullToFollowTopPosition, pullToFollowCache_.pixmap_ );
     }
 
+    // Fade the view when it does not hold focus, so the active view stands out.
+    if ( dimmed_ ) {
+        QColor dimColor = viewport()->palette().color( QPalette::Window );
+        dimColor.setAlpha( InactiveViewDimAlpha );
+        devicePainter.fillRect( viewport()->rect(), dimColor );
+    }
+
     LOG_DEBUG << "End of repaint "
               << std::chrono::duration_cast<std::chrono::microseconds>(
                      std::chrono::system_clock::now() - start )
@@ -1438,8 +1473,7 @@ void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
     }
 
     QSaveFile saveFile{ filename };
-    saveFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
-    if ( !saveFile.isOpen() ) {
+    if ( !saveFile.open( QIODevice::WriteOnly | QIODevice::Truncate ) ) {
         LOG_ERROR << "Failed to open file to save";
         return;
     }

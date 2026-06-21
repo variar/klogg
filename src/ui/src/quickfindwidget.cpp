@@ -104,7 +104,7 @@ QuickFindWidget::QuickFindWidget( QWidget* parent )
     connect( editQuickFind_, &QLineEdit::textEdited, this, &QuickFindWidget::textChanged );
     connect( editQuickFind_, &QLineEdit::returnPressed, this, &QuickFindWidget::returnHandler );
 
-    connect( ignoreCaseCheck_, &QCheckBox::stateChanged, this, [ this ] {
+    connect( ignoreCaseCheck_, &QCheckBox::checkStateChanged, this, [ this ] {
         textChanged();
         Configuration::get().setQfIgnoreCase( ignoreCaseCheck_->isChecked() );
         Configuration::get().save();

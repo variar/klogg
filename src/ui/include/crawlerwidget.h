@@ -190,6 +190,8 @@ class CrawlerWidget : public QSplitter,
     // Stop the currently ongoing search (if one exists)
     void stopSearch();
     void loadIcons();
+    // Dim whichever of the two views does not currently hold focus.
+    void updateInactiveViewDimming();
     // QuickFind is being entered, save the focus for incremental qf.
     void enteringQuickFind();
     // QuickFind is being closed.

@@ -32,6 +32,7 @@ object_script.glogg.Debug
 object_script.glogg.Release
 
 
+/build/
 build_root/
 build_root_clang/
 build_root_gcc/
@@ -60,3 +61,4 @@ cmake-build-relwithdebinfo/
 #website
 website/hugo
 website/resources/
+.DS_Store

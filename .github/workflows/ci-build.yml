@@ -3,6 +3,7 @@ name: "CI Build"
 on:
   push:
     branches: [ master ]
+    tags: [ 'v*' ]
     paths-ignore:
       - 'website/**'
       - BUILD.md
@@ -28,13 +29,13 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/klogg-version
 
       - name: Save version 
         run: echo $KLOGG_VERSION > klogg_version.txt
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: klogg_version
           path: 'klogg_version.txt'
@@ -118,7 +119,7 @@ jobs:
 
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       #- uses: satackey/action-docker-layer-caching@v0.0.11
       #  # Ignore the failure of a step and avoid terminating the job.
@@ -136,7 +137,7 @@ jobs:
       - uses: ./.github/actions/docker-package
           
 # Final upload of all packages
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*'
@@ -167,7 +168,7 @@ jobs:
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Xcode
         shell: sh
@@ -190,14 +191,10 @@ jobs:
       - uses: ./.github/actions/agent-build
       - uses: ./.github/actions/agent-run-tests
       - uses: ./.github/actions/agent-package-mac
-        with:
-          p12-file-base64: ${{ secrets.CODESIGN_BASE64 }}
-          p12-password: ${{ secrets.CODESIGN_PASSWORD }}
-          notarization-username: ${{ secrets.NOTARIZATION_USERNAME }}
-          notarization-team: ${{ secrets.NOTARIZATION_TEAM }}
-          notarization-password: ${{ secrets.NOTARIZATION_PASSWORD }}
+        # Unsigned build (sign defaults to 'false'). To produce signed/notarized
+        # artifacts, set `sign: 'true'` and supply the Apple Developer ID secrets.
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*' 
@@ -229,11 +226,11 @@ jobs:
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache openssl
         id: cache-openssl
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}\openssl-1.1
           key: OpensslCache-1-1-1w
@@ -268,8 +265,39 @@ jobs:
           s3-bucket: ${{ secrets.WIN_CS_BUCKET }}
      
 # Final upload of all packages
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*'
           if-no-files-found: error
+
+# Publish a GitHub Release when a tag like v1.0.0 is pushed.
+# Uses the built-in GITHUB_TOKEN, so no extra secrets are required.
+  Release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ Linux, Mac, Windows ]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: packages-*
+
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          find . -type f -print0 | xargs -0 sha256sum > ../SHA256SUMS.txt
+          cat ../SHA256SUMS.txt
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*
+            SHA256SUMS.txt
+          generate_release_notes: true
+          prerelease: false
+          fail_on_unmatched_files: true
