@@ -128,7 +128,7 @@ void OptionsDialog::setupTabs()
 void OptionsDialog::setupFontList()
 {
     const auto families = FontUtils::availableFonts();
-    for ( const QString& str : qAsConst( families ) ) {
+    for ( const QString& str : families ) {
         fontFamilyBox->addItem( str );
     }
 }
@@ -300,6 +300,7 @@ void OptionsDialog::updateDialogFromConfig()
         fontSizeBox->setCurrentIndex( sizeIndex );
 
     fontSmoothCheckBox->setChecked( config.forceFontAntialiasing() );
+    boldFontCheckBox->setChecked( config.useBoldFont() );
     wrapTextCheckBox->setChecked( config.useTextWrap() );
     enableQtHiDpiCheckBox->setChecked( config.enableQtHighDpi() );
     scaleRoundingComboBox->setCurrentIndex( config.scaleFactorRounding() - 1 );
@@ -334,6 +335,9 @@ void OptionsDialog::updateDialogFromConfig()
     highlightMainSearchCheckBox->setChecked( config.mainSearchHighlight() );
     variateHighlightCheckBox->setChecked( config.variateMainSearchHighlight() );
     incrementalCheckBox->setChecked( config.isQuickfindIncremental() );
+    caseSensitiveCheckBox->setChecked( !config.isSearchIgnoreCaseDefault() );
+    logicalCombiningCheckBox->setChecked( config.isSearchLogicalCombiningDefault() );
+    autoRefreshCheckBox->setChecked( config.isSearchAutoRefreshDefault() );
 
     // Polling
     nativeFileWatchCheckBox->setChecked( config.nativeFileWatchEnabled() );
@@ -361,6 +365,7 @@ void OptionsDialog::updateDialogFromConfig()
     indexReadBufferSpinBox->setValue( config.indexReadBufferSizeMb() );
     searchReadBufferSpinBox->setValue( config.searchReadBufferSizeLines() );
     keepFileClosedCheckBox->setChecked( config.keepFileClosed() );
+    compressedIndexCheckBox->setChecked( config.useCompressedIndex() );
     optimizeForNotLatinEncodingsCheckBox->setChecked( config.optimizeForNotLatinEncodings() );
 
     // version checking
@@ -486,6 +491,7 @@ void OptionsDialog::updateConfigFromDialog()
     QFont font = QFont( fontFamilyBox->currentText(), ( fontSizeBox->currentText() ).toInt() );
     config.setMainFont( font );
     config.setForceFontAntialiasing( fontSmoothCheckBox->isChecked() );
+    config.setUseBoldFont( boldFontCheckBox->isChecked() );
     config.setUseTextWrap( wrapTextCheckBox->isChecked() );
     config.setEnableQtHighDpi( enableQtHiDpiCheckBox->isChecked() );
     config.setScaleFactorRounding( scaleRoundingComboBox->currentIndex() + 1 );
@@ -494,6 +500,9 @@ void OptionsDialog::updateConfigFromDialog()
     config.setMainSearchBackColor( mainSearchColor_ );
     config.setEnableMainSearchHighlight( highlightMainSearchCheckBox->isChecked() );
     config.setVariateMainSearchHighlight( variateHighlightCheckBox->isChecked() );
+    config.setSearchIgnoreCaseDefault( !caseSensitiveCheckBox->isChecked() );
+    config.setSearchAutoRefreshDefault( autoRefreshCheckBox->isChecked() );
+    config.setSearchLogicalCombiningDefault( logicalCombiningCheckBox->isChecked() );
     config.setQuickfindRegexpType( getRegexpTypeFromIndex( quickFindSearchBox->currentIndex() ) );
     config.setQfBackColor( qfSearchColor_ );
     config.setQuickfindIncremental( incrementalCheckBox->isChecked() );
@@ -528,6 +537,7 @@ void OptionsDialog::updateConfigFromDialog()
     config.setIndexReadBufferSizeMb( indexReadBufferSpinBox->value() );
     config.setSearchReadBufferSizeLines( searchReadBufferSpinBox->value() );
     config.setKeepFileClosed( keepFileClosedCheckBox->isChecked() );
+    config.setUseCompressedIndex( compressedIndexCheckBox->isChecked() );
     config.setOptimizeForNotLatinEncodings( optimizeForNotLatinEncodingsCheckBox->isChecked() );
 
     // version checking
@@ -659,29 +669,31 @@ void OptionsDialog::buildShortcutsTable( bool useDefaultsOnly )
     shortcutsTable->setRowCount( 0 );
 
     const auto& config = Configuration::get();
-    auto shortcuts = ShortcutAction::defaultShortcuts();
+    auto shortcutList = ShortcutAction::defaultShortcutList();
     if ( !useDefaultsOnly ) {
         for ( const auto& [ action, keys ] : config.shortcuts() ) {
-            shortcuts[ action ] = keys;
+            shortcutList[ action ].keySequence = keys;
         }
     }
 
-    for ( const auto& [ action, keys ] : shortcuts ) {
+    for ( const auto& [ action, shortCut ] : shortcutList ) {
         auto currentRow = shortcutsTable->rowCount();
         shortcutsTable->insertRow( currentRow );
 
-        auto keyItem = new QTableWidgetItem( ShortcutAction::actionName( action ) );
+        auto keyItem = new QTableWidgetItem( shortCut.name );
         keyItem->setFlags( Qt::ItemIsEnabled | Qt::ItemIsSelectable );
         keyItem->setData( Qt::UserRole, QString::fromStdString( action ) );
         shortcutsTable->setItem( currentRow, 0, keyItem );
 
-        auto primaryKeySequence = new KeySequencePresenter( keys.size() > 0 ? keys[ 0 ] : "" );
+        auto primaryKeySequence = new KeySequencePresenter(
+            shortCut.keySequence.size() > 0 ? shortCut.keySequence[ 0 ] : "" );
         shortcutsTable->setItem( currentRow, 1, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 1, primaryKeySequence );
         connect( primaryKeySequence, &KeySequencePresenter::edited, this,
                  &OptionsDialog::checkShortcutsOnDuplicate );
 
-        auto secondaryKeySequence = new KeySequencePresenter( keys.size() > 1 ? keys[ 1 ] : "" );
+        auto secondaryKeySequence = new KeySequencePresenter(
+            shortCut.keySequence.size() > 1 ? shortCut.keySequence[ 1 ] : "" );
         shortcutsTable->setItem( currentRow, 2, new QTableWidgetItem );
         shortcutsTable->setCellWidget( currentRow, 2, secondaryKeySequence );
         connect( secondaryKeySequence, &KeySequencePresenter::edited, this,

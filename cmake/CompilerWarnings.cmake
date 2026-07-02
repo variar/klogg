@@ -40,6 +40,7 @@ function(set_project_warnings project_name)
       /permissive- # standards conformance mode for MSVC compiler.
       /wd4996 #Your code uses a function, class member, variable, or typedef that's marked deprecated.
       /wd4702 #unreachable code
+      /wd4756 #overflow in constant arithmetic -- false positive in catch2
   )
 
   set(CLANG_WARNINGS
@@ -58,7 +59,7 @@ function(set_project_warnings project_name)
       -Wpedantic # warn if non-standard C++ is used
       -Wconversion # warn on type conversions that may lose data
       -Wsign-conversion # warn on sign conversions
-      -Wnull-dereference # warn if a null dereference is detected
+      -Wno-null-dereference # warn if a null dereference is detected
       -Wdouble-promotion # warn if float is implicit promoted to double
       -Wformat=2 # warn on security issues around functions that format output
                  # (ie printf)

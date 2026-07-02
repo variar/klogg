@@ -42,11 +42,16 @@
 #include <QColor>
 #include <QMetaType>
 #include <QRegularExpression>
+#include <memory>
+#include <optional>
 #include <qcolor.h>
+#include <qregularexpression.h>
 
 #include "containers.h"
 #include "highlightedmatch.h"
 #include "persistable.h"
+#include "regularexpression.h"
+#include "regularexpressionpattern.h"
 
 struct HighlightColor {
     QColor foreColor;
@@ -91,11 +96,17 @@ class Highlighter {
     void saveToStorage( QSettings& settings ) const;
     void retrieveFromStorage( QSettings& settings );
 
+    RegularExpressionPattern expressionPattern() const;
+
+    void compile() const;
+
   private:
     std::pair<QColor, QColor> vairateColors( const QString& match ) const;
 
   private:
     QRegularExpression regexp_;
+    
+    mutable std::optional<QRegularExpression> optimizedRegexp_;
 
     bool useRegex_ = true;
     bool highlightOnlyMatch_ = false;
@@ -125,13 +136,15 @@ class HighlighterSet {
     // Returns weither the passed line match a filter of the set,
     // if so, it returns the fore/back colors the line should use.
     HighlighterMatchType matchLine( const QString& line,
-                                    klogg::vector<HighlightedMatch>& matches ) const;
+                                    HighlightedMatchRanges& matches ) const;
 
     bool isEmpty() const;
 
     // Reads/writes the current config in the QSettings object passed
     void saveToStorage( QSettings& settings ) const;
     void retrieveFromStorage( QSettings& settings );
+
+    void compile() const;
 
   private:
     explicit HighlighterSet( const QString& name );
@@ -148,6 +161,8 @@ class HighlighterSet {
     // internal structure directly.
     friend class HighlighterSetEdit;
     friend class HighlighterSetCollection;
+
+    mutable std::shared_ptr<MultiRegularExpression> compiledExpression_;
 };
 
 struct QuickHighlighter {
@@ -166,9 +181,10 @@ class HighlighterSetCollection final : public Persistable<HighlighterSetCollecti
     QList<HighlighterSet> highlighterSets() const;
     void setHighlighterSets( const QList<HighlighterSet>& highlighters );
 
-    HighlighterSet currentActiveSet() const;
+    const HighlighterSet& currentActiveSet() const;
 
     bool hasSet( const QString& setId ) const;
+    bool hasSetByName( const QString& name ) const;
 
     QStringList activeSetIds() const;
     void activateSet( const QString& setId );
@@ -185,9 +201,12 @@ class HighlighterSetCollection final : public Persistable<HighlighterSetCollecti
   private:
     static constexpr int HighlighterSetCollection_VERSION = 2;
 
+    void updateCombinedSet();
+
   private:
     QList<HighlighterSet> highlighters_;
     QStringList activeSets_;
+    HighlighterSet combinedActiveSet_;
 
     QList<QuickHighlighter> quickHighlighters_;
 

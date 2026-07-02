@@ -40,14 +40,15 @@
 #define LOGDATAWORKERTHREAD_H
 
 #include "containers.h"
+#include "linetypes.h"
 #include <qthreadpool.h>
 #include <variant>
 
-#include <QObject>
 #include <QFile>
+#include <QObject>
 #include <QTextCodec>
 
-#if !defined(Q_MOC_RUN)
+#if !defined( Q_MOC_RUN )
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/flow_graph.h>
 #include <tbb/task_group.h>
@@ -75,7 +76,7 @@ struct IndexedHash {
 
 template <typename Data, typename LockGuard>
 class IndexingDataAccessor {
-  public:
+public:
     IndexingDataAccessor( Data data )
         : data_( data )
         , guard_( data->dataMutex_ )
@@ -111,6 +112,11 @@ class IndexingDataAccessor {
     OffsetInFile getEndOfLineOffset( LineNumber line ) const
     {
         return data_->getEndOfLineOffset( line );
+    }
+
+    klogg::vector<OffsetInFile> getEndOfLineOffsets( LineNumber line, LinesCount count ) const
+    {
+      return data_->getEndOfLineOffsets(line, count);
     }
 
     // Get the guessed encoding for the content.
@@ -174,18 +180,18 @@ class IndexingDataAccessor {
         return data_->allocatedSize();
     }
 
-  private:
+private:
     Data data_;
     LockGuard guard_;
 };
 
 // This class is a thread-safe set of indexing data.
 class IndexingData {
-  public:
+public:
     using ConstAccessor = IndexingDataAccessor<const IndexingData*, SharedLock>;
     using MutateAccessor = IndexingDataAccessor<IndexingData*, UniqueLock>;
 
-  private:
+private:
     qint64 getIndexedSize() const;
 
     IndexedHash getHash() const;
@@ -199,6 +205,7 @@ class IndexingData {
     // Get the position (in byte from the beginning of the file)
     // of the end of the passed line.
     OffsetInFile getEndOfLineOffset( LineNumber line ) const;
+    klogg::vector<OffsetInFile> getEndOfLineOffsets( LineNumber line, LinesCount count ) const;
 
     // Get the guessed encoding for the content.
     QTextCodec* getEncodingGuess() const;
@@ -220,11 +227,11 @@ class IndexingData {
     int getProgress() const;
     void setProgress( int progress );
 
-  private:
+private:
     mutable SharedMutex dataMutex_;
 
-    LinePositionArray linePosition_;
-    mutable tbb::enumerable_thread_specific<CompressedLinePositionStorage::Cache> linePositionCache_;
+    using LinePositionArrayType = std::variant<LinePositionArray, FastLinePositionArray>;
+    LinePositionArrayType linePosition_;
 
     LineLength maxLength_;
 
@@ -259,7 +266,7 @@ using OperationResult = std::variant<bool, MonitoredFileStatus>;
 
 class IndexOperation : public QObject {
     Q_OBJECT
-  public:
+public:
     IndexOperation( const QString& fileName, const std::shared_ptr<IndexingData>& indexingData,
                     AtomicFlag& interruptRequest )
         : fileName_( fileName )
@@ -272,12 +279,12 @@ class IndexOperation : public QObject {
     // and false if it has been cancelled (results not copied)
     virtual OperationResult run() = 0;
 
-  Q_SIGNALS:
+Q_SIGNALS:
     void indexingProgressed( int );
     void indexingFinished( bool );
     void fileCheckFinished( MonitoredFileStatus );
 
-  protected:
+protected:
     using BlockBuffer = klogg::vector<char>;
     using BlockData = std::pair<OffsetInFile::UnderlyingType, BlockBuffer*>;
     using BlockPrefetcher = tbb::flow::limiter_node<BlockData>;
@@ -290,7 +297,7 @@ class IndexOperation : public QObject {
     std::shared_ptr<IndexingData> indexing_data_;
     AtomicFlag& interruptRequest_;
 
-  private:
+private:
     FastLinePositionArray parseDataBlock( OffsetInFile::UnderlyingType blockBegining,
                                           const BlockBuffer& block, IndexingState& state ) const;
 
@@ -303,7 +310,7 @@ class IndexOperation : public QObject {
 
 class FullIndexOperation : public IndexOperation {
     Q_OBJECT
-  public:
+public:
     FullIndexOperation( const QString& fileName, const std::shared_ptr<IndexingData>& indexingData,
                         AtomicFlag& interruptRequest, QTextCodec* forcedEncoding = nullptr )
         : IndexOperation( fileName, indexingData, interruptRequest )
@@ -312,13 +319,13 @@ class FullIndexOperation : public IndexOperation {
     }
     OperationResult run() override;
 
-  private:
+private:
     QTextCodec* forcedEncoding_;
 };
 
 class PartialIndexOperation : public IndexOperation {
     Q_OBJECT
-  public:
+public:
     PartialIndexOperation( const QString& fileName,
                            const std::shared_ptr<IndexingData>& indexingData,
                            AtomicFlag& interruptRequest )
@@ -331,7 +338,7 @@ class PartialIndexOperation : public IndexOperation {
 
 class CheckFileChangesOperation : public IndexOperation {
     Q_OBJECT
-  public:
+public:
     CheckFileChangesOperation( const QString& fileName,
                                const std::shared_ptr<IndexingData>& indexingData,
                                AtomicFlag& interruptRequest )
@@ -341,14 +348,14 @@ class CheckFileChangesOperation : public IndexOperation {
 
     OperationResult run() override;
 
-  private:
+private:
     MonitoredFileStatus doCheckFileChanges();
 };
 
 class LogDataWorker : public QObject {
     Q_OBJECT
 
-  public:
+public:
     // Pass a pointer to the IndexingData (initially empty)
     // This object will change it when indexing (IndexingData must be thread safe!)
     explicit LogDataWorker( const std::shared_ptr<IndexingData>& indexing_data );
@@ -375,7 +382,7 @@ class LogDataWorker : public QObject {
     // Interrupts the indexing if one is in progress
     void interrupt();
 
-  Q_SIGNALS:
+Q_SIGNALS:
     // Sent during the indexing process to signal progress
     // percent being the percentage of completion.
     void indexingProgressed( int percent );
@@ -387,11 +394,11 @@ class LogDataWorker : public QObject {
     // to copy the new data back.
     void checkFileChangesFinished( MonitoredFileStatus status );
 
-  private Q_SLOTS:
+private Q_SLOTS:
     void onIndexingFinished( bool result );
     void onCheckFileFinished( MonitoredFileStatus result );
 
-  private:
+private:
     OperationResult connectSignalsAndRun( IndexOperation* operationRequested );
 
     // Mutex to wait for operations

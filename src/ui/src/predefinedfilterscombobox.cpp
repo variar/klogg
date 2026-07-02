@@ -65,7 +65,7 @@ class QCheckListStyledItemDelegate : public QStyledItemDelegate {
 
 PredefinedFiltersComboBox::PredefinedFiltersComboBox( QWidget* parent )
     : QComboBox( parent )
-    , model_( new QStandardItemModel() )
+    , model_( new QStandardItemModel(this) )
     , ignoreCollecting_( false )
 {
     setFocusPolicy( Qt::ClickFocus );

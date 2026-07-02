@@ -82,7 +82,7 @@ Section "klogg" klogg
     File release\documentation.html
 
     ; Create the 'sendto' link
-    CreateShortCut "$SENDTO\klogg.lnk" "$INSTDIR\klogg,exe" "" "$INSTDIR\klogg.exe" 0
+    CreateShortCut "$SENDTO\klogg.lnk" "$INSTDIR\klogg.exe" "" "$INSTDIR\klogg.exe" 0
 
     ; Register as an otion (but not main handler) for some files (.txt, .Log, .cap)
     WriteRegStr HKCR "Applications\klogg.exe" "" ""
@@ -123,7 +123,12 @@ Section "Qt Runtime libraries" qtlibs
     SetOutPath $INSTDIR\platforms
     File release\platforms\qwindows.dll
     SetOutPath $INSTDIR\styles
+!if ${QT_MAJOR} == "Qt6"
+    File release\styles\qmodernwindowsstyle.dll
+!else
     File release\styles\qwindowsvistastyle.dll
+!endif
+
 SectionEnd
 
 Section "MSVC Runtime libraries" vcruntime

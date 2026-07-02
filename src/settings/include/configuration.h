@@ -231,6 +231,14 @@ class Configuration final : public Persistable<Configuration> {
     {
         keepFileClosed_ = shouldKeepClosed;
     }
+    bool useCompressedIndex() const
+    {
+        return useCompressedIndex_;
+    }
+    void setUseCompressedIndex( bool useCompressedIndex )
+    {
+        useCompressedIndex_ = useCompressedIndex;
+    }
 
     RegexpEngine regexpEngine() const
     {
@@ -329,6 +337,14 @@ class Configuration final : public Persistable<Configuration> {
     {
         searchIgnoreCase_ = ignoreCase;
     }
+    bool isSearchLogicalCombiningDefault() const
+    {
+        return searchLogicalCombining_;
+    }
+    void setSearchLogicalCombiningDefault( bool logicalCombining )
+    {
+        searchLogicalCombining_ = logicalCombining;
+    }
     QList<int> splitterSizes() const
     {
         return splitterSizes_;
@@ -372,6 +388,15 @@ class Configuration final : public Persistable<Configuration> {
     void setForceFontAntialiasing( bool force )
     {
         forceFontAntialiasing_ = force;
+    }
+
+    bool useBoldFont() const
+    {
+        return useBoldFont_;
+    }
+    void setUseBoldFont( bool bold )
+    {
+        useBoldFont_ = bold;
     }
 
     bool enableQtHighDpi() const
@@ -542,6 +567,7 @@ class Configuration final : public Persistable<Configuration> {
     // Default settings for new views
     bool searchAutoRefresh_ = false;
     bool searchIgnoreCase_ = false;
+    bool searchLogicalCombining_ = false;
     QList<int> splitterSizes_;
 
     // Performance settings
@@ -552,6 +578,7 @@ class Configuration final : public Persistable<Configuration> {
     int searchReadBufferSizeLines_ = 10000;
     int searchThreadPoolSize_ = 0;
     bool keepFileClosed_ = false;
+    bool useCompressedIndex_ = true;
 
     bool enableLogging_ = false;
     int loggingLevel_ = 4;
@@ -565,6 +592,7 @@ class Configuration final : public Persistable<Configuration> {
 
     bool forceFontAntialiasing_ = false;
     bool enableQtHighDpi_ = true;
+    bool useBoldFont_ = false;
 
     int scaleFactorRounding_ = 1;
 

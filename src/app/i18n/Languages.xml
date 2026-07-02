@@ -2,4 +2,5 @@
 <languages>
 	<language ietfCode="en" name="English" />
 	<language ietfCode="zh_CN" name="中文 (简体)" />
+	<language ietfCode="zh_TW" name="中文 (繁體)" />
 </languages>

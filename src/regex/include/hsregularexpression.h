@@ -128,8 +128,20 @@ class HsNoopMatcher {
     MatchedPatterns match( const std::string_view& utf8Data ) const;
 };
 
+class HsPrefilterMatcher {
+  public:
+    HsPrefilterMatcher(const klogg::vector<RegularExpressionPattern>& patterns, HsMultiMatcher&& hsMatcher);
+
+    MatchedPatterns match( const std::string_view& utf8Data ) const;
+  
+  private:
+    klogg::vector<RegularExpressionPattern> patterns_;
+    HsMultiMatcher hsMatcher_;
+};
+
 using MatcherVariant
-    = std::variant<DefaultRegularExpressionMatcher, HsNoopMatcher, HsSingleMatcher, HsMultiMatcher>;
+    = std::variant<DefaultRegularExpressionMatcher, HsNoopMatcher, HsSingleMatcher, HsMultiMatcher, HsPrefilterMatcher>;
+
 
 class HsRegularExpression {
   public:
@@ -159,6 +171,8 @@ class HsRegularExpression {
 
     bool isValid_ = true;
     QString errorMessage_;
+
+    bool isPrefilter_ = false;
 };
 #else
 

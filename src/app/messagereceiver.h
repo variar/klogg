@@ -20,9 +20,7 @@
 #ifndef MESSAGERECEIVER_H
 #define MESSAGERECEIVER_H
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 12, 0 )
 #include <QtCore/QCborValue>
-#endif
 
 #include <QtCore/QJsonDocument>
 #include <QtCore/QObject>
@@ -51,12 +49,7 @@ class MessageReceiver final : public QObject {
   public Q_SLOTS:
     void receiveMessage( const QByteArray& message )
     {
-      
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 12, 0 )
         const auto data = QCborValue::fromCbor( message ).toVariant().toMap();
-#else
-        const auto data = QJsonDocument::fromBinaryData( message ).toVariant().toMap();
-#endif
 
         LOG_INFO << "Message " << QJsonDocument::fromVariant(data).toJson();
 

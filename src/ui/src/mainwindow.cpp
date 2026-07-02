@@ -181,12 +181,6 @@ MainWindow::MainWindow( WindowSession session )
     signalMux_.connect( SIGNAL( loadingFinished( LoadingStatus ) ), this,
                         SLOT( handleLoadingFinished( LoadingStatus ) ) );
 
-    // Register for checkbox changes
-    signalMux_.connect( SIGNAL( searchRefreshChanged( bool ) ), this,
-                        SLOT( handleSearchRefreshChanged( bool ) ) );
-    signalMux_.connect( SIGNAL( matchCaseChanged( bool ) ), this,
-                        SLOT( handleMatchCaseChanged( bool ) ) );
-
     signalMux_.connect( SIGNAL( filteredViewChanged() ), this,
                         SLOT( handleFilteredViewChanged() ) );
 
@@ -695,6 +689,15 @@ void MainWindow::updateShortcuts()
                                               crawler->focusSearchEdit();
                                           }
                                       } );
+    ShortcutAction::registerShortcut( shortcuts, shortcuts_, this, Qt::WindowShortcut,
+                                      ShortcutAction::MainWindowFullScreen,
+                                      [ this ] { this->showFullScreen(); } );
+    ShortcutAction::registerShortcut( shortcuts, shortcuts_, this, Qt::WindowShortcut,
+                                      ShortcutAction::MainWindowMax,
+                                      [ this ] { this->showMaximized(); } );
+    ShortcutAction::registerShortcut( shortcuts, shortcuts_, this, Qt::WindowShortcut,
+                                      ShortcutAction::MainWindowMin,
+                                      [ this ] { this->showMinimized(); } );
 
     auto setShortcuts = [ &shortcuts ]( auto* action, const auto& actionName ) {
         action->setShortcuts( ShortcutAction::shortcutKeys( actionName, shortcuts ) );
@@ -721,6 +724,7 @@ void MainWindow::updateShortcuts()
     setShortcuts( showScratchPadAction, ShortcutAction::MainWindowScratchpad );
     setShortcuts( selectOpenFileAction, ShortcutAction::MainWindowSelectOpenFile );
     setShortcuts( goToLineAction, ShortcutAction::LogViewJumpToLine );
+    setShortcuts( optionsAction, ShortcutAction::MainWindowPreference );
 }
 
 void MainWindow::loadIcons()
@@ -1098,8 +1102,10 @@ void MainWindow::find()
 void MainWindow::clearLog()
 {
     const auto current_file = session_.getFilename( currentCrawlerWidget() );
-    if ( QMessageBox::question( this, tr( "klogg - clear file" ),
-                                tr( "Clear file %1?" ).arg( current_file ) )
+    if ( QMessageBox::warning(
+             this, tr( "klogg - clear file" ),
+             tr( "Clear file %1? File content will be removed from disk, this is irreversible" )
+                 .arg( current_file ) )
          == QMessageBox::Yes ) {
         QFile::resize( current_file, 0 );
     }
@@ -1276,7 +1282,7 @@ void MainWindow::encodingChanged( QAction* action )
         mib = mibData.toInt();
     }
 
-    LOG_DEBUG << "encodingChanged, encoding " << mib;
+    LOG_DEBUG << "encodingChanged, encoding " << mib.value_or( 0 );
     if ( auto crawler = currentCrawlerWidget() ) {
         crawler->setEncoding( mib );
         updateInfoLine();
@@ -1418,20 +1424,6 @@ void MainWindow::handleLoadingFinished( LoadingStatus status )
     }
 
     // mainTabWidget_.setEnabled( true );
-}
-
-void MainWindow::handleSearchRefreshChanged( bool isRefreshing )
-{
-    auto& config = Configuration::get();
-    config.setSearchAutoRefreshDefault( isRefreshing );
-    config.save();
-}
-
-void MainWindow::handleMatchCaseChanged( bool matchCase )
-{
-    auto& config = Configuration::get();
-    config.setSearchIgnoreCaseDefault( !matchCase );
-    config.save();
 }
 
 void MainWindow::handleFilteredViewChanged()
@@ -1610,9 +1602,9 @@ void MainWindow::dragEnterEvent( QDragEnterEvent* event )
 // Tries and loads the file if the URL dropped is local
 void MainWindow::dropEvent( QDropEvent* event )
 {
-    QList<QUrl> urls = event->mimeData()->urls();
+    const QList<QUrl> urls = event->mimeData()->urls();
 
-    for ( const auto& url : qAsConst( urls ) ) {
+    for ( const auto& url : urls ) {
         auto fileName = url.toLocalFile();
         if ( fileName.isEmpty() )
             continue;
@@ -1752,7 +1744,7 @@ bool MainWindow::loadFile( const QString& fileName, bool followFile )
             const auto previousViewContext = [ &fileName ]() {
                 const auto& session = SessionInfo::getSynced();
                 const auto& windows = session.windows();
-                for ( const auto& windowId : qAsConst( windows ) ) {
+                for ( const auto& windowId : windows ) {
                     const auto openedFiles = session.openFiles( windowId );
                     const auto existingContext
                         = std::find_if( openedFiles.begin(), openedFiles.end(),

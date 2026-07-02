@@ -47,10 +47,13 @@
 #include <cassert>
 #include <cmath>
 #include <complex>
+#include <cstdint>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <numeric>
 #include <optional>
+#include <qchar.h>
 #include <qcolor.h>
 #include <qscreen.h>
 #include <utility>
@@ -70,17 +73,14 @@
 #include <QRect>
 #include <QScrollBar>
 #include <QShortcut>
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
 #include <QStringView>
-#else
-#include <QStringRef>
-#endif
 #include <QtCore>
 
 #include <tbb/flow_graph.h>
 
 #include "abstractlogview.h"
 #include "containers.h"
+#include "highlightedmatch.h"
 #include "linetypes.h"
 
 #include "active_screen.h"
@@ -176,14 +176,9 @@ int countDigits( uint64_t x )
 
 int textWidth( const QFontMetrics& fm, const QString& text )
 {
-#if ( QT_VERSION >= QT_VERSION_CHECK( 5, 11, 0 ) )
     return fm.horizontalAdvance( text );
-#else
-    return fm.width( text );
-#endif
 }
 
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
 int textWidth( const QFontMetrics& fm, const QStringView& text )
 {
     if ( text.isEmpty() ) {
@@ -191,15 +186,6 @@ int textWidth( const QFontMetrics& fm, const QStringView& text )
     }
     return textWidth( fm, QString::fromRawData( text.data(), klogg::isize( text ) ) );
 }
-#else
-int textWidth( const QFontMetrics& fm, const QStringRef& text )
-{
-    if ( text.isEmpty() ) {
-        return 0;
-    }
-    return textWidth( fm, QString::fromRawData( text.data(), klogg::isize( text ) ) );
-}
-#endif
 
 std::unique_ptr<QPainter> pixmapPainter( QPaintDevice* paintDevice, const QFont& font )
 {
@@ -220,97 +206,8 @@ QFontMetrics pixmapFontMetrics( const QFont& font )
     return devicePainter->fontMetrics();
 }
 
-class WrappedLinesView {
-  public:
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
-    using WrappedString = QStringView;
-#else
-    using WrappedString = QStringRef;
-#endif
-
-    explicit WrappedLinesView( const QString& longLine, LineLength visibleColumns )
-    {
-        if ( longLine.isEmpty() ) {
-            wrappedLines_.push_back( WrappedString{} );
-        }
-        else {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
-            WrappedString lineToWrap( longLine );
-#else
-            WrappedString lineToWrap( &longLine );
-#endif
-            while ( lineToWrap.size() > visibleColumns.get() ) {
-                wrappedLines_.push_back( lineToWrap.left( visibleColumns.get() ) );
-                lineToWrap = lineToWrap.mid( visibleColumns.get() );
-            }
-            if ( lineToWrap.size() > 0 ) {
-                wrappedLines_.push_back( lineToWrap );
-            }
-        }
-    }
-
-    size_t wrappedLinesCount() const
-    {
-        return wrappedLines_.size();
-    }
-
-    klogg::vector<WrappedString> mid( LineColumn start, LineLength length ) const
-    {
-        auto getLength = []( const auto& view ) -> LineLength::UnderlyingType {
-            return type_safe::narrow_cast<LineLength::UnderlyingType>( view.size() );
-        };
-
-        klogg::vector<WrappedString> resultChunks;
-        if ( wrappedLines_.size() == 1 ) {
-            auto& wrappedLine = wrappedLines_.front();
-            auto len = std::min( length.get(), getLength( wrappedLine ) - start.get() );
-            resultChunks.push_back( wrappedLine.mid( start.get(), ( len > 0 ? len : 0 ) ) );
-            return resultChunks;
-        }
-
-        size_t wrappedLineIndex = 0;
-        auto positionInWrappedLine = start.get();
-        while ( positionInWrappedLine > getLength( wrappedLines_[ wrappedLineIndex ] ) ) {
-            positionInWrappedLine -= getLength( wrappedLines_[ wrappedLineIndex ] );
-            wrappedLineIndex++;
-            if ( wrappedLineIndex >= wrappedLines_.size() ) {
-                return resultChunks;
-            }
-        }
-
-        auto chunkLength = length.get();
-        while ( positionInWrappedLine + chunkLength
-                > getLength( wrappedLines_[ wrappedLineIndex ] ) ) {
-            resultChunks.push_back(
-                wrappedLines_[ wrappedLineIndex ].mid( positionInWrappedLine ) );
-            wrappedLineIndex++;
-            positionInWrappedLine = 0;
-            chunkLength -= getLength( resultChunks.back() );
-            if ( wrappedLineIndex >= wrappedLines_.size() ) {
-                return resultChunks;
-            }
-        }
-
-        if ( chunkLength > 0 ) {
-            auto& wrappedLine = wrappedLines_[ wrappedLineIndex ];
-            auto len = std::min( chunkLength, getLength( wrappedLine ) - positionInWrappedLine );
-            resultChunks.push_back(
-                wrappedLine.mid( positionInWrappedLine, ( len > 0 ? len : 0 ) ) );
-        }
-
-        return resultChunks;
-    }
-
-    bool isEmpty() const
-    {
-        return wrappedLines_.empty() || wrappedLines_.front().isEmpty();
-    }
-
-    klogg::vector<WrappedString> wrappedLines_;
-};
-
 class LineChunk {
-  public:
+public:
     LineChunk( LineColumn firstCol, LineColumn endCol, QColor foreColor, QColor backColor )
         : start_{ firstCol }
         , end_{ endCol }
@@ -344,7 +241,7 @@ class LineChunk {
         return backColor_;
     }
 
-  private:
+private:
     LineColumn start_ = {};
     LineColumn end_ = {};
 
@@ -356,7 +253,7 @@ class LineChunk {
 // It stores the chunks of line to draw
 // each chunk having a different colour
 class LineDrawer {
-  public:
+public:
     explicit LineDrawer( const QColor& backColor )
         : backColor_( backColor )
     {
@@ -379,6 +276,16 @@ class LineDrawer {
         // LOG_INFO << "added Chunk of  " << length;
     }
 
+    LineColumn endColumn() const
+    {
+        return chunks_.empty() ? 0_lcol : chunks_.back().end();
+    }
+
+    bool empty() const
+    {
+        return chunks_.empty();
+    }
+
     // Draw the current line of text using the given painter,
     // in the passed block (in pixels)
     // The line must be cut to fit on the screen.
@@ -386,7 +293,7 @@ class LineDrawer {
     // the coloured // background, going all the way to the element
     // left of the line looks better.
     void draw( QPainter* painter, int initialXPos, int initialYPos, int lineWidth,
-               const WrappedLinesView& wrappedLines, int leftExtraBackgroundPx )
+               const WrappedString& wrappedLines, int leftExtraBackgroundPx )
     {
         QFontMetrics fm = painter->fontMetrics();
         const int fontHeight = fm.height();
@@ -441,7 +348,7 @@ class LineDrawer {
             painter->fillRect( xPos, yPos, blankWidth, fontHeight, backColor_ );
     }
 
-  private:
+private:
     klogg::vector<LineChunk> chunks_;
     QColor backColor_;
 };
@@ -536,9 +443,11 @@ AbstractLogView::~AbstractLogView()
     try {
         if ( quickFind_ ) {
             quickFind_->stopSearch();
+            delete quickFind_;
         }
     } catch ( const std::exception& e ) {
         LOG_ERROR << "Failed to stop search: " << e.what();
+        delete quickFind_;
     }
 }
 
@@ -1047,10 +956,7 @@ void AbstractLogView::wheelEvent( QWheelEvent* wheelEvent )
                 followElasticHook_.hold();
             }
             else if ( wheelEvent->phase() == Qt::ScrollEnd
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 12, 0 )
-                      || wheelEvent->phase() == Qt::ScrollMomentum
-#endif
-            ) {
+                      || wheelEvent->phase() == Qt::ScrollMomentum ) {
                 followElasticHook_.release();
             }
 
@@ -1853,8 +1759,8 @@ OptionalLineNumber AbstractLogView::convertCoordToLine( int yPos ) const
 {
     const auto offset = std::abs( ( yPos - drawingTopOffset_ ) / charHeight_ );
     const auto wrappedLineInfoIndex = static_cast<size_t>( std::floor( offset ) );
-    if ( wrappedLineInfoIndex < wrappedLinesNumbers_.size() && !wrappedLinesNumbers_.empty() ) {
-        return wrappedLinesNumbers_[ wrappedLineInfoIndex ].first;
+    if ( wrappedLineInfoIndex < wrappedLinesInfo_.size() && !wrappedLinesInfo_.empty() ) {
+        return wrappedLinesInfo_[ wrappedLineInfoIndex ].lineNumber;
     }
     else {
         return OptionalLineNumber{};
@@ -1867,48 +1773,47 @@ FilePosition AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
 {
     const auto offset = std::abs( ( pos.y() - drawingTopOffset_ ) / charHeight_ );
 
-    if ( wrappedLinesNumbers_.empty() ) {
+    if ( wrappedLinesInfo_.empty() ) {
         return FilePosition{ 0_lnum, 0_lcol };
     }
 
-    const auto wrappedLineInfoIndex
-        = wrappedLinesNumbers_.size() > 1
-              ? std::clamp( static_cast<size_t>( std::floor( offset ) ), size_t{ 0 },
-                            wrappedLinesNumbers_.size() - 1 )
-              : 0;
+    const auto wrappedLineInfoIndex = wrappedLinesInfo_.size() > 1
+                                          ? std::clamp( static_cast<size_t>( std::floor( offset ) ),
+                                                        size_t{ 0 }, wrappedLinesInfo_.size() - 1 )
+                                          : 0;
 
-    auto [ line, wrappedLine ] = wrappedLinesNumbers_[ wrappedLineInfoIndex ];
-    if ( line >= logData_->getNbLine() )
-        line = LineNumber( logData_->getNbLine().get() ) - 1_lcount;
+    const auto [ lineIndex, wrappedLineIndex, wrappedString ]
+        = wrappedLinesInfo_[ wrappedLineInfoIndex ];
 
-    const auto lineText = logData_->getExpandedLineString( line );
+    auto clampedLineIndex = lineIndex;
+    if ( clampedLineIndex >= logData_->getNbLine() ) {
+        clampedLineIndex = LineNumber( logData_->getNbLine().get() ) - 1_lcount;
+    }
+
+    const WrappedString::WrappedStringPart lineText = wrappedString.unwrappedLine();
+
     if ( lineText.size() <= 1 ) {
-        return FilePosition{ line, 0_lcol };
+        return FilePosition{ clampedLineIndex, 0_lcol };
     }
 
-    WrappedLinesView::WrappedString visibleText;
-    if ( useTextWrap_ ) {
-        WrappedLinesView wrapped{ lineText, getNbVisibleCols() };
-        visibleText = wrapped.wrappedLines_[ wrappedLine ];
-    }
-    else {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
-        visibleText = QStringView( lineText ).mid( firstCol_.get(), getNbVisibleCols().get() );
-#else
-        visibleText = QStringRef( &lineText ).mid( firstCol_.get(), getNbVisibleCols().get() );
-#endif
-    }
+    const WrappedString::WrappedStringPart visibleText
+        = useTextWrap_ ? wrappedString.wrappedLine( wrappedLineIndex )
+                       : lineText.mid( firstCol_.get(), getNbVisibleCols().get() );
 
     klogg::vector<LineColumn> possibleColumns( static_cast<size_t>( visibleText.size() ) );
+    klogg::vector<int> columnsWidth( static_cast<size_t>( visibleText.size() ), -1 );
     std::iota( possibleColumns.begin(), possibleColumns.end(), 0_lcol );
 
     const auto columnIt = std::lower_bound(
         possibleColumns.cbegin(), possibleColumns.cend(), pos,
-        [ this, &visibleText ]( LineColumn c, const QPoint& p ) {
-            const auto width
-                = textWidth( pixmapFontMetrics_, visibleText.left( c.get() ) ) + leftMarginPx_;
+        [ this, &visibleText, &columnsWidth ]( LineColumn c, const QPoint& p ) {
+            const size_t columnIndex = static_cast<size_t>( c.get() );
+            if ( columnsWidth[ columnIndex ] == -1 ) {
+                columnsWidth[ columnIndex ]
+                    = textWidth( pixmapFontMetrics_, visibleText.left( c.get() ) ) + leftMarginPx_;
+            }
 
-            return width < p.x();
+            return columnsWidth[ columnIndex ] < p.x();
         } );
 
     const auto length
@@ -1916,16 +1821,26 @@ FilePosition AbstractLogView::convertCoordToFilePos( const QPoint& pos ) const
 
     auto column = ( columnIt != possibleColumns.end() ? *columnIt : length ) - 1_length;
     if ( useTextWrap_ ) {
-        column += LineLength{ getNbVisibleCols().get() * static_cast<int>( wrappedLine ) };
+        for ( auto i = 0u; i < wrappedLineIndex; ++i ) {
+            column += LineLength{ type_safe::narrow_cast<LineLength::UnderlyingType>(
+                wrappedString.wrappedLine( i ).size() ) };
+        }
     }
     else {
         column += LineLength{ firstCol_.get() };
     }
 
-    column = std::clamp( column, 0_lcol, LineColumn( lineText.size() ) - 1_length );
+    const auto maxColumn
+        = LineColumn( type_safe::narrow_cast<LineColumn::UnderlyingType>( std::min(
+              lineText.size(), static_cast<decltype( lineText.size() )>(
+                                   std::numeric_limits<LineColumn::UnderlyingType>::max() ) ) ) )
+          - 1_length;
 
-    LOG_DEBUG << "AbstractLogView::convertCoordToFilePos col=" << column << " line=" << line;
-    return FilePosition{ line, column };
+    column = std::clamp( column, 0_lcol, maxColumn );
+
+    LOG_DEBUG << "AbstractLogView::convertCoordToFilePos col=" << column
+              << " line=" << clampedLineIndex;
+    return FilePosition{ clampedLineIndex, column };
 }
 
 // Makes the widget adjust itself to display the passed line.
@@ -2028,13 +1943,8 @@ void AbstractLogView::jumpToTop()
 // Jump to the last line
 void AbstractLogView::jumpToBottom()
 {
-    const auto newTopLine
-        = ( logData_->getNbLine().get() < getNbVisibleLines().get() )
-              ? 0
-              : logData_->getNbLine().get() - getNbBottomWrappedVisibleLines().get() + 1;
-
     // This will also trigger a scrollContents event
-    verticalScrollBar()->setValue( lineNumberToVerticalScroll( LineNumber( newTopLine ) ) );
+    verticalScrollBar()->setValue( verticalScrollBar()->maximum() );
 
     forceRefresh();
 }
@@ -2215,7 +2125,7 @@ void AbstractLogView::considerMouseHovering( int xPos, int yPos )
         // Mouse moved in the margin, send event up
         // (possibly to highlight the overview)
         if ( line != lastHoveredLine_ ) {
-            LOG_DEBUG << "Mouse moved in margin line: " << line;
+            LOG_DEBUG << "Mouse moved in margin line: " << *line;
             Q_EMIT mouseHoveredOverLine( *line );
             lastHoveredLine_ = line;
         }
@@ -2230,49 +2140,60 @@ void AbstractLogView::considerMouseHovering( int xPos, int yPos )
 
 LinesCount AbstractLogView::getNbBottomWrappedVisibleLines() const
 {
-    const auto visibleLines = getNbVisibleLines();
-
+    const LinesCount visibleLines = getNbVisibleLines();
+    const LineLength visibleColumns = getNbVisibleCols();
     if ( useTextWrap_ ) {
         const auto totalLines = logData_->getNbLine();
-
-        LinesCount wrappedLinesCount{ 0 };
-        LinesCount offset = 0_lcount;
-        for ( ; offset < visibleLines && offset < totalLines && wrappedLinesCount < visibleLines;
-              ++offset ) {
-            LineNumber line = LineNumber{ totalLines.get() } - offset;
-            wrappedLinesCount += LinesCount{ static_cast<LinesCount::UnderlyingType>(
-                logData_->getLineLength( line ).get() / getNbVisibleCols().get() + 1 ) };
+        LinesCount wrappedVisibleLines;
+        LinesCount unwrappedLines;
+        LineNumber unwrappedLineNumber{ logData_->getNbLine().get() - 1 };
+        while ( unwrappedLines < totalLines && unwrappedLines < visibleLines ) {
+            QString expandedLine = logData_->getExpandedLineString( unwrappedLineNumber );
+            WrappedString wrapped{ expandedLine, visibleColumns };
+            wrappedVisibleLines += LinesCount(
+                type_safe::narrow_cast<LinesCount::UnderlyingType>( wrapped.wrappedLinesCount() ) );
+            unwrappedLines++;
+            unwrappedLineNumber--;
         }
 
-        return offset;
+        LOG_INFO << "Bottom visible lines " << visibleLines.get() << " wrapped "
+                 << wrappedVisibleLines.get();
+        return wrappedVisibleLines;
     }
-    return visibleLines;
+    else {
+        return visibleLines;
+    }
 }
 
 void AbstractLogView::updateScrollBars()
 {
-    if ( logData_->getNbLine() < getNbVisibleLines() ) {
+    const LinesCount visibleLines = getNbVisibleLines();
+    const LineLength visibleColumns = getNbVisibleCols();
+    if ( logData_->getNbLine() < visibleLines ) {
         verticalScrollBar()->setRange( 0, 0 );
     }
     else {
         const auto visibleWrappedLines = getNbBottomWrappedVisibleLines();
-        const auto wrappedLinesScrollAdjust = ( getNbVisibleLines() - visibleWrappedLines ).get();
+        const auto wrappedLinesScrollAdjust = ( visibleWrappedLines - visibleLines ).get();
 
         verticalScrollBar()->setRange(
-            0, static_cast<int>( std::min( logData_->getNbLine().get() - getNbVisibleLines().get()
+            0, static_cast<int>( std::min( logData_->getNbLine().get() - visibleLines.get()
                                                + LinesCount::UnderlyingType{ 1 }
                                                + wrappedLinesScrollAdjust,
                                            maxValue<LinesCount>().get() ) ) );
     }
 
     int64_t hScrollMaxValue = 0;
-    if ( !useTextWrap_ && logData_->getMaxLength().get() >= getNbVisibleCols().get() ) {
-        hScrollMaxValue = logData_->getMaxLength().get() - getNbVisibleCols().get() + 1;
+    if ( !useTextWrap_ && logData_->getMaxLength().get() >= visibleColumns.get() ) {
+        hScrollMaxValue = logData_->getMaxLength().get() - visibleColumns.get() + 1;
     }
+
+    hScrollMaxValue
+        = std::min( hScrollMaxValue, static_cast<int64_t>( std::numeric_limits<int>::max() ) );
 
     horizontalScrollBar()->setRange( 0, type_safe::narrow_cast<int>( hScrollMaxValue ) );
     horizontalScrollBar()->setPageStep(
-        type_safe::narrow_cast<int>( getNbVisibleCols().get() * 7 / 8 ) );
+        type_safe::narrow_cast<int>( visibleColumns.get() * 7 / 8 ) );
 }
 
 void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
@@ -2295,7 +2216,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
         = static_cast<int>( std::floor( paintDevice->width() / viewport()->devicePixelRatio() ) );
 
     const QPalette& palette = viewport()->palette();
-    const auto& highlighterSet = HighlighterSetCollection::get().currentActiveSet();
+    const HighlighterSet& highlighterSet = HighlighterSetCollection::get().currentActiveSet();
     const auto& quickHighlighters = HighlighterSetCollection::get().quickHighlighters();
     QColor foreColor, backColor;
 
@@ -2383,7 +2304,7 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
     }();
 
     // Lines to write
-    const auto expandedLines = logData_->getExpandedLines( firstLine_, nbLines );
+    const auto logLines = logData_->getLines( firstLine_, nbLines );
 
     const auto highlightPatternMatches = Configuration::get().mainSearchHighlight();
     const auto variateHighlightPatternMatches = Configuration::get().variateMainSearchHighlight();
@@ -2425,14 +2346,15 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
 
     // Position in pixel of the base line of the line to print
     int yPos = 0;
-    wrappedLinesNumbers_.clear();
+    wrappedLinesInfo_.clear();
+    klogg::vector<std::pair<QColor, QColor>> highlightColors;
     for ( auto currentLine = 0_lcount; currentLine < nbLines; ++currentLine ) {
         const auto lineNumber = firstLine_ + currentLine;
-        const QString logLine = logData_->getLineString( lineNumber );
+        QString logLine = logLines[ currentLine.get() ];
 
         const int xPos = contentStartPosX + ContentMarginWidth;
 
-        klogg::vector<HighlightedMatch> highlighterMatches;
+        HighlightedMatchRanges highlighterMatches;
 
         if ( selection_.isLineSelected( lineNumber ) && !selection_.isSingleLine() ) {
             // Reverse the selected line
@@ -2441,50 +2363,40 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             painter->setPen( palette.color( QPalette::Text ) );
         }
         else {
-            const auto highlightType = highlighterSet.matchLine( logLine, highlighterMatches );
+            foreColor = palette.color( QPalette::Text );
+            backColor = palette.color( QPalette::Base );
 
-            if ( highlightType == HighlighterMatchType::LineMatch ) {
-                // color applies to whole line
-                foreColor = highlighterMatches.front().foreColor();
-                backColor = highlighterMatches.front().backColor();
+            if ( lineNumber < searchStartIndex || lineNumber >= searchEndIndex ) {
+                foreColor = palette.brush( QPalette::Disabled, QPalette::Text ).color();
             }
             else {
-                // Use the default colors
-                if ( lineNumber < searchStartIndex || lineNumber >= searchEndIndex ) {
-                    foreColor = palette.brush( QPalette::Disabled, QPalette::Text ).color();
+                const auto highlightType = highlighterSet.matchLine( logLine, highlighterMatches );
+
+                if ( highlightType == HighlighterMatchType::LineMatch ) {
+                    // color applies to whole line
+                    foreColor = highlighterMatches.front().foreColor();
+                    backColor = highlighterMatches.front().backColor();
                 }
-                else {
-                    foreColor = palette.color( QPalette::Text );
+
+                if ( patternHighlight ) {
+                    klogg::vector<HighlightedMatch> patternMatches;
+                    patternHighlight->matchLine( logLine, patternMatches );
+                    highlighterMatches.addMatches( patternMatches );
                 }
 
-                backColor = palette.color( QPalette::Base );
-            }
-
-            if ( patternHighlight ) {
-                klogg::vector<HighlightedMatch> patternMatches;
-                patternHighlight->matchLine( logLine, patternMatches );
-                highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
-                                           patternMatches.end() );
-            }
-
-            highlighterMatches.reserve( additionalHighlighters.size() );
-            for ( const auto& highlighter : additionalHighlighters ) {
-                klogg::vector<HighlightedMatch> patternMatches;
-                highlighter.matchLine( logLine, patternMatches );
-                highlighterMatches.insert( highlighterMatches.end(), patternMatches.begin(),
-                                           patternMatches.end() );
+                // highlighterMatches.reserve( additionalHighlighters.size() );
+                for ( const auto& highlighter : additionalHighlighters ) {
+                    klogg::vector<HighlightedMatch> patternMatches;
+                    highlighter.matchLine( logLine, patternMatches );
+                    highlighterMatches.addMatches( patternMatches );
+                }
             }
         }
 
         const auto untabifyHighlight = [ &logLine ]( const auto& match ) {
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
             const auto prefix = QStringView{ logLine }.left( match.startColumn().get() );
             const auto matchPart
                 = QStringView{ logLine }.mid( match.startColumn().get(), match.size().get() );
-#else
-            const auto prefix = logLine.leftRef( match.startColumn().get() );
-            const auto matchPart = logLine.midRef( match.startColumn().get(), match.size().get() );
-#endif
             const auto expandedPrefixLength = untabify( prefix.toString() ).size();
             const LineLength startDelta
                 = LineLength{ type_safe::narrow_cast<LineLength::UnderlyingType>(
@@ -2506,32 +2418,32 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                                      match.foreColor(), match.backColor() };
         };
 
-        klogg::vector<HighlightedMatch> allHighlights;
-        allHighlights.reserve( highlighterMatches.size() );
-        std::transform( highlighterMatches.cbegin(), highlighterMatches.cend(),
-                        std::back_inserter( allHighlights ), untabifyHighlight );
+        klogg::vector<HighlightedMatch> sortedHighlights = highlighterMatches.matches();
+        std::transform( sortedHighlights.begin(), sortedHighlights.end(), sortedHighlights.begin(),
+                        untabifyHighlight );
+
+        HighlightedMatchRanges allHighlights{ std::move( sortedHighlights ) };
 
         // string to print, cut to fit the length and position of the view
-        const QString& expandedLine = expandedLines[ currentLine.get() ];
+        const QString& expandedLine = untabify( std::move( logLine ) );
 
         // Has the line got elements to be highlighted
         klogg::vector<HighlightedMatch> quickFindMatches;
         quickFindPattern_->matchLine( expandedLine, quickFindMatches );
-        allHighlights.insert( allHighlights.end(),
-                              std::make_move_iterator( quickFindMatches.begin() ),
-                              std::make_move_iterator( quickFindMatches.end() ) );
+        allHighlights.addMatches( quickFindMatches );
 
         // Is there something selected in the line?
         const auto selectionPortion = selection_.getPortionForLine( lineNumber );
         if ( selectionPortion.isValid() ) {
-            allHighlights.emplace_back( selectionPortion.startColumn(), selectionPortion.size(),
-                                        palette.color( QPalette::HighlightedText ),
-                                        palette.color( QPalette::Highlight ) );
+            allHighlights.addMatch( HighlightedMatch{ selectionPortion.startColumn(),
+                                                      selectionPortion.size(),
+                                                      palette.color( QPalette::HighlightedText ),
+                                                      palette.color( QPalette::Highlight ) } );
         }
 
         const auto wrappedLineLength
             = useTextWrap_ ? nbVisibleCols : LineLength{ klogg::isize( expandedLine ) + 1 };
-        const WrappedLinesView wrappedLineView{ expandedLine, wrappedLineLength };
+        const WrappedString wrappedLineView{ expandedLine, wrappedLineLength };
         const auto finalLineHeight
             = fontHeight * static_cast<int>( wrappedLineView.wrappedLinesCount() );
         // LOG_INFO << "Draw line " << lineNumber << ": " << expandedLine;
@@ -2540,64 +2452,46 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
                            backColor );
 
         LineDrawer lineDrawer( backColor );
-        if ( !allHighlights.empty() && !expandedLine.isEmpty() ) {
-            auto highlightColors = klogg::vector<std::pair<QColor, QColor>>(
-                static_cast<size_t>( expandedLine.size() ),
-                std::make_pair( foreColor, backColor ) );
+        const auto firstVisibleColumn = std::clamp( useTextWrap_ ? 0_lcol : firstCol_, 0_lcol,
+                                                    LineColumn{ klogg::isize( expandedLine ) } );
+        const auto lastVisibleColumn
+            = useTextWrap_ ? LineColumn{ klogg::isize( expandedLine ) } : firstCol_ + nbVisibleCols;
+        allHighlights.clamp( firstVisibleColumn, lastVisibleColumn );
 
-            for ( const auto& match : allHighlights ) {
-                auto matchEnd = match.startColumn() + match.size();
+        if ( !allHighlights.empty() && !expandedLine.isEmpty() ) {
+            // first part without highlight
+            if ( allHighlights.front().startColumn() > firstVisibleColumn ) {
+                lineDrawer.addChunk( firstVisibleColumn,
+                                     allHighlights.front().startColumn() - 1_length, foreColor,
+                                     backColor );
+            }
+
+            for ( const auto& match : allHighlights.matches() ) {
+                const auto matchStart = match.startColumn();
+
+                // a part between two highlight regions
+                if ( !lineDrawer.empty() && matchStart - lineDrawer.endColumn() > 1_length ) {
+                    lineDrawer.addChunk( lineDrawer.endColumn() + 1_length, matchStart - 1_length,
+                                         foreColor, backColor );
+                }
+
+                const auto matchEnd = match.endColumn();
                 auto matchLengthInString = match.size();
                 if ( matchEnd >= LineColumn{ expandedLine.size() } ) {
                     matchLengthInString
                         = LineLength{ klogg::isize( expandedLine ) - match.startColumn().get() };
                 }
                 if ( matchLengthInString > 0_length ) {
-                    std::fill_n( highlightColors.begin() + match.startColumn().get(),
-                                 matchLengthInString.get(),
-                                 std::make_pair( match.foreColor(), match.backColor() ) );
+                    lineDrawer.addChunk( match.startColumn(), matchEnd, match.foreColor(),
+                                         match.backColor() );
                 }
             }
 
-            klogg::vector<LineColumn> columnIndexes( highlightColors.size() );
-            std::iota( columnIndexes.begin(), columnIndexes.end(), 0_lcol );
-
-            auto columnIndexIt = columnIndexes.begin();
-
-            const auto firstVisibleColumn
-                = std::clamp( useTextWrap_ ? 0_lcol : firstCol_, 0_lcol,
-                              LineColumn{ klogg::isize( expandedLine ) } );
-            std::advance( columnIndexIt, firstVisibleColumn.get() );
-            while ( columnIndexIt != columnIndexes.end() ) {
-                auto highlightDiffColumnIt = std::adjacent_find(
-                    columnIndexIt, columnIndexes.end(),
-                    [ &highlightColors ]( LineColumn lhsColumn, LineColumn rhsColumn ) {
-                        return highlightColors[ lhsColumn.get<size_t>() ]
-                               != highlightColors[ rhsColumn.get<size_t>() ];
-                    } );
-
-                if ( highlightDiffColumnIt != columnIndexes.end() ) {
-                    auto highlightChunkStart = *columnIndexIt;
-                    auto highlightChunkEnd = *highlightDiffColumnIt;
-                    lineDrawer.addChunk(
-                        highlightChunkStart, highlightChunkEnd,
-                        highlightColors[ highlightChunkStart.get<size_t>() ].first,
-                        highlightColors[ highlightChunkStart.get<size_t>() ].second );
-
-                    columnIndexIt = highlightDiffColumnIt + 1;
-                }
-                else {
-                    break;
-                }
-            }
-            if ( columnIndexIt != columnIndexes.end() && !columnIndexes.empty() ) {
-                const auto lastHighlightChunkStart = *columnIndexIt;
-                const auto lastHighlightChunkEnd = *columnIndexes.rbegin();
-                if ( lastHighlightChunkEnd >= lastHighlightChunkStart ) {
-                    lineDrawer.addChunk( lastHighlightChunkStart, lastHighlightChunkEnd,
-                                         highlightColors.back().first,
-                                         highlightColors.back().second );
-                }
+            // last part without highlight
+            const auto lastHighlightColumn = allHighlights.back().endColumn();
+            if ( lastHighlightColumn < lastVisibleColumn ) {
+                lineDrawer.addChunk( lastHighlightColumn + 1_length, lastVisibleColumn, foreColor,
+                                     backColor );
             }
         }
         else {
@@ -2668,8 +2562,8 @@ void AbstractLogView::drawTextArea( QPaintDevice* paintDevice )
             painter->drawText( lineNumberAreaStartX + LineNumberPadding, yPos + fontAscent,
                                lineNumberStr );
         }
-        for ( auto i = 0u; i < wrappedLineView.wrappedLinesCount(); ++i ) {
-            wrappedLinesNumbers_.push_back( std::make_pair( lineNumber, i ) );
+        for ( size_t i = 0u; i < wrappedLineView.wrappedLinesCount(); ++i ) {
+            wrappedLinesInfo_.emplace_back( WrappedLineData{ lineNumber, i, wrappedLineView } );
         }
 
         yPos += finalLineHeight;

@@ -28,7 +28,6 @@
 
 // by
 // https://github.com/KubaO/stackoverflown/blob/master/questions/metacall-21646467/main.cpp
-#if QT_VERSION >= QT_VERSION_CHECK( 5, 10, 0 )
 template <typename F>
 static void dispatchToObject( F&& fun, QObject* obj = qApp )
 {
@@ -42,49 +41,6 @@ static void dispatchToThread( F&& fun, QThread* thread = qApp->thread() )
     Q_ASSERT( obj );
     QMetaObject::invokeMethod( obj, std::forward<F>( fun ), Qt::QueuedConnection );
 }
-#else
-namespace detail {
-template <typename F>
-struct FEvent : public QEvent {
-    using Fun = typename std::decay<F>::type;
-
-    FEvent( Fun&& fun )
-        : QEvent( QEvent::None )
-        , fun_( std::move( fun ) )
-    {
-    }
-    FEvent( const Fun& fun )
-        : QEvent( QEvent::None )
-        , fun_( fun )
-    {
-    }
-    ~FEvent()
-    {
-        fun_();
-    }
-
-  private:
-    Fun fun_;
-};
-} // namespace detail
-
-template <typename F>
-static void dispatchToObject( F&& fun, QObject* obj = qApp )
-{
-    if ( qobject_cast<QThread*>( obj ) ) {
-        LOG_WARNING << "posting a call to a thread object - consider using postToThread";
-    }
-    QCoreApplication::postEvent( obj, new detail::FEvent<F>( std::forward<F>( fun ) ) );
-}
-
-template <typename F>
-static void dispatchToThread( F&& fun, QThread* thread = qApp->thread() )
-{
-    QObject* obj = QAbstractEventDispatcher::instance( thread );
-    Q_ASSERT( obj );
-    QCoreApplication::postEvent( obj, new detail::FEvent<F>( std::forward<F>( fun ) ) );
-}
-#endif
 
 template <typename F>
 static void dispatchToMainThread( F&& fun )

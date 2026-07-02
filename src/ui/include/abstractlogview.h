@@ -43,6 +43,7 @@
 #include <array>
 #include <cstddef>
 #include <functional>
+#include <qchar.h>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -65,6 +66,7 @@
 #include "regularexpressionpattern.h"
 #include "selection.h"
 #include "viewtools.h"
+#include "wrappedstring.h"
 
 class QMenu;
 class QAction;
@@ -367,7 +369,12 @@ class AbstractLogView : public QAbstractScrollArea, public SearchableWidgetInter
     bool useTextWrap_ = false;
     LineColumn firstCol_ = 0_lcol;
 
-    klogg::vector<std::pair<LineNumber, size_t>> wrappedLinesNumbers_;
+    struct WrappedLineData {
+      LineNumber lineNumber;
+      size_t wrappedLineIndex;
+      WrappedString wrappedString;
+    };
+    klogg::vector<WrappedLineData> wrappedLinesInfo_;
 
     LineNumber searchStart_;
     LineNumber searchEnd_;

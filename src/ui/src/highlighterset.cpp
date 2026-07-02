@@ -38,6 +38,7 @@
 
 // This file implements classes Highlighter and HighlighterSet
 
+#include <algorithm>
 #include <iterator>
 #include <qcolor.h>
 #include <qnamespace.h>
@@ -46,10 +47,15 @@
 
 #include <QSettings>
 
+#include <simdutf.h>
+
+#include "containers.h"
 #include "crc32.h"
 #include "highlightersetedit.h"
 #include "linetypes.h"
 #include "log.h"
+#include "regularexpression.h"
+#include "regularexpressionpattern.h"
 #include "uuid.h"
 
 #include "highlighterset.h"
@@ -168,20 +174,39 @@ std::pair<QColor, QColor> Highlighter::vairateColors( const QString& match ) con
     return std::make_pair( color_.foreColor.darker( factor ), color_.backColor.darker( factor ) );
 }
 
+RegularExpressionPattern Highlighter::expressionPattern() const
+{
+    RegularExpressionPattern result;
+    result.pattern
+        = useRegex_ ? regexp_.pattern() : QRegularExpression::escape( regexp_.pattern() );
+    result.isCaseSensitive = !ignoreCase();
+    result.isPrefilter = true;
+
+    return result;
+}
+
+void Highlighter::compile() const
+{
+    const auto pattern
+        = useRegex_ ? regexp_.pattern() : QRegularExpression::escape( regexp_.pattern() );
+
+    optimizedRegexp_ = QRegularExpression( pattern, regexp_.patternOptions() );
+    optimizedRegexp_->optimize();
+}
+
 bool Highlighter::matchLine( const QString& line, klogg::vector<HighlightedMatch>& matches ) const
 {
     matches.clear();
 
-    const auto pattern
-        = useRegex_ ? regexp_.pattern() : QRegularExpression::escape( regexp_.pattern() );
+    if ( !optimizedRegexp_ ) {
+        compile();
+    }
 
-    const auto matchingRegex = QRegularExpression( pattern, regexp_.patternOptions() );
-
-    QRegularExpressionMatchIterator matchIterator = matchingRegex.globalMatch( line );
+    QRegularExpressionMatchIterator matchIterator = optimizedRegexp_->globalMatch( line );
 
     while ( matchIterator.hasNext() ) {
         QRegularExpressionMatch match = matchIterator.next();
-        if ( matchingRegex.captureCount() > 0 ) {
+        if ( optimizedRegexp_->captureCount() > 0 ) {
             matches.reserve( static_cast<size_t>( match.lastCapturedIndex() ) );
             for ( int i = 1; i <= match.lastCapturedIndex(); ++i ) {
 
@@ -230,29 +255,60 @@ bool HighlighterSet::isEmpty() const
     return highlighterList_.isEmpty();
 }
 
-HighlighterMatchType HighlighterSet::matchLine( const QString& line,
-                                                klogg::vector<HighlightedMatch>& matches ) const
+void HighlighterSet::compile() const
 {
+    klogg::vector<RegularExpressionPattern> patterns(
+        static_cast<size_t>( highlighterList_.size() ) );
+    std::transform( highlighterList_.begin(), highlighterList_.end(), patterns.begin(),
+                    []( const Highlighter& hl ) { return hl.expressionPattern(); } );
+
+    compiledExpression_ = std::make_shared<MultiRegularExpression>( patterns );
+}
+
+HighlighterMatchType HighlighterSet::matchLine( const QString& line,
+                                                HighlightedMatchRanges& matches ) const
+{
+    if ( highlighterList_.empty() ) {
+        return HighlighterMatchType::NoMatch;
+    }
+
+    if ( !compiledExpression_ ) {
+        compile();
+    }
+
+    klogg::vector<char> utf8Data( static_cast<size_t>( line.size() * 4 ) );
+    const auto resultSize
+        = simdutf::convert_utf16_to_utf8( reinterpret_cast<const char16_t*>( line.utf16() ),
+                                          static_cast<size_t>( line.size() ), utf8Data.data() );
+
+    auto matcher = compiledExpression_->createMatcher();
+    klogg::vector<std::pair<RegularExpressionPattern, bool>> matchedPatterns
+        = matcher->match( std::string_view{ utf8Data.data(), resultSize } );
+
     auto matchType = HighlighterMatchType::NoMatch;
-    for ( auto hl = highlighterList_.rbegin(); hl != highlighterList_.rend(); ++hl ) {
-        klogg::vector<HighlightedMatch> thisMatches;
-        if ( !hl->matchLine( line, thisMatches ) ) {
+
+    for ( int index = static_cast<int>( highlighterList_.size() ) - 1; index >= 0; --index ) {
+        const Highlighter& hl = highlighterList_[ index ];
+        if ( !matchedPatterns[ static_cast<size_t>( index ) ].second ) {
             continue;
         }
 
-        if ( !hl->highlightOnlyMatch() ) {
-            matchType = HighlighterMatchType::LineMatch;
-
-            matches.clear();
-            matches.emplace_back( 0_lcol, LineLength {line.size() }, hl->foreColor(), hl->backColor() );
+        klogg::vector<HighlightedMatch> thisMatches;
+        if ( !hl.matchLine( line, thisMatches ) ) {
+            continue;
         }
-        else {
+
+        if (hl.highlightOnlyMatch()) {
             if ( matchType != HighlighterMatchType::LineMatch ) {
                 matchType = HighlighterMatchType::WordMatch;
             }
-
-            matches.insert( matches.end(), std::make_move_iterator( thisMatches.begin() ),
-                            std::make_move_iterator( thisMatches.end() ) );
+            matches.addMatches( thisMatches );
+        }
+        else {
+            matchType = HighlighterMatchType::LineMatch;
+            matches.clear();
+            matches.addMatch(
+                { 0_lcol, LineLength{ line.size() }, hl.foreColor(), hl.backColor() } );
         }
     }
 
@@ -375,21 +431,26 @@ void HighlighterSetCollection::setHighlighterSets( const QList<HighlighterSet>& 
     activeSets_.erase( std::remove_if( activeSets_.begin(), activeSets_.end(),
                                        [ this ]( const auto& setId ) { return !hasSet( setId ); } ),
                        activeSets_.end() );
+    updateCombinedSet();
 }
 
-HighlighterSet HighlighterSetCollection::currentActiveSet() const
+const HighlighterSet& HighlighterSetCollection::currentActiveSet() const
 {
-    HighlighterSet combinedSet;
+    return combinedActiveSet_;
+}
 
-    std::vector<HighlighterSet> activeSetsInOrder{ static_cast<size_t>( activeSets_.size() ) };
-    std::copy_if( highlighters_.begin(), highlighters_.end(), activeSetsInOrder.begin(),
-                  [ this ]( const auto& set ) { return activeSets_.contains( set.id() ); } );
+void HighlighterSetCollection::updateCombinedSet()
+{
+    combinedActiveSet_.highlighterList_.clear();
 
-    for ( auto& set : activeSetsInOrder ) {
-        combinedSet.highlighterList_.append( set.highlighterList_ );
+    for ( const HighlighterSet& set : klogg::as_const( highlighters_ ) ) {
+        if ( !activeSets_.contains( set.id() ) ) {
+            continue;
+        }
+        combinedActiveSet_.highlighterList_.append( set.highlighterList_ );
     }
 
-    return combinedSet;
+    combinedActiveSet_.compile();
 }
 
 QStringList HighlighterSetCollection::activeSetIds() const
@@ -406,24 +467,33 @@ void HighlighterSetCollection::activateSet( const QString& setId )
     }
 
     activeSets_.append( setId );
+    updateCombinedSet();
 }
 
 void HighlighterSetCollection::deactivateSet( const QString& setId )
 {
     LOG_INFO << "deactivating set " << setId;
     activeSets_.removeAll( setId );
+    updateCombinedSet();
 }
 
 void HighlighterSetCollection::deactivateAll()
 {
     LOG_INFO << "deactivating all sets";
     activeSets_.clear();
+    updateCombinedSet();
 }
 
 bool HighlighterSetCollection::hasSet( const QString& setId ) const
 {
     return std::any_of( highlighters_.begin(), highlighters_.end(),
                         [ setId ]( const auto& s ) { return s.id() == setId; } );
+}
+
+bool HighlighterSetCollection::hasSetByName( const QString& setName ) const
+{
+    return std::any_of( highlighters_.begin(), highlighters_.end(),
+                        [ setName ]( const auto& s ) { return s.name() == setName; } );
 }
 
 QList<QuickHighlighter> HighlighterSetCollection::quickHighlighters() const
@@ -571,4 +641,5 @@ void HighlighterSetCollection::retrieveFromStorage( QSettings& settings )
     }
 
     LOG_INFO << "Loaded " << highlighters_.size() << " highlighter sets";
+    updateCombinedSet();
 }

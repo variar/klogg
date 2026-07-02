@@ -39,14 +39,20 @@
 #ifndef LINEPOSITIONARRAY_H
 #define LINEPOSITIONARRAY_H
 
+#include <algorithm>
 #include <cstddef>
+#include <cstdint>
+#include <iterator>
 #include <vector>
 
 #include "compressedlinestorage.h"
+
+#include "containers.h"
+#include "linetypes.h"
 #include "log.h"
 
 class SimpleLinePositionStorage {
-  public:
+public:
     SimpleLinePositionStorage()
     {
         storage_.reserve( 10000 );
@@ -58,7 +64,6 @@ class SimpleLinePositionStorage {
     SimpleLinePositionStorage( SimpleLinePositionStorage&& ) = default;
     SimpleLinePositionStorage& operator=( SimpleLinePositionStorage&& ) = default;
 
-    using Cache = void*;
     // Append the passed end-of-line to the storage
     void append( OffsetInFile pos )
     {
@@ -78,18 +83,32 @@ class SimpleLinePositionStorage {
 
     size_t allocatedSize() const
     {
-        return storage_.capacity();
+        return storage_.size() * sizeof( OffsetInFile );
     }
 
     // Element at index
-    OffsetInFile at( size_t i, Cache* = nullptr ) const
+    OffsetInFile at( size_t i ) const
     {
         return storage_.at( i );
     }
 
-    OffsetInFile at( LineNumber i, Cache* = nullptr ) const
+    OffsetInFile at( LineNumber i ) const
     {
         return at( i.get() );
+    }
+
+    klogg::vector<OffsetInFile> range( LineNumber firstLine, LinesCount count ) const
+    {
+        klogg::vector<OffsetInFile> result;
+        result.reserve( count.get() );
+        const int64_t beginIndex = static_cast<int64_t>( firstLine.get() );
+        const int64_t endIndex = std::min( beginIndex + static_cast<int64_t>( count.get() ),
+                                           static_cast<int64_t>( storage_.size() ) );
+
+        std::copy_n( storage_.begin() + beginIndex, endIndex - beginIndex,
+                     std::back_inserter( result ) );
+
+        return result;
     }
 
     // Add one list to the other
@@ -109,7 +128,7 @@ class SimpleLinePositionStorage {
         return storage_;
     }
 
-  private:
+private:
     klogg::vector<OffsetInFile> storage_;
 };
 
@@ -119,7 +138,7 @@ class SimpleLinePositionStorage {
 // files) and remove it when more data are added.
 template <typename Storage>
 class LinePosition {
-  public:
+public:
     template <typename>
     friend class LinePosition;
 
@@ -162,12 +181,16 @@ class LinePosition {
     }
 
     // Extract an element
-    inline OffsetInFile at( LineNumber::UnderlyingType i,
-                          typename Storage::Cache* lastPosition = nullptr ) const
+    inline OffsetInFile at( LineNumber::UnderlyingType i ) const
     {
-        const auto pos = array.at( i, lastPosition );
-        LOG_DEBUG << "Line pos at " << i << " is " << pos;
+        const auto pos = array.at( i );
+        // LOG_DEBUG << "Line pos at " << i << " is " << pos;
         return pos;
+    }
+
+    klogg::vector<OffsetInFile> range( LineNumber firstLine, LinesCount count ) const
+    {
+        return array.range( firstLine, count );
     }
 
     // Set the presence of a fake final LF
@@ -194,7 +217,7 @@ class LinePosition {
         this->fakeFinalLF_ = other.fakeFinalLF_;
     }
 
-  private:
+private:
     Storage array;
     bool fakeFinalLF_ = false;
 };
