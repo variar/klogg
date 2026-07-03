@@ -51,7 +51,16 @@ TabbedCrawlerWidget::TabbedCrawlerWidget()
     , newfiltered_icon_( ":/images/newfiltered_icon.png" )
 {
 
-    QString tabStyle = "QTabBar::tab { height: 24px; }";
+    // Make the selected tab stand out with a bold accent background so it is
+    // easy to tell which file is active, even with many tabs open.
+    QString tabStyle = "QTabBar::tab { height: 24px; }"
+                       " QTabBar::tab:selected {"
+                       " background: #1e88e5;"
+                       " color: #ffffff;"
+                       " font-weight: bold;"
+                       " border-top: 2px solid #0d47a1;"
+                       " }"
+                       " QTabBar::tab:!selected:hover { background: rgba(30, 136, 229, 0.35); }";
     QString tabCloseButtonStyle = " QTabBar::close-button {\
               height: 12px; width: 12px;\
               subcontrol-origin: padding;\

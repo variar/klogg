@@ -48,6 +48,7 @@ I try to keep a [changelog](CHANGELOG.md) with monthly changes.
 ## Table of Contents
 
 1. [About the Project](#about-the-project)
+1. [Local modifications](#local-modifications)
 1. [Installation](#installation)
 1. [Building](#building)
 1. [How to Get Help](#how-to-get-help)
@@ -104,6 +105,97 @@ https://user-images.githubusercontent.com/1620716/117588567-bea39100-b12c-11eb-9
 List of glogg issues that have been fixed/implemented in klogg can be found [here](https://github.com/variar/klogg/discussions/302).
 
 List of all changes can be found [here](https://github.com/variar/klogg/milestone/8?closed=1).
+
+**[Back to top](#table-of-contents)**
+
+## Local modifications
+
+This fork contains a number of changes on top of upstream klogg. They are all
+contained in this repository; no upstream files other than those listed below
+are affected.
+
+### Chained sub-search panels
+
+The main new feature is the ability to run a **sub-search**: a search that only
+matches within the results of a previous search, shown in its own panel stacked
+below. Sub-searches can be chained, so each panel filters the results of the one
+above it (for example `ERROR` &rarr; `timeout` &rarr; `database`).
+
+* A **Sub-search** button was added to the search bar. Pressing it adds a new
+  panel below, restricted to the current results.
+* Each stacked panel has its **own full search bar**, identical to the main one
+  (visibility selector, match-case / regex / inverse / boolean toggles,
+  auto-refresh, predefined filters, search history and context menu, Keep
+  Results, Sub-search and Close buttons).
+* Each panel has a **Close** button that removes it together with every panel
+  stacked below it.
+* The chain is **reactive**: when a panel's search changes, every panel below it
+  is automatically re-evaluated. Each child re-runs its own search term against
+  the parent's new results, cascading down the whole chain.
+* Clicking a line in any panel navigates the main view to the corresponding line
+  in the original file.
+
+Under the hood, search results are stored as
+[roaring bitmaps](https://roaringbitmap.org/), so a sub-search is implemented as
+a fast bitmap intersection of the new matches with the parent's matches.
+
+Files involved:
+
+* `src/logdata/include/logfiltereddata.h`, `src/logdata/src/logfiltereddata.cpp`
+  &ndash; added a search restriction set (`setSearchRestriction`,
+  `clearSearchRestriction`, `getMatchingLines`) and intersect the results with
+  it while a search progresses.
+* `src/ui/include/stackedfilterpanel.h`, `src/ui/src/stackedfilterpanel.cpp`
+  &ndash; new self-contained stacked sub-search panel widget.
+* `src/ui/include/crawlerwidget.h`, `src/ui/src/crawlerwidget.cpp` &ndash;
+  Sub-search button, panel stacking/removal, cascade orchestration and applying
+  the font/colour/limits configuration to the stacked panels so they render
+  exactly like the main filtered view.
+* `src/ui/CMakeLists.txt` &ndash; build the new widget.
+
+### More visible selected file tab
+
+When several files are open, the selected tab now stands out with a bold accent
+background (blue with white bold text and a coloured top border), instead of
+being distinguishable only by the red close cross. Non-selected tabs also get a
+subtle hover tint.
+
+* `src/ui/src/tabbedcrawlerwidget.cpp` &ndash; updated the tab bar stylesheet.
+
+### Build notes for recent toolchains
+
+This repository builds with modern toolchains (CMake 4.x, GCC 15, Qt 5.15). See
+[BUILD.md](BUILD.md) for the standard instructions. On a system where both Qt 5
+and Qt 6 are installed, force Qt 5 (klogg targets Qt 5) and relax the minimum
+CMake policy version, e.g.:
+
+```
+cmake -S . -B build_root -G Ninja \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+  -DCMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt5 \
+  -DCMAKE_IGNORE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/cmake/Qt6
+cmake --build build_root --parallel
+```
+
+#### robin_hood on GCC 13+
+
+One of the CPM-fetched dependencies, `robin-hood-hashing` (`robin_hood.h`), does
+not compile with recent compilers (GCC 13 and later): it uses the `<cstdint>`
+fixed-width integer types without including that header, and a nested helper
+accesses private data members that newer compilers reject. If the build fails
+inside `robin_hood.h` with errors like *`'uint64_t' does not name a type`* or
+*`has no member named 'mInfo'`*, patch the fetched header
+(`build_root/_deps/robin_hood-src/src/include/robin_hood.h`):
+
+* add `#include <cstdint>` near the top with the other includes, and
+* add a `public:` access specifier just before the `Table` class data members
+  (`mKeyVals` / `mInfo`), so the nested `Cloner` / `Destroyer` helpers can reach
+  them.
+
+This patch lives under `build_root/_deps/` (a downloaded dependency, not part of
+the repository) and must be re-applied if you delete `build_root` and configure
+again from scratch.
 
 **[Back to top](#table-of-contents)**
 

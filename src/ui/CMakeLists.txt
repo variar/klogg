@@ -3,6 +3,7 @@ add_library(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/abstractlogview.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/crawlerwidget.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/filteredview.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/stackedfilterpanel.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/highlightersdialog.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/highlighteredit.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/highlightersetedit.h
@@ -54,6 +55,7 @@ add_library(
   ${CMAKE_CURRENT_SOURCE_DIR}/src/abstractlogview.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/crawlerwidget.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/filteredview.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/stackedfilterpanel.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/highlightersdialog.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/highlighteredit.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/src/highlightersmenu.cpp

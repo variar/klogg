@@ -64,6 +64,7 @@
 #include "overview.h"
 #include "predefinedfilterscombobox.h"
 #include "signalmux.h"
+#include "stackedfilterpanel.h"
 #include "viewinterface.h"
 
 class InfoLine;
@@ -256,6 +257,19 @@ class CrawlerWidget : public QSplitter,
     // Called when a match is hovered on in the filtered view
     void mouseHoveredOverMatch( LineNumber line );
 
+    // Add a stacked sub-search panel below 'source', restricted to its
+    // results. 'source' is null for the first panel (built from the main
+    // filtered view).
+    void addStackedPanel( StackedFilterPanel* source );
+    // Remove 'panel' and every panel stacked below it.
+    void removeStackedPanel( StackedFilterPanel* panel );
+    // Navigate the main view to the line selected in a stacked panel.
+    void jumpToStackedLine( StackedFilterPanel* panel, LineNumber filteredLineNb, LinesCount nLines,
+                            LineColumn startCol, LineLength nSymbols );
+    // A panel (or the main view, when 'finished' is null) finished its search;
+    // re-run the panel below it with the updated parent results, cascading down.
+    void cascadeFrom( StackedFilterPanel* finished );
+
     // Called when there was activity in the views
     void activityDetected();
 
@@ -371,6 +385,10 @@ class CrawlerWidget : public QSplitter,
     std::unordered_map<FilteredView*, std::shared_ptr<LogFilteredData>> filteredViewsData_;
     QTabWidget* tabbedFilteredView_;
 
+    // Chain of stacked sub-search panels (each searches within the results of
+    // the panel above it). Empty until the user starts a sub-search.
+    std::vector<StackedFilterPanel*> stackedPanels_;
+
     OverviewWidget* overviewWidget_;
 
     QComboBox* visibilityBox_;
@@ -387,6 +405,7 @@ class CrawlerWidget : public QSplitter,
     QToolButton* clearButton_;
     QToolButton* searchButton_;
     QToolButton* keepSearchResultsButton_;
+    QToolButton* subSearchButton_;
     QToolButton* stopButton_;
 
     QToolButton* matchCaseButton_;

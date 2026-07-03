@@ -161,6 +161,30 @@ void LogFilteredData::clearSearch( bool dropCache )
     }
 }
 
+void LogFilteredData::setSearchRestriction( const SearchResultArray& allowedLines )
+{
+    restrictToLines_ = allowedLines;
+    // A restriction changes which lines can match, so previously cached
+    // (unrestricted) results must not be reused.
+    searchResultsCache_.clear();
+}
+
+void LogFilteredData::clearSearchRestriction()
+{
+    restrictToLines_.reset();
+    searchResultsCache_.clear();
+}
+
+bool LogFilteredData::hasSearchRestriction() const
+{
+    return restrictToLines_.has_value();
+}
+
+const SearchResultArray& LogFilteredData::getMatchingLines() const
+{
+    return matching_lines_;
+}
+
 LineNumber LogFilteredData::getMatchingLineNumber( LineNumber matchNum ) const
 {
     return findLogDataLine( matchNum );
@@ -401,8 +425,16 @@ void LogFilteredData::handleSearchProgressed( LinesCount nbMatches, int progress
 
     const auto searchResults = workerThread_.getSearchResults();
 
-    matching_lines_ |= searchResults.newMatches;
-    marks_and_matches_ |= searchResults.newMatches;
+    auto newMatches = searchResults.newMatches;
+    if ( restrictToLines_.has_value() ) {
+        // Sub-search: keep only matches that were also in the parent results.
+        newMatches &= *restrictToLines_;
+        // The worker's nbMatches counts unrestricted matches, so recompute.
+        nbMatches = LinesCount( ( matching_lines_ | newMatches ).cardinality() );
+    }
+
+    matching_lines_ |= newMatches;
+    marks_and_matches_ |= newMatches;
 
     maxLength_ = searchResults.maxLength;
     nbLinesProcessed_ = searchResults.processedLines;

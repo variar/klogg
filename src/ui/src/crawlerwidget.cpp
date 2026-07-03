@@ -494,6 +494,9 @@ void CrawlerWidget::updateFilteredView( LinesCount nbMatches, int progress,
         stopButton_->hide();
         searchButton_->show();
         clearButton_->show();
+
+        // Main search finished: cascade the recompute into the stacked panels.
+        cascadeFrom( nullptr );
     }
     else {
         // Search in progress
@@ -550,6 +553,102 @@ void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nL
     const auto mainViewLine = logFilteredData_->getMatchingLineNumber( filteredLineNb );
     logMainView_->selectPortionAndDisplayLine( mainViewLine, nLines, startCol,
                                                nSymbols ); // FIXME: should be done with a signal.
+}
+
+void CrawlerWidget::addStackedPanel( StackedFilterPanel* source )
+{
+    // The restriction set is the matching lines of the panel we branch off:
+    // the given source panel, or the main filtered view when source is null.
+    const SearchResultArray& restriction
+        = source ? source->filteredData()->getMatchingLines() : logFilteredData_->getMatchingLines();
+
+    // If branching off a panel that is not the deepest one, drop the panels
+    // below it first (we start a new chain from here). Capture the restriction
+    // set before removing, since it points into source's data.
+    SearchResultArray restrictionCopy = restriction;
+    if ( source ) {
+        const auto it = std::find( stackedPanels_.begin(), stackedPanels_.end(), source );
+        if ( it != stackedPanels_.end() && it + 1 != stackedPanels_.end() ) {
+            removeStackedPanel( *( it + 1 ) );
+        }
+    }
+
+    auto* panel = new StackedFilterPanel( logData_.get(), quickFindPattern_.get(),
+                                          savedSearches_, restrictionCopy );
+
+    stackedPanels_.push_back( panel );
+    addWidget( panel );
+
+    connect( panel, &StackedFilterPanel::subSearchRequested, this,
+             &CrawlerWidget::addStackedPanel );
+    connect( panel, &StackedFilterPanel::closeRequested, this,
+             &CrawlerWidget::removeStackedPanel );
+    connect( panel, &StackedFilterPanel::resultsReady, this, &CrawlerWidget::cascadeFrom );
+
+    FilteredView* view = panel->filteredView();
+    connect( view, &FilteredView::newSelection, view, [ view ]( auto ) { view->update(); } );
+    connect( view, &FilteredView::newSelection, this,
+             [ this, panel ]( LineNumber filteredLineNb, LinesCount nLines, LineColumn startCol,
+                              LineLength nSymbols ) {
+                 jumpToStackedLine( panel, filteredLineNb, nLines, startCol, nSymbols );
+             } );
+    connect( view, &FilteredView::highlightersChange, this, &CrawlerWidget::applyConfiguration );
+
+    view->registerShortcuts();
+
+    // Make the new panel's view look exactly like the main filtered view.
+    panel->applyConfiguration();
+
+    panel->setFocusToSearch();
+}
+
+void CrawlerWidget::removeStackedPanel( StackedFilterPanel* panel )
+{
+    const auto it = std::find( stackedPanels_.begin(), stackedPanels_.end(), panel );
+    if ( it == stackedPanels_.end() ) {
+        return;
+    }
+
+    // Remove this panel and everything stacked below it (its descendants).
+    for ( auto cur = it; cur != stackedPanels_.end(); ++cur ) {
+        ( *cur )->setParent( nullptr );
+        ( *cur )->deleteLater();
+    }
+    stackedPanels_.erase( it, stackedPanels_.end() );
+}
+
+void CrawlerWidget::jumpToStackedLine( StackedFilterPanel* panel, LineNumber filteredLineNb,
+                                       LinesCount nLines, LineColumn startCol, LineLength nSymbols )
+{
+    const auto mainViewLine = panel->filteredData()->getMatchingLineNumber( filteredLineNb );
+    logMainView_->selectPortionAndDisplayLine( mainViewLine, nLines, startCol, nSymbols );
+}
+
+void CrawlerWidget::cascadeFrom( StackedFilterPanel* finished )
+{
+    // Find the panel whose parent just finished, and re-run it with the
+    // parent's fresh results. 'finished' is null when the main search finished,
+    // in which case the first stacked panel is the child.
+    std::size_t childIndex = 0;
+    if ( finished ) {
+        const auto it = std::find( stackedPanels_.begin(), stackedPanels_.end(), finished );
+        if ( it == stackedPanels_.end() ) {
+            return;
+        }
+        childIndex = static_cast<std::size_t>( std::distance( stackedPanels_.begin(), it ) ) + 1;
+    }
+
+    if ( childIndex >= stackedPanels_.size() ) {
+        return; // No panel below to update.
+    }
+
+    const SearchResultArray& parentResults
+        = finished ? finished->filteredData()->getMatchingLines()
+                   : logFilteredData_->getMatchingLines();
+
+    // Re-running the child will, on completion, emit resultsReady and cascade
+    // further down the chain on its own.
+    stackedPanels_[ childIndex ]->rerunWithRestriction( parentResults );
 }
 
 void CrawlerWidget::updateLineNumberHandler( LineNumber line, LinesCount nLines,
@@ -653,6 +752,11 @@ void CrawlerWidget::applyConfiguration()
         fv->setLineNumbersVisible( config.filteredLineNumbersVisible() );
         fv->allowFollowMode( isFollowModeAllowed );
         fv->updateFont( font );
+    }
+
+    // Keep stacked sub-search panels visually in sync with the main view.
+    for ( auto* panel : stackedPanels_ ) {
+        panel->applyConfiguration();
     }
 
     // Update the SearchLine (history)
@@ -1116,6 +1220,12 @@ void CrawlerWidget::setup()
     keepSearchResultsButton_->setCheckable( true );
     keepSearchResultsButton_->setContentsMargins( 2, 2, 2, 2 );
 
+    subSearchButton_ = new QToolButton();
+    subSearchButton_->setText( tr( "Sub-search" ) );
+    subSearchButton_->setToolTip(
+        tr( "Add a panel below that searches within the current results (chainable)" ) );
+    subSearchButton_->setContentsMargins( 2, 2, 2, 2 );
+
     stopButton_ = new QToolButton();
     stopButton_->setAutoRaise( true );
     stopButton_->setEnabled( false );
@@ -1138,6 +1248,7 @@ void CrawlerWidget::setup()
     searchLineLayout->addWidget( clearButton_ );
     searchLineLayout->addWidget( searchButton_ );
     searchLineLayout->addWidget( keepSearchResultsButton_ );
+    searchLineLayout->addWidget( subSearchButton_ );
     searchLineLayout->addWidget( stopButton_ );
     searchLineLayout->addWidget( searchInfoLine_ );
 
@@ -1197,6 +1308,8 @@ void CrawlerWidget::setup()
     connect( editSearchHistoryAction, &QAction::triggered, this,
              &CrawlerWidget::editSearchHistory );
     connect( searchButton_, &QToolButton::clicked, this, &CrawlerWidget::startNewSearch );
+    connect( subSearchButton_, &QToolButton::clicked, this,
+             [ this ]() { addStackedPanel( nullptr ); } );
     connect( stopButton_, &QToolButton::clicked, this, &CrawlerWidget::stopSearch );
     connect( clearButton_, &QToolButton::clicked, searchLineEdit_, &QComboBox::clearEditText );
 

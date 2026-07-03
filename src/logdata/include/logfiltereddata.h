@@ -42,6 +42,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <unordered_map>
 
@@ -89,6 +90,18 @@ class LogFilteredData : public AbstractLogData {
     void interruptSearch();
     // Clear the search and the list of results.
     void clearSearch( bool dropCache = false );
+
+    // Restrict subsequent searches so that only lines present in the given set
+    // are considered (used to implement "sub-search": a search within the
+    // results of a previous search). Pass the matching lines of the parent
+    // filtered data. Call clearSearchRestriction() to search the whole file again.
+    void setSearchRestriction( const SearchResultArray& allowedLines );
+    void clearSearchRestriction();
+    bool hasSearchRestriction() const;
+
+    // Returns the set of matching line numbers (in original file coordinates).
+    // Used to seed a sub-search on a child LogFilteredData.
+    const SearchResultArray& getMatchingLines() const;
 
     // Returns the line number in the original LogData where the element
     // 'index' was found.
@@ -178,6 +191,10 @@ class LogFilteredData : public AbstractLogData {
     SearchResultArray matching_lines_;
     SearchResultArray marks_;
     SearchResultArray marks_and_matches_;
+
+    // When set, search results are intersected with this set of lines, so the
+    // search only matches within a previous search's results (sub-search).
+    std::optional<SearchResultArray> restrictToLines_;
 
     const LogData* sourceLogData_;
 
