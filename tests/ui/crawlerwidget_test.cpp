@@ -61,7 +61,6 @@ bool generateDataFiles( QTemporaryFile& file )
 
     return true;
 }
-
 } // namespace
 
 struct CrawlerWidgetPrivate {
@@ -84,6 +83,27 @@ struct CrawlerWidget::access_by<CrawlerWidgetPrivate> {
     LinesCount getLogFilteredNbLines()
     {
         return crawler->logFilteredData_->getNbLine();
+    }
+
+    LinesCount getTopViewNbLines()
+    {
+        return crawler->logMainViewData_->getNbLine();
+    }
+
+    QString getTopViewLine( LineNumber line )
+    {
+        return crawler->logMainViewData_->getLineString( line );
+    }
+
+    LineNumber getTopViewSourceLine( LineNumber line )
+    {
+        return crawler->logMainViewData_->getSourceLineNumber( line );
+    }
+
+    void setTopFilter( const QString& pattern )
+    {
+        crawler->logMainViewData_->setTopFilter(
+            RegularExpressionPattern{ pattern, false, true, false, false } );
     }
 
     void selectAllInMainView()
@@ -265,4 +285,32 @@ SCENARIO( "Crawler widget search", "[ui]" )
             }
         }
     }
+}
+
+SCENARIO( "Top filters are independent from bottom searches", "[ui]" )
+{
+    QTemporaryFile file{ "crawler_top_filter_test_XXXXXX" };
+    REQUIRE( generateDataFiles( file ) );
+
+    Session session;
+    CrawlerWidgetVisitor crawlerVisitor;
+    crawlerVisitor.crawler.reset( static_cast<CrawlerWidget*>(
+        session.open( file.fileName(), []() { return new CrawlerWidget(); } ) ) );
+
+    waitUiState( [ & ]() { return crawlerVisitor.getLogNbLines().get() == SL_NB_LINES; } );
+    waitUiState( [ & ]() { return crawlerVisitor.isLoadingFinished(); } );
+
+    crawlerVisitor.setTopFilter( "line 00000[0-4]" );
+
+    waitUiState( [ & ]() { return crawlerVisitor.getTopViewNbLines().get() == 95; } );
+    REQUIRE( crawlerVisitor.getTopViewSourceLine( 0_lnum ) == 5_lnum );
+    REQUIRE( crawlerVisitor.getTopViewLine( 0_lnum ).contains( "line 000005" ) );
+
+    crawlerVisitor.setSearchPattern( "line" );
+    crawlerVisitor.runSearch();
+
+    waitUiState( [ & ]() {
+        return crawlerVisitor.getLogFilteredNbLines().get() == SL_NB_LINES;
+    } );
+    REQUIRE( crawlerVisitor.getTopViewNbLines().get() == 95 );
 }

@@ -49,6 +49,7 @@ struct PredefinedFilter {
     QString name;
     QString pattern;
     bool useRegex;
+    bool filterTop = false;
 };
 
 // Represents collection of filters read from settings file.
@@ -70,7 +71,7 @@ class PredefinedFiltersCollection final : public Persistable<PredefinedFiltersCo
     void saveToStorage( const Collection& filters );
 
   private:
-    static constexpr int PredefinedFiltersCollection_VERSION = 2;
+    static constexpr int PredefinedFiltersCollection_VERSION = 3;
 
     Collection filters_;
 };

@@ -335,7 +335,7 @@ class CrawlerWidget : public QSplitter,
     void updatePredefinedFiltersWidget();
 
     // Reload predefined filters after changing settings
-    void reloadPredefinedFilters() const;
+    void reloadPredefinedFilters();
 
     QString escapeSearchPattern( const QString& searchPattern, bool isRegex = false ) const;
     QString& combinePatterns( QString& currentPattern, const QString& newPattern ) const;
@@ -359,6 +359,7 @@ class CrawlerWidget : public QSplitter,
     SavedSearches* savedSearches_ = nullptr;
 
     std::shared_ptr<LogData> logData_;
+    std::unique_ptr<LogMainViewData> logMainViewData_;
     std::shared_ptr<LogFilteredData> logFilteredData_;
 
     // Matches overview
@@ -394,7 +395,6 @@ class CrawlerWidget : public QSplitter,
     QToolButton* inverseButton_;
     QToolButton* booleanButton_;
     QToolButton* searchRefreshButton_;
-
     std::map<QString, QShortcut*> shortcuts_;
 
     // Default palette to be remembered

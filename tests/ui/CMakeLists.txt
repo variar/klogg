@@ -3,6 +3,7 @@ set(UI_TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/logdata_test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/logfiltereddata_test.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/crawlerwidget_test.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/predefinedfilters_test.cpp
 )
 
 if(NOT APPLE)

@@ -153,10 +153,11 @@ void PredefinedFiltersDialog::populateFiltersTable(
     filtersTableWidget->clear();
 
     filtersTableWidget->setRowCount( static_cast<int>( filters.size() ) );
-    filtersTableWidget->setColumnCount( 3 );
+    filtersTableWidget->setColumnCount( 4 );
 
     filtersTableWidget->setHorizontalHeaderLabels( QStringList() << tr( "Name" ) << tr( "Pattern" )
-                                                                 << tr( "Regex" ) );
+                                                                 << tr( "Regex" )
+                                                                 << tr( "Filter Top" ) );
 
     int filterIndex = 0;
     for ( const auto& filter : filters ) {
@@ -165,12 +166,17 @@ void PredefinedFiltersDialog::populateFiltersTable(
         auto* regexCheckbox = new CenteredCheckbox;
         regexCheckbox->setChecked( filter.useRegex );
         filtersTableWidget->setCellWidget( filterIndex, 2, regexCheckbox );
+        auto* filterTopCheckbox = new CenteredCheckbox;
+        filterTopCheckbox->setChecked( filter.filterTop );
+        filtersTableWidget->setCellWidget( filterIndex, 3, filterTopCheckbox );
 
         filterIndex++;
     }
 
     filtersTableWidget->horizontalHeader()->setSectionResizeMode( 0, QHeaderView::ResizeToContents );
     filtersTableWidget->horizontalHeader()->setSectionResizeMode( 1, QHeaderView::Stretch );
+    filtersTableWidget->horizontalHeader()->setSectionResizeMode( 2, QHeaderView::ResizeToContents );
+    filtersTableWidget->horizontalHeader()->setSectionResizeMode( 3, QHeaderView::ResizeToContents );
     filtersTableWidget->verticalHeader()->setSectionResizeMode( QHeaderView::ResizeToContents );
     filtersTableWidget->setWordWrap( false );
 
@@ -200,9 +206,12 @@ PredefinedFiltersCollection::Collection PredefinedFiltersDialog::readFiltersTabl
         const auto useRegexCheckbox
             = static_cast<CenteredCheckbox*>( filtersTableWidget->cellWidget( i, 2 ) );
         const auto useRegex = useRegexCheckbox ? useRegexCheckbox->isChecked() : false;
+        const auto filterTopCheckbox
+            = static_cast<CenteredCheckbox*>( filtersTableWidget->cellWidget( i, 3 ) );
+        const auto filterTop = filterTopCheckbox ? filterTopCheckbox->isChecked() : false;
 
         if ( !name.isEmpty() && !value.isEmpty() ) {
-            currentFilters.push_back( { name, value, useRegex } );
+            currentFilters.push_back( { name, value, useRegex, filterTop } );
         }
     }
 
@@ -222,6 +231,8 @@ void PredefinedFiltersDialog::addFilterRow( const QString& newFilter )
     filtersTableWidget->setItem( newRow, 0, new QTableWidgetItem( "" ) );
     auto regexCheckBox = new CenteredCheckbox;
     filtersTableWidget->setCellWidget( newRow, 2, regexCheckBox );
+    auto filterTopCheckBox = new CenteredCheckbox;
+    filtersTableWidget->setCellWidget( newRow, 3, filterTopCheckBox );
 
     filtersTableWidget->scrollToItem( filtersTableWidget->item( newRow, 0 ) );
     filtersTableWidget->setCurrentCell( newRow, 0 );

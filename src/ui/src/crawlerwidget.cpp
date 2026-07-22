@@ -136,7 +136,6 @@ public:
     {
         return useBooleanCombination_;
     }
-
     QList<LineNumber::UnderlyingType> marks() const
     {
         return marks_;
@@ -155,7 +154,6 @@ private:
     bool useRegexp_;
     bool inverseRegexp_;
     bool useBooleanCombination_;
-
     QList<LineNumber::UnderlyingType> marks_;
 };
 
@@ -170,7 +168,7 @@ CrawlerWidget::CrawlerWidget( QWidget* parent )
 // The top line is first one on the main display
 LineNumber CrawlerWidget::getTopLine() const
 {
-    return logMainView_->getTopLine();
+    return logMainView_->getTopSourceLine();
 }
 
 QString CrawlerWidget::getSelectedText() const
@@ -209,9 +207,26 @@ bool CrawlerWidget::isTextWrapEnabled() const
     return logMainView_->isTextWrapEnabled();
 }
 
-void CrawlerWidget::reloadPredefinedFilters() const
+void CrawlerWidget::reloadPredefinedFilters()
 {
     predefinedFilters_->populatePredefinedFilters();
+
+    QStringList topPatterns;
+    const auto filters = PredefinedFiltersCollection::getSynced().getFilters();
+    for ( const auto& filter : filters ) {
+        if ( !filter.filterTop ) {
+            continue;
+        }
+
+        const auto pattern
+            = filter.useRegex ? filter.pattern : QRegularExpression::escape( filter.pattern );
+        topPatterns.append( QString( "(?:%1)" ).arg( pattern ) );
+    }
+
+    const RegularExpressionPattern topFilterPattern{ topPatterns.join( '|' ), false, true, false,
+                                                      false };
+    logMainViewData_->setTopFilter( topFilterPattern );
+    logMainView_->updateData();
 }
 
 QString CrawlerWidget::encodingText() const
@@ -259,6 +274,7 @@ void CrawlerWidget::changeEvent( QEvent* event )
 
 void CrawlerWidget::stopLoading()
 {
+    logMainViewData_->interruptSearch();
     logFilteredData_->interruptSearch();
     logData_->interruptLoading();
 }
@@ -266,6 +282,7 @@ void CrawlerWidget::stopLoading()
 void CrawlerWidget::reload()
 {
     searchState_.resetState();
+    logMainViewData_->prepareFullRefresh();
     constexpr auto DropCache = true;
     logFilteredData_->clearSearch( DropCache );
     logFilteredData_->clearMarks();
@@ -306,7 +323,7 @@ void CrawlerWidget::goToLine()
         const auto selectedLine
             = LineNumber( static_cast<LineNumber::UnderlyingType>( newLine - 1 ) );
         filteredView_->trySelectLine( logFilteredData_->getLineIndexNumber( selectedLine ) );
-        logMainView_->trySelectLine( selectedLine );
+        logMainView_->trySelectSourceLine( selectedLine );
     }
 }
 
@@ -548,8 +565,8 @@ void CrawlerWidget::jumpToMatchingLine( LineNumber filteredLineNb, LinesCount nL
                                         LineColumn startCol, LineLength nSymbols )
 {
     const auto mainViewLine = logFilteredData_->getMatchingLineNumber( filteredLineNb );
-    logMainView_->selectPortionAndDisplayLine( mainViewLine, nLines, startCol,
-                                               nSymbols ); // FIXME: should be done with a signal.
+    logMainView_->selectSourcePortionAndDisplayLine(
+        mainViewLine, nLines, startCol, nSymbols ); // FIXME: should be done with a signal.
 }
 
 void CrawlerWidget::updateLineNumberHandler( LineNumber line, LinesCount nLines,
@@ -695,6 +712,8 @@ void CrawlerWidget::loadingFinishedHandler( LoadingStatus status )
     // overview have probably changed.
     overview_.updateData( logData_->getNbLine() );
 
+    logMainViewData_->refreshSearch();
+
     // FIXME, handle topLine
     // logMainView_->updateData( logData_, topLine );
     logMainView_->updateData();
@@ -739,6 +758,8 @@ void CrawlerWidget::fileChangedHandler( MonitoredFileStatus status )
 {
     // Handle the case where the file has been truncated
     if ( status == MonitoredFileStatus::Truncated ) {
+        logMainViewData_->prepareFullRefresh();
+
         // Clear all marks (TODO offer the option to keep them)
         logFilteredData_->clearMarks();
         if ( !searchInfoLine_->text().isEmpty() ) {
@@ -968,8 +989,10 @@ void CrawlerWidget::setup()
     bottomWindow->setContentsMargins( 2, 0, 2, 0 );
 
     overviewWidget_ = new OverviewWidget();
+    logMainViewData_ = std::make_unique<LogMainViewData>( logData_.get() );
     logMainView_
-        = new LogMainView( logData_.get(), quickFindPattern_.get(), &overview_, overviewWidget_ );
+        = new LogMainView( logMainViewData_.get(), quickFindPattern_.get(), &overview_,
+                           overviewWidget_ );
     logMainView_->setContentsMargins( 2, 0, 2, 0 );
 
     filteredView_ = new FilteredView( logFilteredData_.get(), quickFindPattern_.get() );
@@ -1207,9 +1230,21 @@ void CrawlerWidget::setup()
              [ this ]( auto ) { logMainView_->update(); } );
 
     connect( logMainView_, &LogMainView::newSelection, this,
-             &CrawlerWidget::updateLineNumberHandler );
+             [ this ]( LineNumber line, LinesCount nLines, LineColumn startCol,
+                       LineLength nSymbols ) {
+                 updateLineNumberHandler( logMainViewData_->getSourceLineNumber( line ), nLines,
+                                          startCol, nSymbols );
+             } );
 
-    connect( logMainView_, &LogMainView::markLines, this, &CrawlerWidget::markLinesFromMain );
+    connect( logMainView_, &LogMainView::markLines, this,
+             [ this ]( const klogg::vector<LineNumber>& lines ) {
+                 klogg::vector<LineNumber> sourceLines( lines.size() );
+                 std::transform( lines.cbegin(), lines.cend(), sourceLines.begin(),
+                                 [ this ]( const auto& line ) {
+                                     return logMainViewData_->getSourceLineNumber( line );
+                                 } );
+                 markLinesFromMain( sourceLines );
+             } );
 
     connect( logMainView_, &LogMainView::highlightersChange, this,
              &CrawlerWidget::applyConfiguration );
@@ -1252,6 +1287,10 @@ void CrawlerWidget::setup()
 
     connect( logFilteredData_.get(), &LogFilteredData::searchProgressed, this,
              &CrawlerWidget::updateFilteredView, Qt::QueuedConnection );
+
+    connect( logMainViewData_.get(), &LogMainViewData::searchProgressed, this,
+             [ this ]( LinesCount, int, LineNumber ) { logMainView_->updateData(); },
+             Qt::QueuedConnection );
 
     // Sent load file update to MainWindow (for status update)
     connect( logData_.get(), &LogData::loadingProgressed, this, &CrawlerWidget::loadingProgressed );

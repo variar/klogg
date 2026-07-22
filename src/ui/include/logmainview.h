@@ -40,19 +40,71 @@
 #ifndef LOGMAINVIEW_H
 #define LOGMAINVIEW_H
 
+#include <memory>
+
 #include "abstractlogview.h"
 #include "logdata.h"
+#include "logfiltereddata.h"
+
+class LogMainViewData : public AbstractLogData
+{
+  Q_OBJECT
+
+  public:
+    explicit LogMainViewData( const LogData* sourceLogData );
+
+    void setTopFilter( const RegularExpressionPattern& pattern );
+    void prepareFullRefresh();
+    void refreshSearch();
+    void interruptSearch();
+
+    LineNumber getSourceLineNumber( LineNumber index ) const;
+    LineNumber getLineIndexNumber( LineNumber sourceLine ) const;
+    LinesCount getNbTotalLines() const;
+
+  Q_SIGNALS:
+    void searchProgressed( LinesCount nbMatches, int progress, LineNumber initialLine );
+
+  protected:
+    QString doGetLineString( LineNumber line ) const override;
+    QString doGetExpandedLineString( LineNumber line ) const override;
+    klogg::vector<QString> doGetLines( LineNumber firstLine, LinesCount number ) const override;
+    klogg::vector<QString> doGetExpandedLines( LineNumber firstLine,
+                                               LinesCount number ) const override;
+    LineNumber doGetLineNumber( LineNumber index ) const override;
+    LinesCount doGetNbLine() const override;
+    LineLength doGetMaxLength() const override;
+    LineLength doGetLineLength( LineNumber line ) const override;
+    void doSetDisplayEncoding( const char* encoding ) override;
+    QTextCodec* doGetDisplayEncoding() const override;
+    void doAttachReader() const override;
+    void doDetachReader() const override;
+
+  private:
+    const AbstractLogData* activeData() const;
+
+    const LogData* sourceLogData_;
+    std::unique_ptr<LogFilteredData> filteredData_;
+    RegularExpressionPattern filterPattern_;
+    bool filterEnabled_ = false;
+    bool fullRefreshRequired_ = false;
+};
 
 // Class implementing the main (top) view widget.
 class LogMainView : public AbstractLogView
 {
   Q_OBJECT
   public:
-    LogMainView( const LogData* newLogData,
+    LogMainView( LogMainViewData* newLogData,
             const QuickFindPattern* const quickFindPattern,
             Overview* overview,
             OverviewWidget* overview_widget,
             QWidget* parent = nullptr );
+
+    LineNumber getTopSourceLine() const;
+    void trySelectSourceLine( LineNumber sourceLine );
+    void selectSourcePortionAndDisplayLine( LineNumber sourceLine, LinesCount nLines,
+                                            LineColumn startCol, LineLength nSymbols );
 
     // Configure the view to use the passed filtered list
     // (used for couloured bullets)
@@ -63,10 +115,15 @@ class LogMainView : public AbstractLogView
     // Implements the virtual function
     LogData::LineType lineType( LineNumber lineNumber ) const override;
 
+    LineNumber displayLineNumber( LineNumber lineNumber ) const override;
+    LineNumber lineIndex( LineNumber lineNumber ) const override;
+    LineNumber maxDisplayLineNumber() const override;
+
     void doRegisterShortcuts() override;
 
   private:
     LogFilteredData* filteredData_;
+    LogMainViewData* logMainViewData_;
 };
 
 #endif

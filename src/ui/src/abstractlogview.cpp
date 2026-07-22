@@ -841,7 +841,7 @@ void AbstractLogView::doRegisterShortcuts()
 
     registerShortcut( ShortcutAction::LogViewJumpToLineNumber, [ this ]() {
         const auto newLine = qMax( 0ull, digitsBuffer_.content() - 1ull );
-        trySelectLine( LineNumber( newLine ) );
+        trySelectLine( lineIndex( LineNumber( newLine ) ) );
     } );
 
     registerShortcut( ShortcutAction::LogViewExitView, [ this ]() { Q_EMIT exitView(); } );
@@ -1188,7 +1188,7 @@ void AbstractLogView::setOverview( Overview* overview, OverviewWidget* overviewW
 
     if ( overviewWidget_ ) {
         connect( overviewWidget_, &OverviewWidget::lineClicked, this,
-                 &AbstractLogView::jumpToLine );
+                 [ this ]( LineNumber line ) { jumpToLine( lineIndex( line ) ); } );
     }
     refreshOverview();
 }
@@ -1609,7 +1609,16 @@ void AbstractLogView::updateData()
     if ( overview_ != nullptr ) {
         // Calculate the index of the last line shown
         const LineNumber lastLine = qMin( lastLineNumber, firstLine_ + getNbVisibleLines() );
-        overview_->updateCurrentPosition( firstLine_, lastLine );
+        if ( lastLineNumber > 0_lnum ) {
+            const auto firstSourceLine = displayLineNumber( firstLine_ ) - 1_lcount;
+            const auto lastSourceLine = lastLine > firstLine_
+                                            ? displayLineNumber( lastLine - 1_lcount )
+                                            : firstSourceLine;
+            overview_->updateCurrentPosition( firstSourceLine, lastSourceLine );
+        }
+        else {
+            overview_->updateCurrentPosition( 0_lnum, 0_lnum );
+        }
     }
 
     forceRefresh();
