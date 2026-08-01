@@ -90,6 +90,11 @@ MatchedPatterns HsSingleMatcher::match( const std::string_view& utf8Data ) const
 {
     context_.reset();
 
+    if ( !database_.get() || !scratch_.get() ) {
+        LOG_ERROR << "HsSingleMatcher::match called with invalid database or scratch";
+        return std::move( context_.matchingPatterns );
+    }
+
     hs_scan( database_.get(), utf8Data.data(), static_cast<unsigned int>( utf8Data.size() ), 0,
              scratch_.get(), matchSingleCallback, static_cast<void*>( &context_ ) );
 
@@ -104,6 +109,11 @@ HsMultiMatcher::HsMultiMatcher( HsDatabase db, HsScratch scratch, std::size_t nu
 MatchedPatterns HsMultiMatcher::match( const std::string_view& utf8Data ) const
 {
     context_.reset();
+
+    if ( !database_.get() || !scratch_.get() ) {
+        LOG_ERROR << "HsMultiMatcher::match called with invalid database or scratch";
+        return std::move( context_.matchingPatterns );
+    }
 
     hs_scan( database_.get(), utf8Data.data(), static_cast<unsigned int>( utf8Data.size() ), 0,
              scratch_.get(), matchMultiCallback, static_cast<void*>( &context_ ) );
@@ -157,6 +167,13 @@ HsRegularExpression::HsRegularExpression( const klogg::vector<RegularExpressionP
             hs_database_t* db = nullptr;
             hs_compile_error_t* error = nullptr;
 
+            // Protect against empty expressions vector - hs_compile_multi expects non-null pointers
+            if ( expressions.empty() ) {
+                LOG_ERROR << "Failed to compile pattern: expressions is NULL";
+                errorMessage = QStringLiteral("expressions is NULL");
+                return nullptr;
+            }
+
             klogg::vector<unsigned> flags( expressions.size() );
             std::transform( expressions.cbegin(), expressions.cend(), flags.begin(),
                             [ isPrefilter ]( const auto& expression ) {
@@ -193,9 +210,14 @@ HsRegularExpression::HsRegularExpression( const klogg::vector<RegularExpressionP
                 static_cast<unsigned>( expressions.size() ), HS_MODE_BLOCK, nullptr, &db, &error );
 
             if ( compileResult != HS_SUCCESS ) {
-                LOG_ERROR << "Failed to compile pattern " << error->message;
-                errorMessage = error->message;
-                hs_free_compile_error( error );
+                if ( error ) {
+                    LOG_ERROR << "Failed to compile pattern " << error->message;
+                    errorMessage = error->message;
+                    hs_free_compile_error( error );
+                } else {
+                    LOG_ERROR << "Failed to compile pattern: unknown error";
+                    errorMessage = QStringLiteral("hs_compile_multi failed");
+                }
                 return nullptr;
             }
 
@@ -293,6 +315,11 @@ MatcherVariant HsRegularExpression::createMatcher() const
             return scratch;
         },
         scratch_.get() );
+
+    if ( !matcherScratch ) {
+        LOG_ERROR << "Failed to create matcher scratch — falling back to noop matcher";
+        return HsNoopMatcher();
+    }
 
     if ( !isPrefilter_ ) {
         if ( patterns_.size() == 1 ) {

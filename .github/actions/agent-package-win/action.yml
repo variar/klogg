@@ -2,34 +2,26 @@ name: "Prepare windows packages"
 description: ""
 inputs:
   s3-key-id:
-    required: true
+    required: false
   s3-secret:
-    required: true
+    required: false
   s3-bucket:
-    required: true
+    required: false
 runs:
   using: "composite"
   steps:
-    #- name: Setup codesing env
-    #  if: ${{ github.event_name != 'pull_request' }}
-    #  shell: sh
-    #  run: |
-    #    echo "CS_CLIENT_S3_KEY_ID=${{ inputs.s3-key-id }}" >> $GITHUB_ENV 
-    #    echo "CS_CLIENT_S3_SECRET=${{ inputs.s3-secret }}" >> $GITHUB_ENV 
-    #    echo "CS_CLIENT_S3_BUCKET=${{ inputs.s3-bucket }}" >> $GITHUB_ENV 
-    
-    #- name: Win codesign executables
-    #  if: ${{ github.event_name != 'pull_request' }}
-    #  shell: cmd
-    #  run: |
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_portable.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_crashpad_handler.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_minidump_dump.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbb12.dll
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc.dll
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc_proxy.dll
-    
+    - name: Setup environment for cmd
+      shell: bash
+      run: |
+        echo "KLOGG_WORKSPACE=$KLOGG_WORKSPACE" >> $GITHUB_ENV
+        echo "KLOGG_BUILD_ROOT=$KLOGG_BUILD_ROOT" >> $GITHUB_ENV
+        echo "KLOGG_VERSION=$KLOGG_VERSION" >> $GITHUB_ENV
+        echo "KLOGG_ARCH=$KLOGG_ARCH" >> $GITHUB_ENV
+        echo "KLOGG_QT=$KLOGG_QT" >> $GITHUB_ENV
+        echo "KLOGG_QT_DIR=$KLOGG_QT_DIR" >> $GITHUB_ENV
+        echo "VCToolsRedistDir=$VCToolsRedistDir" >> $GITHUB_ENV
+        echo "VSCMD_ARG_TGT_ARCH=$VSCMD_ARG_TGT_ARCH" >> $GITHUB_ENV
+
     - name: Win portable
       shell: cmd
       run: |
@@ -39,8 +31,8 @@ runs:
       uses: joncloud/makensis-action@v3.3
       with:
         script-file: klogg.nsi
-        arguments: "-DVERSION=%KLOGG_VERSION% -DPLATFORM=%KLOGG_ARCH% -DQT_MAJOR=%KLOGG_QT%" 
-    
+        arguments: "-DVERSION=%KLOGG_VERSION% -DPLATFORM=%KLOGG_ARCH% -DQT_MAJOR=%KLOGG_QT%"
+
     - name: Win package
       shell: cmd
       run: |
