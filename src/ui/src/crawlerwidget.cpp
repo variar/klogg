@@ -59,6 +59,7 @@
 #include <QLineEdit>
 #include <QListView>
 #include <QShortcut>
+#include <QSignalBlocker>
 #include <QStandardItemModel>
 #include <QStringListModel>
 #include <qglobal.h>
@@ -374,9 +375,14 @@ std::shared_ptr<const ViewContextInterface> CrawlerWidget::doGetViewContext() co
 
 void CrawlerWidget::startNewSearch()
 {
+    // Capture before keep-results / history updates can change the combo state.
+    const QString searchText = searchLineEdit_->lineEdit()->text();
+
     if ( keepSearchResultsButton_->isChecked() ) {
         keepSearchResultsButton_->setChecked( false );
 
+        // Keep the previous tab's last-searched context. Do not save the new
+        // query against the old view — the search box already contains it.
         logFilteredData_->interruptSearch();
         logFilteredData_ = logData_->getNewFilteredData();
 
@@ -385,30 +391,37 @@ void CrawlerWidget::startNewSearch()
 
         connectAllFilteredViewSlots( filteredView_ );
 
-        auto index = tabbedFilteredView_->addTab( filteredView_, "" );
-        tabbedFilteredView_->setCurrentIndex( index );
+        // Avoid changeFilteredView()/restore while the new tab has no context yet.
+        {
+            const QSignalBlocker blocker( tabbedFilteredView_ );
+            const auto index = tabbedFilteredView_->addTab( filteredView_, "" );
+            tabbedFilteredView_->setCurrentIndex( index );
+        }
 
         connect( logFilteredData_.get(), &LogFilteredData::searchProgressed, this,
                  &CrawlerWidget::updateFilteredView, Qt::QueuedConnection );
 
+        Q_EMIT filteredViewChanged();
         logMainView_->useNewFiltering( logFilteredData_.get() );
+        changeFilteredViewVisibility( visibilityBox_->currentIndex() );
 
         applyConfiguration();
     }
 
     tabbedFilteredView_->setTabText( tabbedFilteredView_->currentIndex(),
-                                     "Find \"" + searchLineEdit_->currentText() + "\"" );
+                                     "Find \"" + searchText + "\"" );
 
     // Record the search line in the recent list
     // (reload the list first in case another glogg changed it)
     const auto& searches = SavedSearches::getSynced();
-    savedSearches_->addRecent( searchLineEdit_->currentText() );
+    savedSearches_->addRecent( searchText );
     searches.save();
 
     // Update the SearchLine (history)
     updateSearchCombo();
+    searchLineEdit_->lineEdit()->setText( searchText );
     // Call the private function to do the search
-    replaceCurrentSearch( searchLineEdit_->currentText() );
+    replaceCurrentSearch( searchText );
 }
 
 void CrawlerWidget::updatePredefinedFiltersWidget()
@@ -1302,19 +1315,27 @@ void CrawlerWidget::setup()
 
 void CrawlerWidget::changeFilteredView( int tabIndex )
 {
-    logFilteredData_->interruptSearch();
-    if ( tabIndex >= 0 ) {
-        auto* tabFilteredView
-            = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( tabIndex ) );
-
-        filteredView_ = tabFilteredView;
-        logFilteredData_ = filteredViewsData_.at( tabFilteredView );
-
-        Q_EMIT filteredViewChanged();
-
-        logMainView_->useNewFiltering( logFilteredData_.get() );
-        changeFilteredViewVisibility( visibilityBox_->currentIndex() );
+    if ( tabIndex < 0 ) {
+        return;
     }
+
+    auto* tabFilteredView
+        = qobject_cast<FilteredView*>( tabbedFilteredView_->widget( tabIndex ) );
+    if ( tabFilteredView == nullptr || tabFilteredView == filteredView_ ) {
+        return;
+    }
+
+    logFilteredData_->interruptSearch();
+
+    filteredView_ = tabFilteredView;
+    logFilteredData_ = filteredViewsData_.at( tabFilteredView );
+
+    restoreFilteredViewSearchContext( tabFilteredView );
+
+    Q_EMIT filteredViewChanged();
+
+    logMainView_->useNewFiltering( logFilteredData_.get() );
+    changeFilteredViewVisibility( visibilityBox_->currentIndex() );
 }
 
 void CrawlerWidget::closeFilteredView( int tabIndex )
@@ -1326,7 +1347,9 @@ void CrawlerWidget::closeFilteredView( int tabIndex )
 
 void CrawlerWidget::filteredViewDestroyed( QObject* view )
 {
-    filteredViewsData_.erase( qobject_cast<FilteredView*>( view ) );
+    auto* filteredView = qobject_cast<FilteredView*>( view );
+    filteredViewsData_.erase( filteredView );
+    filteredViewsSearchContext_.erase( filteredView );
 }
 
 void CrawlerWidget::saveSplitterSizes() const
@@ -1558,6 +1581,71 @@ void CrawlerWidget::loadIcons()
 
 // Create a new search using the text passed, replace the currently
 // used one and destroy the old one.
+void CrawlerWidget::saveFilteredViewSearchContext( FilteredView* view, const QString& searchText )
+{
+    if ( view == nullptr ) {
+        return;
+    }
+
+    FilteredViewSearchContext context;
+    context.searchText = searchText;
+    context.matchCase = matchCaseButton_->isChecked();
+    context.useRegexp = useRegexpButton_->isChecked();
+    context.inverse = inverseButton_->isChecked();
+    context.booleanCombination = booleanButton_->isChecked();
+    context.searchStartLine = searchStartLine_;
+    context.searchEndLine = searchEndLine_;
+    filteredViewsSearchContext_[ view ] = context;
+}
+
+void CrawlerWidget::restoreFilteredViewSearchContext( FilteredView* view )
+{
+    const auto contextIt = filteredViewsSearchContext_.find( view );
+    if ( contextIt == filteredViewsSearchContext_.end() ) {
+        return;
+    }
+
+    const auto& context = contextIt->second;
+
+    const QSignalBlocker blockSearchLine( searchLineEdit_ );
+    const QSignalBlocker blockSearchLineEdit( searchLineEdit_->lineEdit() );
+    const QSignalBlocker blockMatchCase( matchCaseButton_ );
+    const QSignalBlocker blockUseRegexp( useRegexpButton_ );
+    const QSignalBlocker blockInverse( inverseButton_ );
+    const QSignalBlocker blockBoolean( booleanButton_ );
+
+    // Clear history selection so the line edit shows this tab's pattern,
+    // not the most recently used history entry.
+    searchLineEdit_->setCurrentIndex( -1 );
+    searchLineEdit_->lineEdit()->setText( context.searchText );
+    matchCaseButton_->setChecked( context.matchCase );
+    useRegexpButton_->setChecked( context.useRegexp );
+    inverseButton_->setChecked( context.inverse );
+    booleanButton_->setChecked( context.booleanCombination );
+    searchLineCompleter_->setCaseSensitivity( context.matchCase ? Qt::CaseSensitive
+                                                                : Qt::CaseInsensitive );
+
+    searchStartLine_ = context.searchStartLine;
+    searchEndLine_ = context.searchEndLine;
+    logMainView_->setSearchLimits( searchStartLine_, searchEndLine_ );
+    filteredView_->setSearchLimits( searchStartLine_, searchEndLine_ );
+
+    const auto pattern = context.toPattern();
+    logMainView_->setSearchPattern( pattern );
+    filteredView_->setSearchPattern( pattern );
+
+    updatePredefinedFiltersWidget();
+
+    if ( context.searchText.isEmpty() ) {
+        searchState_.resetState();
+        printSearchInfoMessage();
+    }
+    else {
+        searchState_.startSearch();
+        printSearchInfoMessage( logFilteredData_->getNbMatches() );
+    }
+}
+
 void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
 {
     LOG_INFO << "replacing current search with " << searchText;
@@ -1640,6 +1728,10 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
         searchState_.resetState();
         printSearchInfoMessage();
     }
+
+    // Bind this tab to the pattern that was actually searched, not whatever
+    // the shared search box may contain later.
+    saveFilteredViewSearchContext( filteredView_, searchText );
 }
 
 // Updates the content of the drop down list for the saved searches,

@@ -63,6 +63,7 @@
 #include "logmainview.h"
 #include "overview.h"
 #include "predefinedfilterscombobox.h"
+#include "regularexpression.h"
 #include "signalmux.h"
 #include "viewinterface.h"
 
@@ -322,6 +323,22 @@ class CrawlerWidget : public QSplitter,
         bool autoRefreshRequested_;
     };
 
+    struct FilteredViewSearchContext {
+        QString searchText;
+        bool matchCase = false;
+        bool useRegexp = true;
+        bool inverse = false;
+        bool booleanCombination = false;
+        LineNumber searchStartLine = 0_lnum;
+        LineNumber searchEndLine = 0_lnum;
+
+        RegularExpressionPattern toPattern() const
+        {
+            return RegularExpressionPattern( searchText, matchCase, inverse, booleanCombination,
+                                             !useRegexp );
+        }
+    };
+
     // Private functions
     void setup();
     void setShortcuts();
@@ -347,6 +364,9 @@ class CrawlerWidget : public QSplitter,
 
     void connectAllFilteredViewSlots( FilteredView* view);
 
+    void saveFilteredViewSearchContext( FilteredView* view, const QString& searchText );
+    void restoreFilteredViewSearchContext( FilteredView* view );
+
     void saveSplitterSizes() const;
 
     void changeFontSize( bool increase );
@@ -369,6 +389,7 @@ class CrawlerWidget : public QSplitter,
     LogMainView* logMainView_;
     FilteredView* filteredView_;
     std::unordered_map<FilteredView*, std::shared_ptr<LogFilteredData>> filteredViewsData_;
+    std::unordered_map<FilteredView*, FilteredViewSearchContext> filteredViewsSearchContext_;
     QTabWidget* tabbedFilteredView_;
 
     OverviewWidget* overviewWidget_;
