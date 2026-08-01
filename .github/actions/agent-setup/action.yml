@@ -6,22 +6,16 @@ runs:
     - name: Install Ninja
       uses: seanmiddleditch/gha-setup-ninja@master
 
-    - name: Cache Qt
-      id: cache-qt
-      uses: actions/cache@v1
-      with:
-        path: ../Qt
-        key: ${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.qt_version }}-QtCache
-
     - name: Install Qt
       if: ${{ matrix.config.qt_arch }}
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4
       with:
         version: ${{ matrix.config.qt_version }}
         arch: ${{ matrix.config.qt_arch }}
-        cached: ${{ steps.cache-qt.outputs.cache-hit }}
         modules: ${{ matrix.config.qt_modules }}
         archives: qtbase qtimageformats qtsvg qttools qttranslations icu
+        cache: true
+        cache-key-prefix: klogg-qt-${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.qt_version }}
 
     - name: Set boost env vars
       shell: sh
@@ -30,7 +24,7 @@ runs:
         echo "BOOST_URL=https://sourceforge.net/projects/boost/files/boost/1.86.0/boost_1_86_0.tar.bz2/download" >> $GITHUB_ENV
 
     - name: Restore Boost cache
-      uses: actions/cache@v2
+      uses: actions/cache@v4
       id: cache-boost
       with:
         path: ${{env.BOOST_ROOT}}
@@ -55,6 +49,3 @@ runs:
           cd $BOOST_ROOT && cp -r boost_*/* .
           rm -rf boost_*/* download.tar.bz2 download.tar
         fi
-        
-
-

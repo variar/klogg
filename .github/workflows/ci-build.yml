@@ -28,13 +28,13 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/klogg-version
 
       - name: Save version 
         run: echo $KLOGG_VERSION > klogg_version.txt
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: klogg_version
           path: 'klogg_version.txt'
@@ -118,7 +118,7 @@ jobs:
 
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       #- uses: satackey/action-docker-layer-caching@v0.0.11
       #  # Ignore the failure of a step and avoid terminating the job.
@@ -136,7 +136,7 @@ jobs:
       - uses: ./.github/actions/docker-package
           
 # Final upload of all packages
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*'
@@ -167,7 +167,7 @@ jobs:
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Setup Xcode
         shell: sh
@@ -197,7 +197,7 @@ jobs:
           notarization-team: ${{ secrets.NOTARIZATION_TEAM }}
           notarization-password: ${{ secrets.NOTARIZATION_PASSWORD }}
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*' 
@@ -229,11 +229,11 @@ jobs:
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Cache openssl
         id: cache-openssl
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}\openssl-1.1
           key: OpensslCache-1-1-1w
@@ -268,7 +268,7 @@ jobs:
           s3-bucket: ${{ secrets.WIN_CS_BUCKET }}
      
 # Final upload of all packages
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.config.artifacts_id }}
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*'
