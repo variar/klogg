@@ -108,69 +108,173 @@ if exist "%SSL_DIR%" (
 
 echo "Deploying Qt from %KLOGG_QT_DIR%..."
 set "QTDIR=%KLOGG_QT_DIR:/=\%"
+if "%QTDIR%"=="" (
+    echo KLOGG_QT_DIR is not set, trying to find Qt...
+    for /d %%Q in ("C:\Qt" "D:\a\_temp" "%LOCALAPPDATA%\Qt" "C:\hostedtoolcache\Qt") do (
+        if exist "%%Q" (
+            for /d %%V in ("%%Q\6.*") do (
+                set "QTDIR=%%V"
+            )
+        )
+    )
+)
 echo Using QTDIR=%QTDIR%
 
-REM Try to find Qt using windeployqt first (most reliable)
-if exist "%QTDIR%\bin\windeployqt.exe" (
-    echo "Running windeployqt to deploy Qt runtime into release dir"
-    "%QTDIR%\bin\windeployqt.exe" --no-compiler-runtime --dir "%KLOGG_WORKSPACE%\release" "%KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\klogg.exe"
-    if errorlevel 1 (
-        echo windeployqt failed, trying manual copy...
-        for %%D in (Qt5 Qt6) do (
-            if exist "%QTDIR%\bin\%%DCore.dll" (
-                echo Copying %%D* DLLs...
-                xcopy /Y /Q "%QTDIR%\bin\%%DCore.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                xcopy /Y /Q "%QTDIR%\bin\%%DGui.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                xcopy /Y /Q "%QTDIR%\bin\%%DNetwork.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                xcopy /Y /Q "%QTDIR%\bin\%%DWidgets.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                xcopy /Y /Q "%QTDIR%\bin\%%DConcurrent.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                xcopy /Y /Q "%QTDIR%\bin\%%DXml.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                xcopy /Y /Q "%QTDIR%\bin\%%DCore5Compat.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+REM Find the Qt bin directory containing DLLs
+set "QTBIN="
+if exist "%QTDIR%\bin" (
+    if exist "%QTDIR%\bin\Qt6Core.dll" (
+        set "QTBIN=%QTDIR%\bin"
+    )
+)
+
+REM Check if Qt6Core.dll exists directly in QTDIR (like in klogg installed directory)
+if "%QTBIN%"=="" (
+    if exist "%QTDIR%\Qt6Core.dll" (
+        set "QTBIN=%QTDIR%"
+    )
+)
+
+REM Check klogg installed directory as fallback
+if "%QTBIN%"=="" (
+    for %%K in ("D:\klogg" "%PROGRAMFILES%\klogg" "%PROGRAMFILES(X86)%\klogg") do (
+        if exist "%%~K\Qt6Core.dll" (
+            echo Found Qt DLLs in klogg installed directory at %%~K
+            set "QTBIN=%%~K"
+            set "KLOGG_INSTALLED_DIR=%%~K"
+        )
+    )
+)
+
+REM If not found, search recursively
+if "%QTBIN%"=="" (
+    for /d %%Q in ("C:\Qt" "D:\a\_temp" "%LOCALAPPDATA%\Qt" "C:\hostedtoolcache\Qt") do (
+        if exist "%%Q" (
+            for /r "%%Q" %%F in (Qt6Core.dll) do (
+                if exist "%%F" (
+                    set "QTBIN=%%~dpF"
+                    set "QTDIR=%%~dpF.."
+                )
             )
         )
+    )
+)
+
+echo QTBIN=%QTBIN%
+
+REM Copy Qt DLLs manually - use Qt6 for Qt6 builds
+if "%QTBIN%" neq "" (
+    if exist "%QTBIN%\Qt6Core.dll" (
+        echo Copying Qt6 DLLs...
+        xcopy /Y /Q "%QTBIN%\Qt6Core.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt6Core.dll
+        xcopy /Y /Q "%QTBIN%\Qt6Gui.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt6Gui.dll
+        xcopy /Y /Q "%QTBIN%\Qt6Network.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt6Network.dll
+        xcopy /Y /Q "%QTBIN%\Qt6Widgets.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt6Widgets.dll
+        xcopy /Y /Q "%QTBIN%\Qt6Concurrent.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt6Concurrent.dll
+        xcopy /Y /Q "%QTBIN%\Qt6Xml.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt6Xml.dll
+        xcopy /Y /Q "%QTBIN%\Qt6Core5Compat.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Qt6Core5Compat.dll not found, skipping
+    ) else if exist "%QTBIN%\Qt5Core.dll" (
+        echo Copying Qt5 DLLs...
+        xcopy /Y /Q "%QTBIN%\Qt5Core.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt5Core.dll
+        xcopy /Y /Q "%QTBIN%\Qt5Gui.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt5Gui.dll
+        xcopy /Y /Q "%QTBIN%\Qt5Network.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt5Network.dll
+        xcopy /Y /Q "%QTBIN%\Qt5Widgets.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt5Widgets.dll
+        xcopy /Y /Q "%QTBIN%\Qt5Concurrent.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt5Concurrent.dll
+        xcopy /Y /Q "%QTBIN%\Qt5Xml.dll" "%KLOGG_WORKSPACE%\release\" 2>nul || echo Failed to copy Qt5Xml.dll
     )
 ) else (
-    echo "windeployqt not found at %QTDIR%\bin\windeployqt.exe"
-    echo "Trying to find Qt DLLs in common locations..."
-
-    REM Search for Qt DLLs recursively in various locations
-    set "QT_FOUND=0"
-
-    for /d %%Q in ("C:\Qt" "D:\a\_temp" "%LOCALAPPDATA%\Qt" "C:\Users\runneradmin\AppData\Local\Qt") do (
-        if exist "%%Q" (
-            echo Searching in %%Q...
-            for /r "%%Q" %%F in (windeployqt.exe) do (
-                if exist "%%F" (
-                    echo Found windeployqt at %%F
-                    "%%F" --no-compiler-runtime --dir "%KLOGG_WORKSPACE%\release" "%KLOGG_WORKSPACE%\%KLOGG_BUILD_ROOT%\output\klogg.exe"
-                    set "QT_FOUND=1"
+    echo Qt bin directory not found! Searching recursively...
+    for /r "C:\Qt" %%F in (Qt6Core.dll Qt5Core.dll) do (
+        if exist "%%F" (
+            set "FOUND_QT_BIN=%%~dpF"
+            for %%D in (Qt6 Qt5) do (
+                if exist "%%~dpF%%DCore.dll" (
+                    echo Found %%D DLLs at %%~dpF
+                    xcopy /Y /Q "%%~dpF%%DCore.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DGui.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DNetwork.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DWidgets.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DConcurrent.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DXml.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DCore5Compat.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
                 )
             )
         )
     )
-
-    REM If Qt not found yet, search for DLLs directly
-    if "%QT_FOUND%"=="0" (
-        echo "Searching for Qt DLLs directly..."
-        for /d %%Q in ("C:\Qt" "D:\a\_temp" "%LOCALAPPDATA%\Qt") do (
-            for /r "%%Q" %%F in (Qt6Core.dll Qt5Core.dll) do (
-                if exist "%%F" (
-                    echo Found Qt DLL at %%F
-                    set "FOUND_QT_BIN=%%~dpF"
-                    for %%D in (Qt5 Qt6) do (
-                        if exist "%%~dpF%%DCore.dll" (
-                            echo Copying %%D* DLLs from %%~dpF
-                            xcopy /Y /Q "%%~dpF%%DCore.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                            xcopy /Y /Q "%%~dpF%%DGui.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                            xcopy /Y /Q "%%~dpF%%DNetwork.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                            xcopy /Y /Q "%%~dpF%%DWidgets.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                            xcopy /Y /Q "%%~dpF%%DConcurrent.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                            xcopy /Y /Q "%%~dpF%%DXml.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                            xcopy /Y /Q "%%~dpF%%DCore5Compat.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
-                        )
-                    )
+    for /r "D:\a\_temp" %%F in (Qt6Core.dll Qt5Core.dll) do (
+        if exist "%%F" (
+            set "FOUND_QT_BIN=%%~dpF"
+            for %%D in (Qt6 Qt5) do (
+                if exist "%%~dpF%%DCore.dll" (
+                    echo Found %%D DLLs at %%~dpF
+                    xcopy /Y /Q "%%~dpF%%DCore.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DGui.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DNetwork.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DWidgets.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DConcurrent.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DXml.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DCore5Compat.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
                 )
             )
+        )
+    )
+    for /r "C:\hostedtoolcache\Qt" %%F in (Qt6Core.dll Qt5Core.dll) do (
+        if exist "%%F" (
+            set "FOUND_QT_BIN=%%~dpF"
+            for %%D in (Qt6 Qt5) do (
+                if exist "%%~dpF%%DCore.dll" (
+                    echo Found %%D DLLs at %%~dpF
+                    xcopy /Y /Q "%%~dpF%%DCore.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DGui.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DNetwork.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DWidgets.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DConcurrent.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DXml.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                    xcopy /Y /Q "%%~dpF%%DCore5Compat.dll" "%KLOGG_WORKSPACE%\release\" 2>nul
+                )
+            )
+        )
+    )
+)
+
+REM Also copy additional Qt6 DLLs that might be needed
+if exist "%QTBIN%\Qt6Core.dll" (
+    for %%F in (
+        "Qt6DBus.dll"
+        "Qt6OpenGL.dll"
+        "Qt6PrintSupport.dll"
+        "Qt6Sql.dll"
+        "Qt6Svg.dll"
+        "Qt6Test.dll"
+        "Qt6OpenGLWidgets.dll"
+        "Qt6Gamepad.dll"
+        "Qt6Pdf.dll"
+        "Qt6Positioning.dll"
+        "Qt6Qml.dll"
+        "Qt6QmlModels.dll"
+        "Qt6QmlWorkerScript.dll"
+        "Qt6Quick.dll"
+        "Qt6QuickWidgets.dll"
+        "Qt6ShaderTools.dll"
+        "Qt63DCore.dll"
+        "Qt63DRender.dll"
+        "Qt63DInput.dll"
+        "Qt63DLogic.dll"
+        "Qt6Charts.dll"
+        "Qt6DataVisualization.dll"
+        "Qt6NetworkAuth.dll"
+        "Qt6TextToSpeech.dll"
+        "Qt6StateMachine.dll"
+        "Qt6Speech.dll"
+        "Qt6SerialPort.dll"
+        "Qt6RemoteObjects.dll"
+        "Qt6WebChannel.dll"
+        "icudt72.dll"
+        "icuin72.dll"
+        "icuuc72.dll"
+    ) do (
+        if exist "%QTBIN%\%%~F" (
+            xcopy /Y /Q "%QTBIN%\%%~F" "%KLOGG_WORKSPACE%\release\" 2>nul
         )
     )
 )
@@ -179,26 +283,62 @@ REM Copy Qt plugins from known locations
 md "%KLOGG_WORKSPACE%\release\platforms"
 md "%KLOGG_WORKSPACE%\release\styles"
 
-for /d %%Q in ("C:\Qt" "D:\a\_temp" "%LOCALAPPDATA%\Qt" "%QTDIR%") do (
-    if exist "%%Q\plugins\platforms\qwindows.dll" (
-        xcopy /Y /Q "%%Q\plugins\platforms\qwindows.dll" "%KLOGG_WORKSPACE%\release\platforms\" 2>nul
+REM Try to find plugins directory
+set "QT_PLUGINS="
+if "%QTDIR%" neq "" (
+    if exist "%QTDIR%\plugins" (
+        set "QT_PLUGINS=%QTDIR%\plugins"
     )
-    if exist "%%Q\plugins\styles\qwindowsvistastyle.dll" (
-        xcopy /Y /Q "%%Q\plugins\styles\qwindowsvistastyle.dll" "%KLOGG_WORKSPACE%\release\styles\" 2>nul
+)
+
+REM Search for plugins if not found
+if "%QT_PLUGINS%"=="" (
+    for /d %%Q in ("C:\Qt" "D:\a\_temp" "%LOCALAPPDATA%\Qt" "C:\hostedtoolcache\Qt") do (
+        if exist "%%Q" (
+            for /d %%P in ("%%Q\6.*\plugins") do (
+                set "QT_PLUGINS=%%P"
+            )
+        )
     )
-    if exist "%%Q\plugins\styles\qmodernwindowsstyle.dll" (
-        xcopy /Y /Q "%%Q\plugins\styles\qmodernwindowsstyle.dll" "%KLOGG_WORKSPACE%\release\styles\" 2>nul
+)
+
+echo QT_PLUGINS=%QT_PLUGINS%
+
+REM Copy platforms plugin
+if "%QT_PLUGINS%" neq "" (
+    if exist "%QT_PLUGINS%\platforms\qwindows.dll" (
+        echo Copying qwindows.dll...
+        xcopy /Y /Q "%QT_PLUGINS%\platforms\qwindows.dll" "%KLOGG_WORKSPACE%\release\platforms\" 2>nul || echo Failed to copy qwindows.dll
+    )
+    if exist "%QT_PLUGINS%\styles\qmodernwindowsstyle.dll" (
+        echo Copying qmodernwindowsstyle.dll...
+        xcopy /Y /Q "%QT_PLUGINS%\styles\qmodernwindowsstyle.dll" "%KLOGG_WORKSPACE%\release\styles\" 2>nul || echo Failed to copy qmodernwindowsstyle.dll
+    )
+    if exist "%QT_PLUGINS%\styles\qwindowsvistastyle.dll" (
+        echo Copying qwindowsvistastyle.dll...
+        xcopy /Y /Q "%QT_PLUGINS%\styles\qwindowsvistastyle.dll" "%KLOGG_WORKSPACE%\release\styles\" 2>nul || echo Failed to copy qwindowsvistastyle.dll
     )
 )
 
 REM Search recursively for plugins if not found
 if not exist "%KLOGG_WORKSPACE%\release\platforms\qwindows.dll" (
-    for /d %%Q in ("C:\Qt" "D:\a\_temp" "%LOCALAPPDATA%\Qt") do (
-        for /r "%%Q" %%F in (qwindows.dll) do (
-            if exist "%%F" (
-                echo Found qwindows.dll at %%F
-                copy /Y "%%F" "%KLOGG_WORKSPACE%\release\platforms\" 2>nul
-            )
+    echo Searching for qwindows.dll recursively...
+    for /r "C:\Qt" %%F in (qwindows.dll) do (
+        if exist "%%F" (
+            echo Found qwindows.dll at %%F
+            xcopy /Y /Q "%%F" "%KLOGG_WORKSPACE%\release\platforms\" 2>nul
+        )
+    )
+    for /r "D:\a\_temp" %%F in (qwindows.dll) do (
+        if exist "%%F" (
+            echo Found qwindows.dll at %%F
+            xcopy /Y /Q "%%F" "%KLOGG_WORKSPACE%\release\platforms\" 2>nul
+        )
+    )
+    for /r "C:\hostedtoolcache\Qt" %%F in (qwindows.dll) do (
+        if exist "%%F" (
+            echo Found qwindows.dll at %%F
+            xcopy /Y /Q "%%F" "%KLOGG_WORKSPACE%\release\platforms\" 2>nul
         )
     )
 )
