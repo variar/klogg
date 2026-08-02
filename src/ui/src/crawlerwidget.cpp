@@ -394,7 +394,8 @@ void CrawlerWidget::startNewSearch()
         // Avoid changeFilteredView()/restore while the new tab has no context yet.
         {
             const QSignalBlocker blocker( tabbedFilteredView_ );
-            const auto index = tabbedFilteredView_->addTab( filteredView_, "" );
+            const auto index = tabbedFilteredView_->addTab( filteredView_,
+                                    QString::number( nextTabNumber_++ ) );
             tabbedFilteredView_->setCurrentIndex( index );
         }
 
@@ -409,7 +410,7 @@ void CrawlerWidget::startNewSearch()
     }
 
     tabbedFilteredView_->setTabText( tabbedFilteredView_->currentIndex(),
-                                     "Find \"" + searchText + "\"" );
+                                     QString::number( nextTabNumber_ - 1 ) );
 
     // Record the search line in the recent list
     // (reload the list first in case another glogg changed it)
@@ -1157,9 +1158,17 @@ void CrawlerWidget::setup()
     // Construct the bottom window
     tabbedFilteredView_ = new QTabWidget;
     tabbedFilteredView_->setTabsClosable( true );
-    tabbedFilteredView_->addTab( filteredView_, "" );
+    tabbedFilteredView_->addTab( filteredView_, QString::number( nextTabNumber_++ ) );
     tabbedFilteredView_->setDocumentMode( true );
     tabbedFilteredView_->setTabBarAutoHide( true );
+
+    // Set fixed tab width so all tabs have equal size regardless of text content
+    auto* tabBar = tabbedFilteredView_->tabBar();
+    constexpr int fixedTabWidth = 40;
+    tabBar->setFixedHeight( 25 );
+    tabBar->setStyleSheet(
+        QString( "QTabBar::tab { min-width: %1px; max-width: %1px; width: %1px; }" )
+            .arg( fixedTabWidth ) );
 
     auto* bottomMainLayout = new QVBoxLayout;
     bottomMainLayout->addLayout( searchLineLayout );
@@ -1343,6 +1352,7 @@ void CrawlerWidget::closeFilteredView( int tabIndex )
     auto* tabFilteredView = tabbedFilteredView_->widget( tabIndex );
     connect( tabFilteredView, &QObject::destroyed, this, &CrawlerWidget::filteredViewDestroyed );
     tabFilteredView->deleteLater();
+    // Note: nextTabNumber is not decremented to maintain unique tab numbers
 }
 
 void CrawlerWidget::filteredViewDestroyed( QObject* view )

@@ -447,6 +447,9 @@ class CrawlerWidget : public QSplitter,
 
     klogg::vector<LineNumber> savedMarkedLines_;
 
+    // Track tab numbers for display
+    int nextTabNumber_ = 1;
+
     // Current encoding setting;
     std::optional<int> encodingMib_;
     QString encodingText_;
