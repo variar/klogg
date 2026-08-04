@@ -88,6 +88,20 @@ LogFilteredData::LogFilteredData( const LogData* logData )
              &LogFilteredData::handleSearchProgressedThrottled );
 }
 
+// Add missing destructor implementation to fix linking error LNK2001
+LogFilteredData::~LogFilteredData()
+{
+    LOG_DEBUG << "Destroying LogFilteredData";
+    try {
+        // Ensure any running search is interrupted so worker thread can stop cleanly.
+        interruptSearch();
+
+        // Worker/threads are cleaned up in their own destructors; no further action required here.
+    } catch ( const std::exception& e ) {
+        LOG_ERROR << "Failed to destroy LogFilteredData: " << e.what();
+    }
+}
+
 void LogFilteredData::runSearch( const RegularExpressionPattern& regExp )
 {
     runSearch( regExp, 0_lnum, LineNumber( getNbTotalLines().get() ) );
