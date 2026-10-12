@@ -55,8 +55,9 @@ void openFileByHandle( QFile* file )
         LOG_WARNING << "Failed to open file by handle " << file->fileName();
     }
 #endif
-    if ( !openedByHandle ) {
-        file->open( QIODevice::ReadOnly );
+    if ( !openedByHandle && !file->open( QIODevice::ReadOnly ) ) {
+        LOG_WARNING << "Failed to open file " << file->fileName() << ": " << file->errorString();
+        return;
     }
     LOG_INFO << "QFile opened";
 }

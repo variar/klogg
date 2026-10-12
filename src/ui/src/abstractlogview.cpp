@@ -1438,8 +1438,7 @@ void AbstractLogView::saveLinesToFile( LineNumber begin, LineNumber end )
     }
 
     QSaveFile saveFile{ filename };
-    saveFile.open( QIODevice::WriteOnly | QIODevice::Truncate );
-    if ( !saveFile.isOpen() ) {
+    if ( !saveFile.open( QIODevice::WriteOnly | QIODevice::Truncate ) ) {
         LOG_ERROR << "Failed to open file to save";
         return;
     }

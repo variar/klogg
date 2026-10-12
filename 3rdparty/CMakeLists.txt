@@ -1,6 +1,7 @@
 set(QAPPLICATION_CLASS QApplication)
 
 include(CPM)
+include(PatchBundledDependency)
 
 set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
 
@@ -121,7 +122,19 @@ cpmaddpackage(
   EXCLUDE_FROM_ALL
   YES
 )
-if(NOT KF5Archive_ADDED)
+if(KF5Archive_ADDED)
+  # QString::arg() requires an explicit integer conversion for QFlags in newer Qt.
+  foreach(source kar.cpp krcc.cpp karchive.cpp)
+    klogg_patch_bundled_dependency(
+      "${KF5Archive_SOURCE_DIR}/karchive/src/${source}"
+      ".arg(mode)" ".arg(static_cast<int>(mode))"
+    )
+  endforeach()
+  klogg_patch_bundled_dependency(
+    "${KF5Archive_SOURCE_DIR}/karchive/src/karchive.cpp"
+    ".arg(d->mode)" ".arg(static_cast<int>(d->mode))"
+  )
+else()
   find_package(KF5Archive)
   add_library(klogg_karchive INTERFACE)
   target_link_libraries(klogg_karchive INTERFACE KF5::Archive)
@@ -142,6 +155,13 @@ cpmaddpackage(
   EXCLUDE_FROM_ALL
   YES
 )
+if(robin_hood_ADDED)
+  # Do not depend on libstdc++ transitively including the fixed-width types.
+  klogg_patch_bundled_dependency(
+    "${robin_hood_SOURCE_DIR}/src/include/robin_hood.h"
+    "#include <cstdlib>" "#include <cstdlib>\n#include <cstdint>"
+  )
+endif()
 if(NOT TARGET robin_hood)
   message("Adding imported target for robin_hood")
   add_library(robin_hood INTERFACE)

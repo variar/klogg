@@ -82,8 +82,6 @@ class WriteFileThread : public QThread {
     int result_{};
 };
 
-#include "logdata_test.moc"
-
 #ifdef _WIN32
 void writeDataToFileBackground( QFile& file, int numberOfLines = 200,
                                 WriteFileModification flag = WriteFileModification::None )
@@ -103,6 +101,8 @@ void writeDataToFile( QFile& file, int numberOfLines = 200,
     thread->deleteLater();
 }
 } // namespace
+
+#include "logdata_test.moc"
 
 TEST_CASE( "Logdata decoding lines", "[logdata]" )
 {
