@@ -111,6 +111,12 @@ if(${QT_VERSION_MAJOR} EQUAL 6)
 set(CPM_USE_LOCAL_PACKAGES OFF)
 endif()
 
+# Qt >= 6.9 no longer accepts QFlags in QString::arg(), patch karchive sources
+set(_klogg_karchive_patches)
+if(KLOGG_QT_VERSION VERSION_GREATER_EQUAL 6.9)
+  set(_klogg_karchive_patches PATCHES "${CMAKE_CURRENT_LIST_DIR}/../cmake/patches/karchive-qt6.9-qstring-arg.patch")
+endif()
+
 cpmaddpackage(
   NAME
   KF5Archive
@@ -120,6 +126,7 @@ cpmaddpackage(
   f546bf6ae66a8d34b43da5a41afcfbf4e1a47906
   EXCLUDE_FROM_ALL
   YES
+  ${_klogg_karchive_patches}
 )
 if(NOT KF5Archive_ADDED)
   find_package(KF5Archive)

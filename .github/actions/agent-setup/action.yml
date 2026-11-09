@@ -51,10 +51,16 @@ runs:
             BOOST_ROOT=$(echo $BOOST_ROOT | sed 's/\\/\//g')
           fi
           mkdir -p $BOOST_ROOT
-          curl --progress-bar --location --output $BOOST_ROOT/download.tar.bz2 $BOOST_URL
-          7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar.bz2 -y -bd
-          7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar -y -bd
-          cd $BOOST_ROOT && cp -r boost_*/* .
-          rm -rf boost_*/* download.tar.bz2 download.tar
+          curl --fail --progress-bar --location --output $BOOST_ROOT/download.tar.bz2 $BOOST_URL
+          if [ "$OS" == "Windows_NT" ]; then
+            7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar.bz2 -y -bd
+            7z -o$BOOST_ROOT x $BOOST_ROOT/download.tar -y -bd
+            cd $BOOST_ROOT && cp -r boost_*/* .
+            rm -rf boost_*/* download.tar.bz2 download.tar
+          else
+            # p7zip on macOS fails on recent boost archives, use tar
+            tar -xjf $BOOST_ROOT/download.tar.bz2 -C $BOOST_ROOT --strip-components=1
+            rm -f $BOOST_ROOT/download.tar.bz2
+          fi
         fi
         
