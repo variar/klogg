@@ -139,6 +139,13 @@ message("Resetting CPM_USE_LOCAL_PACKAGES to ${_TMP_CPM_USE_LOCAL_PACKAGES}")
 set(CPM_USE_LOCAL_PACKAGES ${_TMP_CPM_USE_LOCAL_PACKAGES})
 endif()
 
+# robin_hood.h relies on <cstdint> being included transitively, which is no longer
+# the case with GCC 15 (Ubuntu 26.04). MSVC is not affected and avoids CRLF patch issues.
+set(_klogg_robin_hood_patches)
+if(NOT MSVC)
+  set(_klogg_robin_hood_patches PATCHES "${CMAKE_CURRENT_LIST_DIR}/../cmake/patches/robin_hood-gcc15-cstdint.patch")
+endif()
+
 cpmaddpackage(
   NAME
   robin_hood
@@ -148,6 +155,7 @@ cpmaddpackage(
   3.11.5
   EXCLUDE_FROM_ALL
   YES
+  ${_klogg_robin_hood_patches}
 )
 if(NOT TARGET robin_hood)
   message("Adding imported target for robin_hood")
