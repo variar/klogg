@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
 
+# CMake 4 dropped compatibility with cmake_minimum_required < 3.5,
+# some third-party dependencies still declare older versions
+if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
+  set(CMAKE_POLICY_VERSION_MINIMUM 3.5 CACHE STRING "Minimum policy version for dependencies")
+endif()
+
 project(
   klogg
   VERSION 24.11.0
