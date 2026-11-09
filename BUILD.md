@@ -18,9 +18,9 @@ git clone https://github.com/variar/klogg
 
 To build Klogg:
 
-- cmake 3.12 or later to generate build files
-- C++ compiler with decent C++17 support (at least gcc 7.5, clang 7, msvc 19.14)
-- Qt libraries 5.9 or later (CI builds use Qt 5.9.5/5.12.5/5.15.2):
+- cmake 3.18 or later to generate build files
+- C++17 compiler supported by the selected Qt version (CI uses GCC 13 and MSVC 2022)
+- Qt libraries 5.9 or later (CI builds use Qt 6.12.0 and Qt 5.15.2):
   - QtCore
   - QtGui
   - QtWidgets
@@ -32,7 +32,7 @@ To build Klogg:
 To build Hyperscan regular expressions backend (default):
 
 - CPU with support for [SSSE3](https://en.wikipedia.org/wiki/SSSE3) instructions (for Hyperscan backend)
-- Boost (1.58 or later, header-only part)
+- Boost (1.58 or later, header-only part; CI uses 1.91.0)
 - Ragel (6.8 or later; precompiled binary is provided for Windows; has to be installed from package managers on Linux or Homebrew on Mac)
 
 To build installer for Windows:
@@ -64,7 +64,7 @@ Memory allocator override can be turned off by passing `-DKLOGG_OVERRIDE_MALLOC`
 
 ### Building on Linux
 
-Here is how to build klogg on Ubuntu 18.04.
+Here is how to build klogg on Ubuntu 26.04 or later.
 
 Install dependencies:
 
@@ -94,17 +94,17 @@ See `.github/workflows/ci-build.yml` for more information on build process.
 
 ### Building on Windows
 
-Install Microsoft Visual Studio 2017 or 2019 with C++ support.
+Install Microsoft Visual Studio 2022 with C++ support for Qt 6.12.
 Community edition can be downloaded from [Microsoft](https://visualstudio.microsoft.com/vs/).
 
 Intall latest Qt version using [online installer](https://www.qt.io/download-qt-installer).
 Make sure to select version matching Visual Studio installation. 64-bit libraries are recommended.
 
 Install CMake from [Kitware](https://cmake.org/download/).
-Use version 3.14 or later for Visual Studio 2019 support.
+Use version 3.18 or later.
 
 Download the Boost source code from http://www.boost.org/users/download/.
-Extract to some folder. Directory structure should be something like `C:\Boost\boost_1_63_0`.
+Extract to some folder. Directory structure should be something like `C:\Boost\boost_1_91_0`.
 Then add `BOOST_ROOT` environment variable pointing to main directory of Boost sources so CMake is able to fine it.
 
 Prepare build environment for CMake. Open command prompt window and depending on version of Visual Studio run either
@@ -137,14 +137,15 @@ Configure klogg solution (use CMake generator matching Visual Studio version):
 cd <path_to_project_root>
 md build_root
 cd build_root
-cmake -G "Visual Studio 16 2019 Win64" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 ```
 
 CMake should generate `klogg.sln` file in `<path_to_project_root>\build_root` directory. Open solution and build it.
 
 Binaries are placed into `build_root/output`.
 
-For https network urls support download precompiled openssl library https://mirror.firedaemon.com/OpenSSL/openssl-1.1.1l-dev.zip.
+For HTTPS support with the Windows build, download the current OpenSSL 1.1.1w binaries from
+https://www.firedaemon.com/download-firedaemon-openssl-1.1.1-zip.
 Put libcrypto-1_1 and libssl-1_1 for desired architecture near klogg binaries.
 
 ### Building on Mac OS
@@ -165,7 +166,7 @@ Download and install build dependencies:
 brew install cmake ninja qt boost ragel
 ```
 
-Usually path to qt installation looks like `/usr/local/Cellar/qt/5.14.0/lib/cmake/Qt5`
+Usually path to Qt installation looks like `/usr/local/Cellar/qt/6.12.0/lib/cmake/Qt6`
 
 Configure and build klogg:
 

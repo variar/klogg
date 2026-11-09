@@ -4,10 +4,10 @@ include(CPM)
 
 set(_TMP_CPM_USE_LOCAL_PACKAGES ${CPM_USE_LOCAL_PACKAGES})
 
-cpmaddpackage("gh:simdutf/simdutf@5.6.2")
+cpmaddpackage("gh:simdutf/simdutf@9.3.3")
 cpmaddpackage("gh:foonathan/type_safe@0.2.4")
-cpmaddpackage("gh:RoaringBitmap/CRoaring@4.2.1")
-cpmaddpackage("gh:lemire/streamvbyte@1.0.0")
+cpmaddpackage("gh:RoaringBitmap/CRoaring@5.5.5")
+cpmaddpackage("gh:lemire/streamvbyte@3.0.2")
 
 if(APPLE)
   cpmaddpackage(
@@ -16,7 +16,7 @@ if(APPLE)
     GITHUB_REPOSITORY
     arl/macdeployqtfix
     GIT_TAG
-    df888505849d3c06d20a4338af276dfa7d11826a
+    631361abd994640023c83b539735d8373744f9dd
     DOWNLOAD_ONLY
     YES
   )
@@ -58,7 +58,7 @@ elseif(KLOGG_USE_VECTORSCAN)
     GITHUB_REPOSITORY
     VectorCamp/vectorscan
     GIT_TAG
-    d29730e1cb9daaa66bda63426cdce83505d2c809
+    vectorscan/5.4.14
     EXCLUDE_FROM_ALL
     YES
     OPTIONS
@@ -138,7 +138,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   martinus/robin-hood-hashing
   GIT_TAG
-  3.11.2
+  3.11.5
   EXCLUDE_FROM_ALL
   YES
 )
@@ -156,7 +156,7 @@ if(KLOGG_BUILD_TESTS)
     GITHUB_REPOSITORY
     catchorg/Catch2
     VERSION
-    2.13.8
+    3.16.1
     EXCLUDE_FROM_ALL
     YES
   )
@@ -197,7 +197,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   Cyan4973/xxHash
   VERSION
-  0.8.1
+  0.8.4
   DOWNLOAD_ONLY
   YES
 )
@@ -255,7 +255,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   KDAB/KDToolBox
   GIT_TAG
-  6468867d1a46eabe1bcb2cd342f338fe66f06675
+  8e28921e436fd805904118d04f1f9a8428ca1408
   DOWNLOAD_ONLY
   YES
 )
@@ -276,7 +276,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   SpartanJ/efsw
   GIT_TAG
-  1.4.1
+  1.7.3
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
@@ -295,7 +295,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   variar/oneTBB
   GIT_TAG
-  c9be1ac2930f02dea523003ed801b4489f3e6b6e
+  d1d43adf6af117d3ab4ee3a14a5fa129e0690290
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
@@ -315,7 +315,7 @@ cpmaddpackage(
   GITHUB_REPOSITORY
   microsoft/mimalloc
   VERSION
-  2.1.7
+  3.6.1
   EXCLUDE_FROM_ALL
   YES
   OPTIONS
@@ -367,7 +367,7 @@ if(KLOGG_USE_SENTRY)
     GITHUB_REPOSITORY
     getsentry/sentry-native
     GIT_TAG
-    a3d58622a807b9dda174cb9fc18fa0f98c89d043
+    0.17.6
     EXCLUDE_FROM_ALL
     YES
   )
@@ -414,5 +414,4 @@ foreach(target ${klogg_cpm_targets})
     set_property(TARGET ${target} PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${${target}_include_dirs})
   endif()
 endforeach()
-
 

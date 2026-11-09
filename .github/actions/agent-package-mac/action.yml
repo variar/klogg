@@ -18,7 +18,7 @@ runs:
     - name: Mac prepare codesign
       id: prepare-codesign
       if: ${{ github.event_name != 'pull_request' }} 
-      uses: apple-actions/import-codesign-certs@v1
+      uses: apple-actions/import-codesign-certs@v7.2.0
       with: 
         p12-file-base64: ${{ inputs.p12-file-base64 }}
         p12-password: ${{ inputs.p12-password }}

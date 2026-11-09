@@ -4,18 +4,20 @@ runs:
   using: "composite"
   steps:
     - name: Install Ninja
-      uses: seanmiddleditch/gha-setup-ninja@master
+      uses: seanmiddleditch/gha-setup-ninja@v6
+      with:
+        version: 1.13.2
 
     - name: Cache Qt
       id: cache-qt
-      uses: actions/cache@v1
+      uses: actions/cache@v6.1.0
       with:
         path: ../Qt
         key: ${{ matrix.config.os }}-${{ matrix.config.arch }}-${{ matrix.config.qt_version }}-QtCache
 
     - name: Install Qt
       if: ${{ matrix.config.qt_arch }}
-      uses: jurplel/install-qt-action@v3
+      uses: jurplel/install-qt-action@v4.5.0
       with:
         version: ${{ matrix.config.qt_version }}
         arch: ${{ matrix.config.qt_arch }}
@@ -27,10 +29,10 @@ runs:
       shell: sh
       run: |
         echo "BOOST_ROOT=${{github.workspace}}/3rdparty/boost" >> $GITHUB_ENV
-        echo "BOOST_URL=https://sourceforge.net/projects/boost/files/boost/1.86.0/boost_1_86_0.tar.bz2/download" >> $GITHUB_ENV
+        echo "BOOST_URL=https://archives.boost.io/release/1.91.0/source/boost_1_91_0.tar.bz2" >> $GITHUB_ENV
 
     - name: Restore Boost cache
-      uses: actions/cache@v2
+      uses: actions/cache@v6.1.0
       id: cache-boost
       with:
         path: ${{env.BOOST_ROOT}}
@@ -56,5 +58,3 @@ runs:
           rm -rf boost_*/* download.tar.bz2 download.tar
         fi
         
-
-

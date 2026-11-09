@@ -17,8 +17,7 @@
  * along with klogg.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CATCH_CONFIG_RUNNER
-#include <catch2/catch.hpp>
+#include <catch2/catch_session.hpp>
 
 #include <QApplication>
 

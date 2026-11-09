@@ -9,13 +9,12 @@ RUN yum update -y && \
     gcc gcc-c++ elfutils-devel && \
     yum clean all
 
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.20.2/cmake-3.20.2-linux-x86_64.sh && \
-    chmod 755 cmake-3.20.2-linux-x86_64.sh && \
-    ./cmake-3.20.2-linux-x86_64.sh --prefix=/opt/ --exclude-subdir --skip-license && \
-    rm cmake-3.20.2-linux-x86_64.sh
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.31.12/cmake-3.31.12-linux-x86_64.sh && \
+    chmod 755 cmake-3.31.12-linux-x86_64.sh && \
+    ./cmake-3.31.12-linux-x86_64.sh --prefix=/opt/ --exclude-subdir --skip-license && \
+    rm cmake-3.31.12-linux-x86_64.sh
 
 RUN wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-linux.zip && \
     unzip ninja-linux.zip && chmod 755 ninja && mv ninja /opt/bin && rm ninja-linux.zip
 
 ENV PATH=/opt/bin:$PATH
-

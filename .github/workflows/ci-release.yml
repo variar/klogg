@@ -11,17 +11,17 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7.0.1
     - name: Download artifacts for last successful CI workflow
       if: ${{ !github.event.inputs.ci-run-id }}
-      uses: dawidd6/action-download-artifact@v2
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: ci-build.yml
         workflow_conclusion: success
 
     - name: Download artifacts for CI workflow with provided run id
       if: ${{ github.event.inputs.ci-run-id }}
-      uses: dawidd6/action-download-artifact@v6
+      uses: dawidd6/action-download-artifact@v28
       with:
         workflow: ci-build.yml
         run_id: ${{ github.event.inputs.ci-run-id }}
@@ -33,9 +33,7 @@ jobs:
       run: ls -R ./packages-*
 
     - name: Setup Sentry CLI
-      uses: mathrix-education/setup-sentry-cli@0.1.0
-      env:
-        ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+      uses: mathrix-education/setup-sentry-cli@v3.0.0
       with:
         token: ${{ secrets.SENTRY_TOKEN }}
         organization: anton-filimonov
@@ -53,11 +51,13 @@ jobs:
         xz -d ./packages-focal/klogg_focal.debug.xz
         xz -d ./packages-jammy/klogg_jammy.debug.xz
         xz -d ./packages-noble/klogg_noble.debug.xz
+        xz -d ./packages-resolute/klogg_resolute.debug.xz
         xz -d ./packages-oracle/klogg_oracle.debug.xz
         xz -d ./packages-appimage/klogg_appimage.debug.xz
         sentry-cli upload-dif ./packages-focal/klogg_focal.debug ./packages-focal/klogg_focal
         sentry-cli upload-dif ./packages-jammy/klogg_jammy.debug ./packages-jammy/klogg_jammy
         sentry-cli upload-dif ./packages-noble/klogg_noble.debug  ./packages-noble/klogg_noble
+        sentry-cli upload-dif ./packages-resolute/klogg_resolute.debug ./packages-resolute/klogg_resolute
         sentry-cli upload-dif ./packages-oracle/klogg_oracle.debug ./packages-oracle/klogg_oracle
         sentry-cli upload-dif ./packages-appimage/klogg_appimage.debug  ./packages-appimage/klogg_appimage
 
@@ -79,6 +79,7 @@ jobs:
         rm -rf ./packages-focal/klogg_focal
         rm -rf ./packages-jammy/klogg_jammy
         rm -rf ./packages-noble/klogg_noble
+        rm -rf ./packages-resolute/klogg_resolute
         rm -rf ./packages-oracle/klogg_oracle
         rm -rf ./packages-appimage/klogg_appimage
         rm -rf ./packages-macos-intel-qt6/klogg-x64.app
@@ -87,6 +88,7 @@ jobs:
         mv ./packages-focal/klogg_focal.debug ./linux-debug
         mv ./packages-jammy/klogg_jammy.debug ./linux-debug
         mv ./packages-noble/klogg_noble.debug ./linux-debug
+        mv ./packages-resolute/klogg_resolute.debug ./linux-debug
         mv ./packages-oracle/klogg_oracle.debug ./linux-debug
         mv ./packages-appimage/klogg_appimage.debug ./linux-debug
         tar -cJf ./linux-debug/klogg-$KLOGG_VERSION-symbols.tar.xz ./linux-debug/*
@@ -103,10 +105,10 @@ jobs:
     - name: Prepare checksums
       shell: sh
       run: |
-        sha256sum --binary ./packages-bin/* ./packages-focal/* ./packages-jammy/* ./packages-noble/* ./packages-oracle/* ./packages-appimage/*  > ./packages-bin/klogg-$KLOGG_VERSION-sha256.txt
+        sha256sum --binary ./packages-bin/* ./packages-focal/* ./packages-jammy/* ./packages-noble/* ./packages-resolute/* ./packages-oracle/* ./packages-appimage/*  > ./packages-bin/klogg-$KLOGG_VERSION-sha256.txt
         
     - name: Release win
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: "marvinpinto/action-automatic-releases@v1.2.1"
       with:
         repo_token: ${{ secrets.KLOGG_GITHUB_TOKEN }}
         automatic_release_tag: continuous-win
@@ -116,7 +118,7 @@ jobs:
           ./packages-windows-x64-qt6/*
 
     - name: Release linux
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: "marvinpinto/action-automatic-releases@v1.2.1"
       with:
         repo_token: ${{ secrets.KLOGG_GITHUB_TOKEN }}
         automatic_release_tag: continuous-linux
@@ -125,13 +127,14 @@ jobs:
           ./packages-focal/*
           ./packages-jammy/*
           ./packages-noble/*
+          ./packages-resolute/*
           ./packages-oracle/*
           ./packages-appimage/*
           ./packages-bin/*
           ./linux-debug/*
 
     - name: Release mac
-      uses: "marvinpinto/action-automatic-releases@latest"
+      uses: "marvinpinto/action-automatic-releases@v1.2.1"
       with:
         repo_token: ${{ secrets.KLOGG_GITHUB_TOKEN }}
         automatic_release_tag: continuous-osx
@@ -144,7 +147,7 @@ jobs:
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_NEW_VERSIONS_WEBHOOK }}
         DISCORD_EMBEDS: '[{"title": "Windows", "url": "https://github.com/variar/klogg/releases/tag/continuous-win"}, {"title": "Linux", "url": "https://github.com/variar/klogg/releases/tag/continuous-linux"}, {"title": "Mac", "url": "https://github.com/variar/klogg/releases/tag/continuous-osx"}]'
-      uses: Ilshidur/action-discord@master
+      uses: Ilshidur/action-discord@0.4.0
       with:
         args: 'New CI build {{KLOGG_VERSION}} has been released!'
 
