@@ -48,14 +48,10 @@ jobs:
     - name: Upload symbols linux
       shell: sh
       run: |
-        xz -d ./packages-focal/klogg_focal.debug.xz
-        xz -d ./packages-jammy/klogg_jammy.debug.xz
         xz -d ./packages-noble/klogg_noble.debug.xz
         xz -d ./packages-resolute/klogg_resolute.debug.xz
         xz -d ./packages-oracle/klogg_oracle.debug.xz
         xz -d ./packages-appimage/klogg_appimage.debug.xz
-        sentry-cli upload-dif ./packages-focal/klogg_focal.debug ./packages-focal/klogg_focal
-        sentry-cli upload-dif ./packages-jammy/klogg_jammy.debug ./packages-jammy/klogg_jammy
         sentry-cli upload-dif ./packages-noble/klogg_noble.debug  ./packages-noble/klogg_noble
         sentry-cli upload-dif ./packages-resolute/klogg_resolute.debug ./packages-resolute/klogg_resolute
         sentry-cli upload-dif ./packages-oracle/klogg_oracle.debug ./packages-oracle/klogg_oracle
@@ -76,8 +72,6 @@ jobs:
     - name: Cleanup release artifacts
       shell: sh
       run: |
-        rm -rf ./packages-focal/klogg_focal
-        rm -rf ./packages-jammy/klogg_jammy
         rm -rf ./packages-noble/klogg_noble
         rm -rf ./packages-resolute/klogg_resolute
         rm -rf ./packages-oracle/klogg_oracle
@@ -85,8 +79,6 @@ jobs:
         rm -rf ./packages-macos-intel-qt6/klogg-x64.app
         rm -rf ./packages-macos-arm-qt6/klogg-arm64.app
         mkdir ./linux-debug
-        mv ./packages-focal/klogg_focal.debug ./linux-debug
-        mv ./packages-jammy/klogg_jammy.debug ./linux-debug
         mv ./packages-noble/klogg_noble.debug ./linux-debug
         mv ./packages-resolute/klogg_resolute.debug ./linux-debug
         mv ./packages-oracle/klogg_oracle.debug ./linux-debug
@@ -99,13 +91,13 @@ jobs:
       run: |
         mkdir ./packages-bin
         mv ./packages-appimage/klogg_deps.tar.xz ./packages-bin/klogg-$KLOGG_VERSION-deps.tar.xz
-        ar p  ./packages-focal/klogg-$KLOGG_VERSION-focal.deb data.tar.gz > ./packages-bin/klogg-$KLOGG_VERSION-bin.tar.gz
+        ar p  ./packages-noble/klogg-$KLOGG_VERSION-noble.deb data.tar.gz > ./packages-bin/klogg-$KLOGG_VERSION-bin.tar.gz
         mv ./klogg_version/klogg_version.txt ./packages-bin
 
     - name: Prepare checksums
       shell: sh
       run: |
-        sha256sum --binary ./packages-bin/* ./packages-focal/* ./packages-jammy/* ./packages-noble/* ./packages-resolute/* ./packages-oracle/* ./packages-appimage/*  > ./packages-bin/klogg-$KLOGG_VERSION-sha256.txt
+        sha256sum --binary ./packages-bin/* ./packages-noble/* ./packages-resolute/* ./packages-oracle/* ./packages-appimage/*  > ./packages-bin/klogg-$KLOGG_VERSION-sha256.txt
         
     - name: Release win
       uses: "marvinpinto/action-automatic-releases@v1.2.1"
@@ -124,8 +116,6 @@ jobs:
         automatic_release_tag: continuous-linux
         prerelease: true
         files: |
-          ./packages-focal/*
-          ./packages-jammy/*
           ./packages-noble/*
           ./packages-resolute/*
           ./packages-oracle/*
