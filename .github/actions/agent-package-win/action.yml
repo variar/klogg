@@ -35,6 +35,14 @@ runs:
       run: |
         packaging\windows\prepare_release.cmd
 
+    - name: Install NSIS
+      shell: pwsh
+      run: |
+        # windows-2025 runner image does not ship NSIS
+        if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) {
+          choco install nsis -y --no-progress
+        }
+
     - name: Win installer
       uses: joncloud/makensis-action@v5.0
       with:
