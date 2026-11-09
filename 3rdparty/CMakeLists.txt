@@ -202,9 +202,8 @@ cpmaddpackage(
   YES
 )
 if(xxHash_ADDED)
-  set(XXHASH_BUILD_ENABLE_INLINE_API OFF)
   set(XXHASH_BUILD_XXHSUM OFF)
-  add_subdirectory(${xxHash_SOURCE_DIR}/cmake_unofficial ${CMAKE_BINARY_DIR}/xxhash EXCLUDE_FROM_ALL)
+  add_subdirectory(${xxHash_SOURCE_DIR}/build/cmake ${CMAKE_BINARY_DIR}/xxhash EXCLUDE_FROM_ALL)
 endif()
 
 cpmaddpackage(
@@ -414,4 +413,3 @@ foreach(target ${klogg_cpm_targets})
     set_property(TARGET ${target} PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES ${${target}_include_dirs})
   endif()
 endforeach()
-

@@ -204,6 +204,7 @@ jobs:
             qt_arch: win64_msvc2022_64
             arch: x64
             ssl_arch: -x64
+            ssl_target: VC-WIN64A
             cmake_opts:
             artifacts_id: windows-x64-qt6
 
@@ -212,6 +213,7 @@ jobs:
             qt_version: 5.15.2
             qt_arch: win32_msvc2019
             arch: x86
+            ssl_target: VC-WIN32
             cmake_opts:
             artifacts_id: windows-x86-qt5
 
@@ -224,28 +226,63 @@ jobs:
         uses: actions/cache@v6.1.0
         with:
           path: ${{ github.workspace }}\openssl-1.1
-          key: OpensslCache-1-1-1w
-
-      - name: Download openssl
-        if: ${{ steps.cache-openssl.outputs.cache-hit != 'true' }} 
-        run: |
-          Invoke-WebRequest -Uri "https://www.firedaemon.com/download-firedaemon-openssl-1.1.1-zip" -OutFile openssl.zip
-          7z x openssl.zip 
+          key: OpenSSL-1.1.1w-${{ matrix.config.arch }}
 
       - name: Set openssl paths
         shell: sh
         run: |
           echo "SSL_DIR=${{ github.workspace }}\openssl-1.1\${{ matrix.config.arch }}\bin" >> $GITHUB_ENV
-          echo "SSL_ARCH=${{ matrix.config.ssl_arch }}" >> $GITHUB_ENV 
+          echo "SSL_ARCH=${{ matrix.config.ssl_arch }}" >> $GITHUB_ENV
 
       - uses: ./.github/actions/agent-setup
       - uses: ./.github/actions/klogg-version
       - uses: ./.github/actions/prepare-workspace-env
-      
+
       - name: Prepare dev cmd
         uses: ilammy/msvc-dev-cmd@v1.13.0
         with:
           arch: ${{ matrix.config.arch }}
+
+      - name: Build OpenSSL
+        if: ${{ steps.cache-openssl.outputs.cache-hit != 'true' }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:GITHUB_WORKSPACE 'openssl-1.1.1w.tar.gz'
+          Invoke-WebRequest -Uri 'https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz' -OutFile $archive
+          $actualHash = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne 'cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8') {
+            throw "OpenSSL source archive SHA-256 mismatch: $actualHash"
+          }
+
+          tar -xzf $archive -C $env:GITHUB_WORKSPACE
+          if ($LASTEXITCODE -ne 0) { throw "OpenSSL source archive extraction failed with exit code $LASTEXITCODE" }
+          $source = Join-Path $env:GITHUB_WORKSPACE 'openssl-1.1.1w'
+          $prefix = Join-Path $env:GITHUB_WORKSPACE "openssl-1.1\${{ matrix.config.arch }}"
+          Push-Location $source
+          try {
+            perl Configure ${{ matrix.config.ssl_target }} no-asm shared no-tests "--prefix=$prefix" "--openssldir=$prefix/ssl"
+            if ($LASTEXITCODE -ne 0) { throw "OpenSSL configuration failed with exit code $LASTEXITCODE" }
+            nmake
+            if ($LASTEXITCODE -ne 0) { throw "OpenSSL build failed with exit code $LASTEXITCODE" }
+            nmake install_sw
+            if ($LASTEXITCODE -ne 0) { throw "OpenSSL installation failed with exit code $LASTEXITCODE" }
+          }
+          finally {
+            Pop-Location
+          }
+
+      - name: Verify OpenSSL installation
+        shell: pwsh
+        run: |
+          $sslDir = Join-Path $env:GITHUB_WORKSPACE "openssl-1.1\${{ matrix.config.arch }}\bin"
+          $sslArch = '${{ matrix.config.ssl_arch }}'
+          foreach ($name in @("libcrypto-1_1${sslArch}.dll", "libssl-1_1${sslArch}.dll")) {
+            $path = Join-Path $sslDir $name
+            if (-not (Test-Path -Path $path -PathType Leaf)) {
+              throw "Expected OpenSSL DLL was not installed: $path"
+            }
+          }
 
       - uses: ./.github/actions/agent-build
       - uses: ./.github/actions/agent-run-tests
