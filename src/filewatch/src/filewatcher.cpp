@@ -238,7 +238,7 @@ class EfswFileWatcher final : public efsw::FileWatchListener {
 
     void handleFileAction( efsw::WatchID watchid, const std::string& dir,
                            const std::string& filename, efsw::Action action,
-                           std::string oldFilename ) override
+                           const std::string& oldFilename ) override
     {
         Q_UNUSED( watchid );
         Q_UNUSED( action );
