@@ -47,7 +47,7 @@
 #endif // _WIN32
 
 #include <mimalloc.h>
-#include <roaring.hh>
+#include <roaring/roaring.hh>
 
 #ifdef KLOGG_HAS_HS
 #include <hs.h>

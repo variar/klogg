@@ -44,8 +44,8 @@
 #include <qthreadpool.h>
 
 #ifndef Q_MOC_RUN
-#include <roaring.hh>
-#include <roaring64map.hh>
+#include <roaring/roaring.hh>
+#include <roaring/roaring64map.hh>
 #include <tbb/task_group.h>
 #endif
 

@@ -23,10 +23,17 @@ on:
       - .gitignore
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # cancel superseded PR builds, keep every master build (releases use the last successful one)
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   SaveVersion:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: ./.github/actions/klogg-version
@@ -41,35 +48,10 @@ jobs:
           if-no-files-found: error
 
   Linux:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     strategy:
       fail-fast: false
       matrix:
         config:
-          #- os: oraclelinux
-          #  os_version: 7
-          #  arch: x64
-          #  check_command: yum install -y --setopt tsflags=test /usr/local/klogg*.rpm
-          #  cpack_gen: RPM
-          #  artifacts_id: oracle7
-          #  package_suffix: rpm
-          #  check_container: oraclelinux:7
-          #  container_root: docker/oracle7
-          #  container: variar/klogg_oracle7
-          #  cmake_opts: -DKLOGG_USE_SENTRY=OFF -DKLOGG_USE_LTO=OFF -DKLOGG_USE_HYPERSCAN=OFF
-
-          - os: oraclelinux
-            os_version: 8
-            arch: x64
-            check_command: yum install -y --setopt tsflags=test /usr/local/klogg*.rpm
-            cpack_gen: RPM
-            artifacts_id: oracle
-            package_suffix: rpm
-            check_container: oraclelinux:8
-            container_root: docker/oracle8
-            container: variar/klogg_oracle8
-            cmake_opts: -DCMAKE_BUILD_WITH_INSTALL_RPATH=on -DKLOGG_USE_VECTORSCAN=OFF -DKLOGG_USE_HYPERSCAN=ON
-
           - os: ubuntu_noble
             os_version: 24.04
             arch: x64
@@ -94,28 +76,21 @@ jobs:
             container: variar/klogg_ubuntu26.04
             cmake_opts:
 
-          - os: ubuntu_appimage
-            os_version: 20.04
-            arch: x64
-            artifacts_id: appimage
-            package_suffix: AppImage
-            container_root: docker/ubuntu20.04
-            container: variar/klogg_ubuntu20.04
-            cmake_opts:
-
-
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7.0.1
 
-      #- uses: satackey/action-docker-layer-caching@v0.0.11
-      #  # Ignore the failure of a step and avoid terminating the job.
-      #  continue-on-error: true
-      
-      - name: Build container 
-        run: |
-          cd ${{ matrix.config.container_root }}
-          docker build -t ${{ matrix.config.container }} .
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build container
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.config.container_root }}
+          tags: ${{ matrix.config.container }}
+          load: true
+          cache-from: type=gha,scope=${{ matrix.config.artifacts_id }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.config.artifacts_id }}
 
       - uses: ./.github/actions/klogg-version
       - uses: ./.github/actions/prepare-workspace-env
@@ -131,22 +106,15 @@ jobs:
           if-no-files-found: error      
 
   Mac:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    # macOS builds are disabled for now
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
         config:
           - os: macos
-            os_version: 13
-            qt_version: 6.12.0
-            qt_arch: clang_64
-            qt_modules: qt5compat
-            arch: x64
-            artifacts_id: macos-intel-qt6
-            cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=13.0
-          - os: macos
-            os_version: 14
-            qt_version: 6.12.0
+            os_version: 15
+            qt_version: 6.8.3
             qt_arch: clang_64
             qt_modules: qt5compat
             arch: arm64
@@ -154,13 +122,10 @@ jobs:
             cmake_opts: -DKLOGG_OSX_DEPLOYMENT_TARGET=14.0
 
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v7.0.1
       
-      - name: Setup Xcode
-        shell: sh
-        run: sudo xcode-select -s /Applications/Xcode_15.2.app
-
 #Install build deps
       - name: Set brew env
         run: |
@@ -192,14 +157,13 @@ jobs:
           if-no-files-found: error
 
   Windows:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
     strategy:
       fail-fast: false
       matrix:
         config:
           - os: windows
-            os_version: 2022
-            qt_version: 6.12.0
+            os_version: 2025
+            qt_version: 6.8.3
             qt_modules: qt5compat
             qt_arch: win64_msvc2022_64
             arch: x64
@@ -208,16 +172,8 @@ jobs:
             cmake_opts:
             artifacts_id: windows-x64-qt6
 
-          - os: windows
-            os_version: 2022
-            qt_version: 5.15.2
-            qt_arch: win32_msvc2019
-            arch: x86
-            ssl_target: VC-WIN32
-            cmake_opts:
-            artifacts_id: windows-x86-qt5
-
     runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v7.0.1
 

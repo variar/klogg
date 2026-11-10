@@ -111,6 +111,12 @@ if(${QT_VERSION_MAJOR} EQUAL 6)
 set(CPM_USE_LOCAL_PACKAGES OFF)
 endif()
 
+# Qt >= 6.9 no longer accepts QFlags in QString::arg(), patch karchive sources
+set(_klogg_karchive_patches)
+if(KLOGG_QT_VERSION VERSION_GREATER_EQUAL 6.9)
+  set(_klogg_karchive_patches PATCHES "${CMAKE_CURRENT_LIST_DIR}/../cmake/patches/karchive-qt6.9-qstring-arg.patch")
+endif()
+
 cpmaddpackage(
   NAME
   KF5Archive
@@ -120,6 +126,7 @@ cpmaddpackage(
   f546bf6ae66a8d34b43da5a41afcfbf4e1a47906
   EXCLUDE_FROM_ALL
   YES
+  ${_klogg_karchive_patches}
 )
 if(NOT KF5Archive_ADDED)
   find_package(KF5Archive)
@@ -132,6 +139,13 @@ message("Resetting CPM_USE_LOCAL_PACKAGES to ${_TMP_CPM_USE_LOCAL_PACKAGES}")
 set(CPM_USE_LOCAL_PACKAGES ${_TMP_CPM_USE_LOCAL_PACKAGES})
 endif()
 
+# robin_hood.h relies on <cstdint> being included transitively, which is no longer
+# the case with GCC 15 (Ubuntu 26.04). MSVC is not affected and avoids CRLF patch issues.
+set(_klogg_robin_hood_patches)
+if(NOT MSVC)
+  set(_klogg_robin_hood_patches PATCHES "${CMAKE_CURRENT_LIST_DIR}/../cmake/patches/robin_hood-gcc15-cstdint.patch")
+endif()
+
 cpmaddpackage(
   NAME
   robin_hood
@@ -141,6 +155,7 @@ cpmaddpackage(
   3.11.5
   EXCLUDE_FROM_ALL
   YES
+  ${_klogg_robin_hood_patches}
 )
 if(NOT TARGET robin_hood)
   message("Adding imported target for robin_hood")
@@ -338,46 +353,6 @@ endif()
 
 set(CPM_USE_LOCAL_PACKAGES ${_TMP_CPM_USE_LOCAL_PACKAGES})
 
-if(KLOGG_USE_SENTRY)
-  set(SENTRY_BACKEND
-     "crashpad"
-     CACHE INTERNAL "" FORCE
-  )
-  set(SENTRY_TRANSPORT
-     "none"
-     CACHE INTERNAL "" FORCE
-  )
-  set(SENTRY_BUILD_EXAMPLES
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-  set(CRASHPAD_ENABLE_INSTALL
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-  set(CRASHPAD_ENABLE_INSTALL_DEV
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-
-  cpmaddpackage(
-    NAME
-    sentry
-    GITHUB_REPOSITORY
-    getsentry/sentry-native
-    GIT_TAG
-    0.17.6
-    EXCLUDE_FROM_ALL
-    YES
-  )
-
-  if(WIN32)
-    set_target_properties(crashpad_handler PROPERTIES OUTPUT_NAME "klogg_crashpad_handler.exe")
-  else()
-    set_target_properties(crashpad_handler PROPERTIES OUTPUT_NAME "klogg_crashpad_handler")
-  endif()
-endif(KLOGG_USE_SENTRY)
-
 set(klogg_cpm_targets
     xxhash
     Catch2
@@ -394,11 +369,6 @@ set(klogg_cpm_targets
     exprtk
     type_safe
     mimalloc-static
-    sentry
-    crashpad_client
-    crashpad_compat
-    crashpad_util
-    mini_chromium
     streamvbyte
     FastPFor
 )

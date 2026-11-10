@@ -9,18 +9,26 @@ runs:
         echo "KLOGG_WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV 
         echo "KLOGG_BUILD_ROOT=build_root" >> $GITHUB_ENV 
         echo "KLOGG_ARCH=${{ matrix.config.arch }}" >> $GITHUB_ENV 
-        echo "KLOGG_CMAKE_OPTS=-G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_GENERIC_CPU=ON -DKLOGG_USE_SENTRY=ON -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.config.cmake_opts }}" >> $GITHUB_ENV
+        echo "KLOGG_CMAKE_OPTS=-G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_GENERIC_CPU=ON -DCMAKE_INSTALL_PREFIX=/usr ${{ matrix.config.cmake_opts }}" >> $GITHUB_ENV
+
+    - name: Cache CPM dependencies
+      uses: actions/cache@v6.1.0
+      with:
+        path: ${{ github.workspace }}/cpm_cache
+        key: cpm-${{ runner.os }}-${{ hashFiles('3rdparty/CMakeLists.txt', 'cmake/CPM.cmake') }}
+        restore-keys: |
+          cpm-${{ runner.os }}-
 
     - name: Set qt env var
       if: "startsWith(matrix.config.qt_version, '5')"
       shell: sh
       run: |
         echo "KLOGG_QT=Qt5" >> $GITHUB_ENV 
-        echo "KLOGG_QT_DIR=${{ env.Qt5_Dir }}" >> $GITHUB_ENV
+        echo "KLOGG_QT_DIR=${{ env.QT_ROOT_DIR }}" >> $GITHUB_ENV
     
     - name: Set qt env var
       if: "startsWith(matrix.config.qt_version, '6')"
       shell: sh
       run: |
         echo "KLOGG_QT=Qt6" >> $GITHUB_ENV 
-        echo "KLOGG_QT_DIR=${{ env.Qt6_Dir }}" >> $GITHUB_ENV
+        echo "KLOGG_QT_DIR=${{ env.QT_ROOT_DIR }}" >> $GITHUB_ENV

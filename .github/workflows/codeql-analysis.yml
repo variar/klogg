@@ -13,6 +13,10 @@ on:
     - cron: '0 22 * * 4'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   analyze:
     name: Analyze
@@ -24,10 +28,10 @@ jobs:
         config:
           - os: linux
             arch: x64
-            qt_version: 6.12.0
+            qt_version: 6.8.3
             qt_arch: linux_gcc_64
             qt_modules: qt5compat
-            languages: ['cpp']
+            languages: cpp
 
     steps:
     - name: Checkout repository
@@ -46,7 +50,7 @@ jobs:
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
-        languages: ${{ matrix.config.language }}
+        languages: ${{ matrix.config.languages }}
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file. 
         # Prefix the list here with "+" to use these queries and those in the config file.
@@ -63,7 +67,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_GENERIC_CPU=ON -DKLOGG_USE_SENTRY=OFF -DKLOGG_USE_VECTORSCAN=OFF ..
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DKLOGG_GENERIC_CPU=ON -DKLOGG_USE_VECTORSCAN=OFF ..
 
     - name: build
       run: |

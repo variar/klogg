@@ -2,22 +2,27 @@ name: "Prepare klogg mac packages"
 description: ""
 inputs:
   p12-file-base64:
-    required: true
+    required: false
+    default: ''
   p12-password:
-    required: true
+    required: false
+    default: ''
   notarization-username:
-    required: true
+    required: false
+    default: ''
   notarization-team:
-    required: true
+    required: false
+    default: ''
   notarization-password:
-    required: true
+    required: false
+    default: ''
     
 runs:
   using: "composite"
   steps:
     - name: Mac prepare codesign
       id: prepare-codesign
-      if: ${{ github.event_name != 'pull_request' }} 
+      if: ${{ github.event_name != 'pull_request' && inputs.p12-file-base64 != '' }}
       uses: apple-actions/import-codesign-certs@v7.2.0
       with: 
         p12-file-base64: ${{ inputs.p12-file-base64 }}
@@ -33,13 +38,13 @@ runs:
       if: "startsWith(matrix.config.qt_version, '5')"
       shell: sh
       run: |
-        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt5_DIR
+        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $QT_ROOT_DIR
 
     - name: Mac deploy Qt fixing
       if: "startsWith(matrix.config.qt_version, '6')"
       shell: sh
       run: |
-        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $Qt6_DIR
+        python3 $KLOGG_BUILD_ROOT/macdeployqtfix.py $KLOGG_BUILD_ROOT/output/klogg.app/Contents/MacOS/klogg $QT_ROOT_DIR
     
     - name: Set packaging env
       shell: sh
@@ -50,7 +55,7 @@ runs:
         echo "KLOGG_PKG=klogg-${{ env.KLOGG_VERSION }}-mac-${{ env.KLOGG_ARCH }}.pkg" >> $GITHUB_ENV
 
     - name: Mac codesign binaries
-      if: ${{ github.event_name != 'pull_request' }}
+      if: ${{ github.event_name != 'pull_request' && inputs.p12-file-base64 != '' }}
       shell: sh
       run: |
         cd $KLOGG_BUILD_ROOT
@@ -62,16 +67,21 @@ runs:
         cd $KLOGG_BUILD_ROOT
         cpack --verbose -G "DragNDrop"
 
-    - name: Mac codesign dmg
-      if: ${{ github.event_name != 'pull_request' }}
+    - name: Mac rename dmg
       shell: sh
       run: |
         cd $KLOGG_BUILD_ROOT
         mv ./packages/klogg-${{ env.KLOGG_VERSION }}-OSX.dmg ./packages/${{ env.KLOGG_DMG }}
+
+    - name: Mac codesign dmg
+      if: ${{ github.event_name != 'pull_request' && inputs.p12-file-base64 != '' }}
+      shell: sh
+      run: |
+        cd $KLOGG_BUILD_ROOT
         codesign -v -f -o runtime --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./packages/${{ env.KLOGG_DMG }}
     
     - name: Mac notarize DMG 
-      if: ${{ github.event_name != 'pull_request' }} 
+      if: ${{ github.event_name != 'pull_request' && inputs.p12-file-base64 != '' && inputs.notarization-username != '' }}
       shell: sh
       run: |
         xcrun notarytool submit --wait --apple-id "${{ inputs.notarization-username }}" --team-id "${{ inputs.notarization-team }}" --password "${{ inputs.notarization-password }}" "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}" | tee dmg_notary.log
@@ -80,7 +90,7 @@ runs:
         cat "dmg_notary.log.json"
 
     - name: Mac staple DMG 
-      if: ${{ github.event_name != 'pull_request' }} 
+      if: ${{ github.event_name != 'pull_request' && inputs.p12-file-base64 != '' && inputs.notarization-username != '' }}
       shell: sh
       run: |
         xcrun stapler staple "${{ env.KLOGG_BUILD_ROOT }}/packages/${{ env.KLOGG_DMG }}"

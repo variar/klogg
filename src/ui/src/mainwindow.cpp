@@ -388,14 +388,10 @@ void MainWindow::reTranslateUI()
     reportIssueAction->setText( transAction( action::reportIssueText ) );
     reportIssueAction->setStatusTip( transAction( action::reportIssueStatusTip ) );
 
-    joinDiscordAction->setText( transAction( action::joinDiscordText ) );
-    joinDiscordAction->setStatusTip( transAction( action::joinDiscordStatusTip ) );
 
     joinTelegramAction->setText( transAction( action::joinTelegramText ) );
     joinTelegramAction->setStatusTip( transAction( action::joinTelegramStatusTip ) );
 
-    generateDumpAction->setText( transAction( action::generateDumpText ) );
-    generateDumpAction->setStatusTip( transAction( action::generateDumpStatusTip ) );
 
     showScratchPadAction->setText( transAction( action::showScratchPadText ) );
     showScratchPadAction->setStatusTip( transAction( action::showScratchPadStatusTip ) );
@@ -609,24 +605,12 @@ void MainWindow::createActions()
     connect( reportIssueAction, &QAction::triggered, this,
              []( auto ) { IssueReporter::reportIssue( IssueTemplate::Bug ); } );
 
-    joinDiscordAction = new QAction( tr( action::joinDiscordText ), this );
-    joinDiscordAction->setStatusTip( tr( action::joinDiscordStatusTip ) );
-    connect( joinDiscordAction, &QAction::triggered, this, []( auto ) {
-        QUrl url( "https://discord.gg/DruNyQftzB" );
-        QDesktopServices::openUrl( url );
-    } );
-
     joinTelegramAction = new QAction( tr( action::joinTelegramText ), this );
     joinTelegramAction->setStatusTip( tr( action::joinTelegramStatusTip ) );
     connect( joinTelegramAction, &QAction::triggered, this, []( auto ) {
         QUrl url( "https://t.me/joinchat/JeIBxstIfp4xZTk6" );
         QDesktopServices::openUrl( url );
     } );
-
-    generateDumpAction = new QAction( tr( action::generateDumpText ), this );
-    generateDumpAction->setStatusTip( tr( action::generateDumpStatusTip ) );
-    connect( generateDumpAction, &QAction::triggered, this,
-             [ this ]( auto ) { this->generateDump(); } );
 
     showScratchPadAction = new QAction( tr( action::showScratchPadText ), this );
     showScratchPadAction->setStatusTip( tr( action::showScratchPadStatusTip ) );
@@ -822,10 +806,7 @@ void MainWindow::createMenus()
     helpMenu->addAction( showDocumentationAction );
     helpMenu->addSeparator();
     helpMenu->addAction( reportIssueAction );
-    helpMenu->addAction( joinDiscordAction );
     helpMenu->addAction( joinTelegramAction );
-    helpMenu->addSeparator();
-    helpMenu->addAction( generateDumpAction );
     helpMenu->addSeparator();
     helpMenu->addAction( aboutQtAction );
     helpMenu->addAction( aboutAction );
@@ -2251,14 +2232,3 @@ void MainWindow::logScreenInfo( QScreen* screen )
     LOG_INFO << "screen physical dpi " << screen->physicalDotsPerInch();
 }
 
-void MainWindow::generateDump()
-{
-    const auto userAction = QMessageBox::warning(
-        this, tr( "klogg - generate crash dump" ),
-        tr( "This will shutdown klogg and generate diagnostic crash dump. Continue?" ),
-        QMessageBox::Yes | QMessageBox::No, QMessageBox::No );
-
-    if ( userAction == QMessageBox::Yes ) {
-        throw std::logic_error( "test dump" );
-    }
-}

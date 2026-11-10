@@ -24,8 +24,6 @@ runs:
     #  run: |
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg.exe
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_portable.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_crashpad_handler.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_minidump_dump.exe
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbb12.dll
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc.dll
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc_proxy.dll
@@ -35,12 +33,19 @@ runs:
       run: |
         packaging\windows\prepare_release.cmd
 
+    - name: Install NSIS
+      shell: pwsh
+      run: |
+        # windows-2025 runner image does not ship NSIS
+        if (-not (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe")) {
+          choco install nsis -y --no-progress
+        }
+
     - name: Win installer
-      uses: joncloud/makensis-action@v5.0
-      with:
-        script-file: klogg.nsi
-        arguments: "-DVERSION=%KLOGG_VERSION% -DPLATFORM=%KLOGG_ARCH% -DQT_MAJOR=%KLOGG_QT%" 
-    
+      shell: cmd
+      run: |
+        "%ProgramFiles(x86)%\NSIS\makensis.exe" -V3 -DVERSION=%KLOGG_VERSION% -DPLATFORM=%KLOGG_ARCH% -DQT_MAJOR=%KLOGG_QT% klogg.nsi
+
     - name: Win package
       shell: cmd
       run: |

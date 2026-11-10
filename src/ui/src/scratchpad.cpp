@@ -288,9 +288,8 @@ void ScratchPad::fileTime()
         bool isOk = false;
         const auto time = text.toUtf8().toLongLong( &isOk );
         if ( isOk ) {
-            QDateTime dateTime;
-            dateTime.setTimeSpec( Qt::UTC );
-            dateTime.setSecsSinceEpoch( windowsTickToUnixSeconds( time ) );
+            const auto dateTime = QDateTime::fromSecsSinceEpoch(
+                windowsTickToUnixSeconds( time ), QTimeZone::utc() );
             return dateTime.toString( Qt::ISODate );
         }
         else {
