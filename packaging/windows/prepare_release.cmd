@@ -45,10 +45,6 @@ if not exist %KLOGG_WORKSPACE%\release\vcruntime140.dll (
   exit /b 1
 )
 
-echo "Copying ssl..."
-xcopy %SSL_DIR%\libcrypto-1_1%SSL_ARCH%.dll %KLOGG_WORKSPACE%\release\ /y
-xcopy %SSL_DIR%\libssl-1_1%SSL_ARCH%.dll %KLOGG_WORKSPACE%\release\ /y
-
 echo "Copying Qt..."
 set "QTDIR=%KLOGG_QT_DIR:/=\%"
 echo %QTDIR%
@@ -66,6 +62,15 @@ xcopy %QTDIR%\bin\%KLOGG_QT%Core5Compat.dll %KLOGG_WORKSPACE%\release\ /y
 
 md %KLOGG_WORKSPACE%\release\platforms
 xcopy %QTDIR%\plugins\platforms\qwindows.dll %KLOGG_WORKSPACE%\release\platforms\ /y
+
+rem TLS backends: native Windows schannel (no OpenSSL needed) and certificate-only fallback
+md %KLOGG_WORKSPACE%\release\tls
+xcopy %QTDIR%\plugins\tls\qschannelbackend.dll %KLOGG_WORKSPACE%\release\tls\ /y
+xcopy %QTDIR%\plugins\tls\qcertonlybackend.dll %KLOGG_WORKSPACE%\release\tls\ /y
+if not exist %KLOGG_WORKSPACE%\release\tls\qschannelbackend.dll (
+  echo "Qt schannel TLS backend not found"
+  exit /b 1
+)
 
 md %KLOGG_WORKSPACE%\release\styles
 xcopy %QTDIR%\plugins\styles\qwindowsvistastyle.dll %KLOGG_WORKSPACE%\release\styles /y

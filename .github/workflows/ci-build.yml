@@ -81,10 +81,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4.4.1
 
       - name: Build container
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7.4.0
+        env:
+          # do not attach build records as extra *.dockerbuild artifacts
+          DOCKER_BUILD_RECORD_UPLOAD: false
         with:
           context: ${{ matrix.config.container_root }}
           tags: ${{ matrix.config.container }}
@@ -165,8 +168,6 @@ jobs:
             qt_modules: qt5compat
             qt_arch: win64_msvc2022_64
             arch: x64
-            ssl_arch: -x64
-            ssl_target: VC-WIN64A
             cmake_opts:
             artifacts_id: windows-x64-qt6
 
@@ -175,66 +176,21 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - name: Cache openssl
-        id: cache-openssl
-        uses: actions/cache@v6.1.0
-        with:
-          path: ${{ github.workspace }}\openssl-1.1
-          key: OpenSSL-1.1.1w-${{ matrix.config.arch }}
-
-      - name: Set openssl paths
-        shell: sh
-        run: |
-          echo "SSL_DIR=${{ github.workspace }}\openssl-1.1\${{ matrix.config.arch }}\bin" >> $GITHUB_ENV
-          echo "SSL_ARCH=${{ matrix.config.ssl_arch }}" >> $GITHUB_ENV
-
       - uses: ./.github/actions/agent-setup
       - uses: ./.github/actions/klogg-version
       - uses: ./.github/actions/prepare-workspace-env
 
       - name: Prepare dev cmd
-        uses: ilammy/msvc-dev-cmd@v1.13.0
-        with:
-          arch: ${{ matrix.config.arch }}
-
-      - name: Build OpenSSL
-        if: ${{ steps.cache-openssl.outputs.cache-hit != 'true' }}
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
-          $archive = Join-Path $env:GITHUB_WORKSPACE 'openssl-1.1.1w.tar.gz'
-          Invoke-WebRequest -Uri 'https://www.openssl.org/source/old/1.1.1/openssl-1.1.1w.tar.gz' -OutFile $archive
-          $actualHash = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($actualHash -ne 'cf3098950cb4d853ad95c0841f1f9c6d3dc102dccfcacd521d93925208b76ac8') {
-            throw "OpenSSL source archive SHA-256 mismatch: $actualHash"
-          }
-
-          tar -xzf $archive -C $env:GITHUB_WORKSPACE
-          if ($LASTEXITCODE -ne 0) { throw "OpenSSL source archive extraction failed with exit code $LASTEXITCODE" }
-          $source = Join-Path $env:GITHUB_WORKSPACE 'openssl-1.1.1w'
-          $prefix = Join-Path $env:GITHUB_WORKSPACE "openssl-1.1\${{ matrix.config.arch }}"
-          Push-Location $source
-          try {
-            perl Configure ${{ matrix.config.ssl_target }} no-asm shared no-tests "--prefix=$prefix" "--openssldir=$prefix/ssl"
-            if ($LASTEXITCODE -ne 0) { throw "OpenSSL configuration failed with exit code $LASTEXITCODE" }
-            nmake
-            if ($LASTEXITCODE -ne 0) { throw "OpenSSL build failed with exit code $LASTEXITCODE" }
-            nmake install_sw
-            if ($LASTEXITCODE -ne 0) { throw "OpenSSL installation failed with exit code $LASTEXITCODE" }
-          }
-          finally {
-            Pop-Location
-          }
-
-      - name: Verify OpenSSL installation
-        shell: pwsh
-        run: |
-          $sslDir = Join-Path $env:GITHUB_WORKSPACE "openssl-1.1\${{ matrix.config.arch }}\bin"
-          $sslArch = '${{ matrix.config.ssl_arch }}'
-          foreach ($name in @("libcrypto-1_1${sslArch}.dll", "libssl-1_1${sslArch}.dll")) {
-            $path = Join-Path $sslDir $name
-            if (-not (Test-Path -Path $path -PathType Leaf)) {
-              throw "Expected OpenSSL DLL was not installed: $path"
+          # Load the MSVC developer environment (replaces ilammy/msvc-dev-cmd, which runs on Node 20)
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vs) { throw "Visual Studio with C++ tools not found" }
+          $vcvars = Join-Path $vs "VC\Auxiliary\Build\vcvarsall.bat"
+          cmd /c "`"$vcvars`" ${{ matrix.config.arch }} > nul && set" | ForEach-Object {
+            if ($_ -match '^([^=]+)=(.*)$') {
+              "$($matches[1])=$($matches[2])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
             }
           }
 

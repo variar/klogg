@@ -120,6 +120,11 @@ Section "Qt Runtime libraries" qtlibs
 
     SetOutPath $INSTDIR\platforms
     File release\platforms\qwindows.dll
+!if ${QT_MAJOR} == "Qt6"
+    SetOutPath $INSTDIR\tls
+    File release\tls\qschannelbackend.dll
+    File release\tls\qcertonlybackend.dll
+!endif
     SetOutPath $INSTDIR\styles
 !if ${QT_MAJOR} == "Qt6"
     File release\styles\qmodernwindowsstyle.dll
@@ -137,12 +142,6 @@ Section "MSVC Runtime libraries" vcruntime
     
 !if ${PLATFORM} == "x64"
     File release\vcruntime140_1.dll
-
-    File release\libcrypto-1_1-x64.dll
-    File release\libssl-1_1-x64.dll
-!else
-    File release\libcrypto-1_1.dll
-    File release\libssl-1_1.dll
 !endif
 
 SectionEnd
@@ -199,6 +198,12 @@ Section "Uninstall"
     Delete "$INSTDIR\platforms\qwindows.dll"
     Delete "$INSTDIR\platforms\qminimal.dll"
     Delete "$INSTDIR\styles\qwindowsvistastyle.dll"
+    Delete "$INSTDIR\styles\qmodernwindowsstyle.dll"
+    Delete "$INSTDIR\tls\qschannelbackend.dll"
+    Delete "$INSTDIR\tls\qcertonlybackend.dll"
+    RMDir "$INSTDIR\tls"
+    RMDir "$INSTDIR\styles"
+    RMDir "$INSTDIR\platforms"
     Delete "$INSTDIR\msvcp140.dll"
     Delete "$INSTDIR\msvcp140_1.dll"
     Delete "$INSTDIR\vcruntime140.dll"

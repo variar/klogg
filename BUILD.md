@@ -38,7 +38,6 @@ To build Hyperscan regular expressions backend (default):
 To build installer for Windows:
 
 - nsis to build installer for Windows
-- Precompiled OpenSSl library to enable https support on Windows
 
 Building tests:
 
@@ -142,9 +141,8 @@ CMake should generate `klogg.sln` file in `<path_to_project_root>\build_root` di
 
 Binaries are placed into `build_root/output`.
 
-For HTTPS support with the Windows build, download the current OpenSSL 1.1.1w binaries from
-https://www.firedaemon.com/download-firedaemon-openssl-1.1.1-zip.
-Put libcrypto-1_1 and libssl-1_1 for desired architecture near klogg binaries.
+HTTPS on Windows uses Qt's native schannel TLS backend, no OpenSSL is needed.
+Deploy `plugins\tls\qschannelbackend.dll` from the Qt installation into a `tls` folder next to klogg binaries.
 
 ### Building on Mac OS
 

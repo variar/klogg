@@ -4,9 +4,23 @@ runs:
   using: "composite"
   steps:
     - name: Install Ninja
-      uses: seanmiddleditch/gha-setup-ninja@v6
-      with:
-        version: 1.13.2
+      shell: bash
+      env:
+        NINJA_VERSION: 1.13.2
+      run: |
+        case "$RUNNER_OS" in
+          Windows) asset=ninja-win.zip ;;
+          macOS)   asset=ninja-mac.zip ;;
+          *)       asset=ninja-linux.zip ;;
+        esac
+        dir="$RUNNER_TEMP/ninja"
+        mkdir -p "$dir"
+        curl --fail --silent --show-error --location --output "$dir/ninja.zip" \
+          "https://github.com/ninja-build/ninja/releases/download/v$NINJA_VERSION/$asset"
+        unzip -o -q "$dir/ninja.zip" -d "$dir"
+        rm "$dir/ninja.zip"
+        echo "$dir" >> "$GITHUB_PATH"
+        "$dir/ninja" --version
 
     - name: Cache Qt
       id: cache-qt
