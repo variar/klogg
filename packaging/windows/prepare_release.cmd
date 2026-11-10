@@ -34,11 +34,18 @@ xcopy %KLOGG_WORKSPACE%\README.md %KLOGG_WORKSPACE%\release\ /y
 xcopy %KLOGG_WORKSPACE%\DOCUMENTATION.md %KLOGG_WORKSPACE%\release\ /y
 
 echo "Copying vc runtime..."
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\msvcp140.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\msvcp140_1.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\msvcp140_2.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\vcruntime140.dll" %KLOGG_WORKSPACE%\release\ /y
-xcopy "%VCToolsRedistDir%%platform%\Microsoft.VC143.CRT\vcruntime140_1.dll" %KLOGG_WORKSPACE%\release\ /y
+rem CRT folder name depends on Visual Studio version (VC143, VC145, ...)
+for /d %%C in ("%VCToolsRedistDir%%platform%\Microsoft.VC*.CRT") do (
+  xcopy "%%C\msvcp140.dll" %KLOGG_WORKSPACE%\release\ /y
+  xcopy "%%C\msvcp140_1.dll" %KLOGG_WORKSPACE%\release\ /y
+  xcopy "%%C\msvcp140_2.dll" %KLOGG_WORKSPACE%\release\ /y
+  xcopy "%%C\vcruntime140.dll" %KLOGG_WORKSPACE%\release\ /y
+  xcopy "%%C\vcruntime140_1.dll" %KLOGG_WORKSPACE%\release\ /y
+)
+if not exist %KLOGG_WORKSPACE%\release\vcruntime140.dll (
+  echo "VC runtime not found in %VCToolsRedistDir%%platform%"
+  exit /b 1
+)
 
 echo "Copying ssl..."
 xcopy %SSL_DIR%\libcrypto-1_1%SSL_ARCH%.dll %KLOGG_WORKSPACE%\release\ /y
