@@ -106,8 +106,6 @@ jobs:
           if-no-files-found: error      
 
   Mac:
-    # macOS builds are disabled for now
-    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
