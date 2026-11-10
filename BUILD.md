@@ -53,8 +53,6 @@ If a library can't be found, the one provided by CPM will be used.
 
 ### Configuration options
 
-By default Klogg is built without support for reporting crash dumps. This can be enabled via cmake option `-DKLOGG_USE_SENTRY=ON`.
-
 Klogg uses Hyperscan regular expressions library which requires CPU with SSSE3 support, ragel and boost headers.
 Klogg can be built with only Qt reqular expressions backend by passing `-DKLOGG_USE_HYPERSCAN=OFF` to cmake.
 

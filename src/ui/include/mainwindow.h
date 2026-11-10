@@ -134,7 +134,6 @@ class MainWindow : public QMainWindow {
     void addToFavorites();
     void removeFromFavorites();
     void selectOpenedFile();
-    void generateDump();
 
     // Change the view settings
     void toggleOverviewVisibility( bool isVisible );
@@ -275,9 +274,7 @@ class MainWindow : public QMainWindow {
     QAction* aboutQtAction;
     QAction* predefinedFiltersDialogAction;
     QAction* reportIssueAction;
-    QAction* joinDiscordAction;
     QAction* joinTelegramAction;
-    QAction* generateDumpAction;
     QActionGroup* encodingGroup;
     QAction* addToFavoritesAction;
     QAction* addToFavoritesMenuAction;

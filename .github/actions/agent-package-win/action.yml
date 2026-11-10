@@ -24,8 +24,6 @@ runs:
     #  run: |
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg.exe
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_portable.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_crashpad_handler.exe
-    #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\klogg_minidump_dump.exe
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbb12.dll
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc.dll
     #    packaging\windows\codesign_client.exe --debug %KLOGG_BUILD_ROOT%\output\tbbmalloc_proxy.dll

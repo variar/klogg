@@ -23,7 +23,6 @@ set(PROJECT_DESCRIPTION "${PROJECT_NAME} log viewer")
 
 option(KLOGG_BUILD_TESTS "Build tests" ON)
 option(KLOGG_USE_LTO "Use link time optimization" ON)
-option(KLOGG_USE_SENTRY "Use Sentry" OFF)
 option(KLOGG_GENERIC_CPU "Build for generic CPU" OFF)
 option(KLOGG_OSX_DEPLOYMENT_TARGET "Override target MacOS version" "")
 
@@ -143,16 +142,6 @@ else()
     endif()
   endif()
 endif(MSVC)
-
-if(WIN32)
-  set(SYMS_TOOLS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/dump_syms/win)
-elseif(APPLE)
-  set(SYMS_TOOLS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/dump_syms/mac)
-else()
-  set(SYMS_TOOLS ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/dump_syms/linux)
-endif()
-
-message("Dump symbols tools path ${SYMS_TOOLS}")
 
 # standard compiler warnings
 # Link this 'library' to use the warnings specified in CompilerWarnings.cmake

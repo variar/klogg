@@ -32,36 +32,11 @@ jobs:
     - name: Display structure of downloaded files
       run: ls -R ./packages-*
 
-    - name: Setup Sentry CLI
-      uses: mathrix-education/setup-sentry-cli@v3.0.0
-      with:
-        token: ${{ secrets.SENTRY_TOKEN }}
-        organization: anton-filimonov
-        project: klogg
-
-    - name: Create Sentry release
-      shell: sh
-      run: |
-        sentry-cli releases new $KLOGG_VERSION
-        sentry-cli releases set-commits --auto $KLOGG_VERSION
-
-    - name: Upload symbols linux
+    - name: Unpack linux symbols
       shell: sh
       run: |
         xz -d ./packages-noble/klogg_noble.debug.xz
         xz -d ./packages-resolute/klogg_resolute.debug.xz
-        sentry-cli upload-dif ./packages-noble/klogg_noble.debug  ./packages-noble/klogg_noble
-        sentry-cli upload-dif ./packages-resolute/klogg_resolute.debug ./packages-resolute/klogg_resolute
-
-    - name: Upload symbols mac
-      shell: sh
-      run: |
-        sentry-cli upload-dif ./packages-macos-arm-qt6/klogg-arm64.app/Contents/MacOS/klogg ./packages-macos-arm-qt6/klogg-arm64.dSym
-
-    - name: Upload symbols win
-      shell: sh
-      run: |
-        sentry-cli upload-dif ./packages-windows-x64-qt6/klogg-$KLOGG_VERSION-x64-Qt6-pdb.zip
 
     - name: Cleanup release artifacts
       shell: sh
@@ -116,16 +91,3 @@ jobs:
         prerelease: true
         files: |
           ./packages-macos-arm-qt6/*
-
-    - name: Discord notification
-      env:
-        DISCORD_WEBHOOK: ${{ secrets.DISCORD_NEW_VERSIONS_WEBHOOK }}
-        DISCORD_EMBEDS: '[{"title": "Windows", "url": "https://github.com/variar/klogg/releases/tag/continuous-win"}, {"title": "Linux", "url": "https://github.com/variar/klogg/releases/tag/continuous-linux"}, {"title": "Mac", "url": "https://github.com/variar/klogg/releases/tag/continuous-osx"}]'
-      uses: Ilshidur/action-discord@0.4.0
-      with:
-        args: 'New CI build {{KLOGG_VERSION}} has been released!'
-
-
-
-
-   

@@ -353,46 +353,6 @@ endif()
 
 set(CPM_USE_LOCAL_PACKAGES ${_TMP_CPM_USE_LOCAL_PACKAGES})
 
-if(KLOGG_USE_SENTRY)
-  set(SENTRY_BACKEND
-     "crashpad"
-     CACHE INTERNAL "" FORCE
-  )
-  set(SENTRY_TRANSPORT
-     "none"
-     CACHE INTERNAL "" FORCE
-  )
-  set(SENTRY_BUILD_EXAMPLES
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-  set(CRASHPAD_ENABLE_INSTALL
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-  set(CRASHPAD_ENABLE_INSTALL_DEV
-     OFF
-     CACHE INTERNAL "" FORCE
-  )
-
-  cpmaddpackage(
-    NAME
-    sentry
-    GITHUB_REPOSITORY
-    getsentry/sentry-native
-    GIT_TAG
-    0.17.6
-    EXCLUDE_FROM_ALL
-    YES
-  )
-
-  if(WIN32)
-    set_target_properties(crashpad_handler PROPERTIES OUTPUT_NAME "klogg_crashpad_handler.exe")
-  else()
-    set_target_properties(crashpad_handler PROPERTIES OUTPUT_NAME "klogg_crashpad_handler")
-  endif()
-endif(KLOGG_USE_SENTRY)
-
 set(klogg_cpm_targets
     xxhash
     Catch2
@@ -409,11 +369,6 @@ set(klogg_cpm_targets
     exprtk
     type_safe
     mimalloc-static
-    sentry
-    crashpad_client
-    crashpad_compat
-    crashpad_util
-    mini_chromium
     streamvbyte
     FastPFor
 )
