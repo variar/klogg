@@ -54,6 +54,10 @@ xcopy %SSL_DIR%\libssl-1_1%SSL_ARCH%.dll %KLOGG_WORKSPACE%\release\ /y
 echo "Copying Qt..."
 set "QTDIR=%KLOGG_QT_DIR:/=\%"
 echo %QTDIR%
+if not exist %QTDIR%\bin\%KLOGG_QT%Core.dll (
+  echo "Qt not found in '%QTDIR%'"
+  exit /b 1
+)
 xcopy %QTDIR%\bin\%KLOGG_QT%Core.dll %KLOGG_WORKSPACE%\release\ /y
 xcopy %QTDIR%\bin\%KLOGG_QT%Gui.dll %KLOGG_WORKSPACE%\release\ /y
 xcopy %QTDIR%\bin\%KLOGG_QT%Network.dll %KLOGG_WORKSPACE%\release\ /y
