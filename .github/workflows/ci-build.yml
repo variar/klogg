@@ -108,6 +108,56 @@ jobs:
           path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*'
           if-no-files-found: error      
 
+  AppImage:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          # oldest supported Ubuntu LTS keeps glibc requirements low (2.35)
+          - os: ubuntu
+            os_version: 22.04
+            qt_version: 6.8.3
+            qt_arch: linux_gcc_64
+            qt_modules: qt5compat
+            arch: x64
+            cc: gcc-12
+            cxx: g++-12
+            cmake_opts:
+            artifacts_id: appimage
+
+    runs-on: ${{ matrix.config.os }}-${{ matrix.config.os_version }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            g++-12 ragel file libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
+
+      - uses: ./.github/actions/agent-setup
+      - uses: ./.github/actions/klogg-version
+      - uses: ./.github/actions/prepare-workspace-env
+      - uses: ./.github/actions/agent-build
+
+      - uses: ./.github/actions/agent-run-tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+
+      - name: Build AppImage
+        run: |
+          cd "$KLOGG_BUILD_ROOT"
+          "$GITHUB_WORKSPACE/packaging/linux/appimage/generate_appimage.sh"
+
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: packages-${{ matrix.config.artifacts_id }}
+          path: '${{ env.KLOGG_BUILD_ROOT }}/packages/*.AppImage'
+          if-no-files-found: error
+
   Mac:
     strategy:
       fail-fast: false

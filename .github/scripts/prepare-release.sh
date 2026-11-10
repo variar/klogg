@@ -35,6 +35,11 @@ for f in "$src"/packages-noble/*.deb; do
   break
 done
 
+# Linux: AppImage
+for f in "$src"/packages-appimage/*.AppImage; do
+  cp "$f" "$out/"
+done
+
 # macOS: dmg and zipped dSYM bundle (the .app is already inside the dmg)
 for dir in "$src"/packages-macos-*; do
   for f in "$dir"/*.dmg; do cp "$f" "$out/"; done

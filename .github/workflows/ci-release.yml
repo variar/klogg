@@ -86,6 +86,7 @@ jobs:
           | Windows x64 | \`*-setup.exe\` installer, \`*-portable.zip\` |
           | Ubuntu 24.04 | \`*-noble.deb\` |
           | Ubuntu 26.04 | \`*-resolute.deb\` |
+          | Linux (any distro with glibc 2.35+) | \`*-x86_64.AppImage\` |
           | Linux (other) | \`*-linux-bin.tar.gz\` |
           | macOS (Apple Silicon) | \`*-mac-arm64.dmg\` |
 
