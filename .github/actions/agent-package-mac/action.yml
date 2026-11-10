@@ -1,5 +1,5 @@
 name: "Prepare klogg mac packages"
-description: ""
+description: "Deploy Qt, sign, notarize and package klogg for macOS"
 inputs:
   p12-file-base64:
     required: false

@@ -1,5 +1,5 @@
 name: "Setup agent"
-description: ""
+description: "Install Ninja, Qt and Boost on the build agent"
 runs:
   using: "composite"
   steps:
