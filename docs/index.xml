@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Docs on KLOGG</title>
+    <link>https://klogg.filimonov.dev/docs/</link>
+    <description>Recent content in Docs on KLOGG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 13 Jun 2022 15:42:17 +0100</lastBuildDate><atom:link href="https://klogg.filimonov.dev/docs/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>

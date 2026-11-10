@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>KLOGG</title>
+    <link>https://klogg.filimonov.dev/docs/news/</link>
+    <description>Recent content on KLOGG</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 13 Jun 2022 15:42:17 +0100</lastBuildDate><atom:link href="https://klogg.filimonov.dev/docs/news/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Version 22.06 released</title>
+      <link>https://klogg.filimonov.dev/docs/news/release_22.06/</link>
+      <pubDate>Mon, 13 Jun 2022 15:42:17 +0100</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/release_22.06/</guid>
+      <description>Version 22.06 #  Finally new stable version is ready! This release has several major new features.
+This release brings many new features, performance and usability improvements.
+New features #   Regular expression engine is switched to Hyperscan. This is several times faster than Qt regular expressions. Hyperscan pattern syntax is less expressive, and klogg will automatically switch to Qt engine if needed. Moreover, klogg now allows combining regular expressions with boolean operators (AND, OR, NOT).</description>
+    </item>
+    
+    <item>
+      <title>Combining search expressions</title>
+      <link>https://klogg.filimonov.dev/docs/news/boolean_combination/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/boolean_combination/</guid>
+      <description>When regular expression syntax is not enough #  Regular expressions are very powerful. However, sometimes their syntax becomes too complex and cumbersome. This is the case when you want to search for “this, but not that”. Writing single regular expression for such pattern requires some look-ahead magic. Things become a lot easier if search pattern can be combined from several simple regular expressions using boolean logic operators and, or and not.</description>
+    </item>
+    
+    <item>
+      <title>Allocation matters</title>
+      <link>https://klogg.filimonov.dev/docs/news/allocation/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/allocation/</guid>
+      <description>Improving memory allocation #  Performance testing #  Studying final perf tool report from previous post after switching to Hyperscan I&amp;rsquo;ve noticed some strange lines. Here it is once again:
+# Overhead Command Shared Object Symbol 4.84% Thread (pooled) klogg_portable [.] std::vector&amp;lt;`QString`, std::allocator&amp;lt;`QString`&amp;gt; &amp;gt;::~vector 3.83% Thread (pooled) libklogg_tbbmalloc.so [.] rml::internal::internalPoolMalloc 3.15% Thread (pooled) klogg_portable [.] noodExec 2.97% klogg_portable libc-2.32.so [.] 0x000000000015e01f 2.92% Thread (pooled) klogg_portable [.] hs_scan 2.78% Thread (pooled) libQt5Core.</description>
+    </item>
+    
+    <item>
+      <title>Switching to Hyperscan</title>
+      <link>https://klogg.filimonov.dev/docs/news/hyperscan/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/hyperscan/</guid>
+      <description>Swiching to Hyprescan regular expressions engine #  Performance testing #  For years Klogg has been using regular expression engine provided by Qt library. It is based on PCRE2 with JIT compilation. However, recent performance tests have proved that regular expression matching is a bottleneck. For example, this is a report from perf tool after running a simple string search in 1Gb text file:
+# Overhead Command Shared Object Symbol 17.</description>
+    </item>
+    
+    <item>
+      <title>Version 20.12 released</title>
+      <link>https://klogg.filimonov.dev/docs/news/release_20.12/</link>
+      <pubDate>Wed, 16 Dec 2020 15:42:17 +0100</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/release_20.12/</guid>
+      <description>Version 20.12 #  Finally new stable version is ready. This release has several major new features.
+First of all highlighters have been reworked. Now it is possible to create several sets of highlighting rules and choose active set to apply at the moment. Highlight rules has become more flexible. It is possible to colorize only matching part of line (with support for regex capture groups if present). And finally, highlighters configuration can be exported to a file and shared with collaborators.</description>
+    </item>
+    
+    <item>
+      <title>Automatic crash reporting</title>
+      <link>https://klogg.filimonov.dev/docs/news/crash_reporting/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://klogg.filimonov.dev/docs/news/crash_reporting/</guid>
+      <description>Automatic crash reporting #  In response to several github issues about unexpected crashes I&amp;rsquo;ve implemented crash dump collection. Thanks to SDK provided by Sentry it is fairly easy to integrate Breakpad/Crashpad to collect minidumps for application crashes and send them to developers for investigation.
+What is included in crash report #  Crash report provides information about:
+ operating system: name, version, architecture Qt version modules that were loaded into klogg process: filename, size and hashes for symbols stacktraces for all running threads in klogg process  These minidumps do not include content of klogg process memory during the crash.</description>
+    </item>
+    
+  </channel>
+</rss>

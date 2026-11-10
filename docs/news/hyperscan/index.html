@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en" dir=>
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Swiching to Hyprescan regular expressions engine #  Performance testing #  For years Klogg has been using regular expression engine provided by Qt library. It is based on PCRE2 with JIT compilation. However, recent performance tests have proved that regular expression matching is a bottleneck. For example, this is a report from perf tool after running a simple string search in 1Gb text file:
+# Overhead Command Shared Object Symbol 17.">
+<meta name="theme-color" content="#FFFFFF"><meta property="og:title" content="Switching to Hyperscan" />
+<meta property="og:description" content="Swiching to Hyprescan regular expressions engine #  Performance testing #  For years Klogg has been using regular expression engine provided by Qt library. It is based on PCRE2 with JIT compilation. However, recent performance tests have proved that regular expression matching is a bottleneck. For example, this is a report from perf tool after running a simple string search in 1Gb text file:
+# Overhead Command Shared Object Symbol 17." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://klogg.filimonov.dev/docs/news/hyperscan/" />
+
+<title>Switching to Hyperscan | KLOGG</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/favicon.png" type="image/x-icon">
+<link rel="stylesheet" href="/book.min.6cd8553a6854f4812343f0f0c8baca31271e686434f381fbe3c7226f66639176.css" integrity="sha256-bNhVOmhU9IEjQ/DwyLrKMSceaGQ084H748cib2ZjkXY="><!--
+Made with Book Theme
+https://github.com/alex-shpak/hugo-book
+-->
+
+  <link rel="stylesheet" href="/css/unite-gallery.css">
+</head>
+
+<body dir=>
+  <input type="checkbox" class="hidden toggle" id="menu-control" />
+  <input type="checkbox" class="hidden toggle" id="toc-control" />
+  <main class="container flex">
+    <aside class="book-menu">
+      
+  <nav>
+<h2 class="book-brand">
+  <a href="/"><img src="/klogg.png" alt="Logo" /><span>KLOGG</span>
+  </a>
+</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+  
+  
+
+  
+  <ul>
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <span>News</span>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/release_22.06/" class="">Version 22.06 released</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/boolean_combination/" class="">Combining search expressions</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/allocation/" class="">Allocation matters</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/hyperscan/" class="active">Switching to Hyperscan</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/release_20.12/" class="">Version 20.12 released</a>
+  
+
+        </li>
+      
+    
+      
+        <li>
+          
+  
+    <a href="/docs/news/crash_reporting/" class="">Automatic crash reporting</a>
+  
+
+        </li>
+      
+    
+  </ul>
+  
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <a href="/docs/getting_involved/" class="">Getting Involved</a>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+  </ul>
+  
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <a href="/docs/legal_notice/" class="">Legal Notice</a>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+  </ul>
+  
+
+        </li>
+      
+    
+      
+        <li class="book-section-flat" >
+          
+  
+    <a href="/docs/privacy_policy/" class="">Privacy Policy</a>
+  
+
+          
+  
+  
+  
+
+  
+  <ul>
+    
+  </ul>
+  
+
+        </li>
+      
+    
+  </ul>
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+<ul>
+  
+  <li>
+    <a href="/archive/" >
+        Archive
+      </a>
+  </li>
+  
+</ul>
+
+
+
+
+
+<ul>
+    <hr />
+
+    <li>
+        <a href="https://github.com/variar/glogg">
+            <i class="fab fa-github fa-lg"></i> klogg on GitHub
+        </a>
+    </li>
+
+    <li>
+        <a class="github-button" href="https://github.com/variar/klogg" data-show-count="true" data-icon="octicon-star"
+            aria-label="Star variar/klogg on GitHub">Star</a>
+    </li>
+
+    <hr />
+    <li class="book-section-flat">
+        <span>Downloads</span>
+        <ul>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/latest">
+                    <img src="https://img.shields.io/github/v/release/variar/klogg?label=GitHub%20Release&amp;style=for-the-badge"
+                        alt="GitHub Release">
+                </a>
+            </li>
+
+            <li>
+                <a href="https://formulae.brew.sh/cask/klogg">
+                    <img src="https://img.shields.io/homebrew/cask/v/klogg?style=for-the-badge" alt="Homebrew">
+                </a>
+            </li>
+
+            <li>
+                <a href="https://chocolatey.org/packages/klogg">
+                    <img src="https://img.shields.io/chocolatey/v/klogg?style=for-the-badge" alt="Chocolatey">
+                </a>
+            </li>
+        </ul>
+    </li>
+
+    <li class="book-section-flat">
+        <span>Development builds</span>
+        <ul>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/tag/continuous-win" target="_blank">
+                    <i class="fab fa-windows fa-lg"></i> Windows
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/tag/continuous-linux" target="_blank">
+                    <i class="fab fa-linux fa-lg"></i> Linux
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/variar/klogg/releases/tag/continuous-osx" target="_blank">
+                    <i class="fab fa-apple fa-lg"></i> Mac
+                </a>
+            </li>
+        </ul>
+    </li>
+
+    <hr />
+
+    <li class="book-section-flat">
+        <span>Support development</span>
+        <ul>
+            <li>
+                <form action="https://www.paypal.com/donate" method="post" target="_top">
+                    <input type="hidden" name="hosted_button_id" value="P8PQU46XYCKU2" />
+                    <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+                    <img alt="" border="0" src="https://www.paypal.com/en_NL/i/scr/pixel.gif" width="1" height="1" />
+                </form>
+            </li>
+            <li>
+                <a href='https://ko-fi.com/M4M14LZ2Y' target='_blank'><img
+                        src='https://ko-fi.com/img/githubbutton_sm.svg' alt='Buy Me a Coffee at ko-fi.com' /></a>
+            </li>
+        </ul>
+    </li>
+
+</ul>
+</nav>
+
+
+
+
+  <script>(function(){var menu=document.querySelector("aside.book-menu nav");addEventListener("beforeunload",function(event){localStorage.setItem("menu.scrollTop",menu.scrollTop);});menu.scrollTop=localStorage.getItem("menu.scrollTop");})();</script>
+
+
+ 
+    </aside>
+
+    <div class="book-page">
+      <header class="book-header">
+        
+  <div class="flex align-center justify-between">
+  <label for="menu-control">
+    <img src="/svg/menu.svg" class="book-icon" alt="Menu" />
+  </label>
+
+  <strong>Switching to Hyperscan</strong>
+
+  <label for="toc-control">
+    
+    <img src="/svg/toc.svg" class="book-icon" alt="Table of Contents" />
+    
+  </label>
+</div>
+
+
+  
+  <aside class="hidden clearfix">
+    
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#swiching-to-hyprescan-regular-expressions-engine">Swiching to Hyprescan regular expressions engine</a>
+      <ul>
+        <li><a href="#performance-testing">Performance testing</a></li>
+        <li><a href="#hyperscan-regular-expressions-engine">Hyperscan regular expressions engine</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+
+  </aside>
+  
+ 
+      </header>
+
+      
+      
+  <article class="markdown"><h2 id="swiching-to-hyprescan-regular-expressions-engine">
+  Swiching to Hyprescan regular expressions engine
+  <a class="anchor" href="#swiching-to-hyprescan-regular-expressions-engine">#</a>
+</h2>
+<h3 id="performance-testing">
+  Performance testing
+  <a class="anchor" href="#performance-testing">#</a>
+</h3>
+<p>For years Klogg has been using regular expression engine provided by Qt library.
+It is based on PCRE2 with JIT compilation. However, recent performance tests have proved
+that regular expression matching is a bottleneck. For example, this is a report from <code>perf</code> tool
+after running a simple string search in 1Gb text file:</p>
+<pre><code># Overhead  Command          Shared Object                  Symbol  
+    17.10%  Thread (pooled)  libpcre2-16.so.0.10.0          [.] 0x000000000005956f
+     7.29%  Thread (pooled)  libpcre2-16.so.0.10.0          [.] 0x000000000005956c
+     6.95%  Thread (pooled)  libpcre2-16.so.0.10.0          [.] 0x0000000000059560
+     2.89%  Thread (pooled)  libQt5Core.so.5.15.2           [.] 0x0000000000167498
+     2.48%  Thread (pooled)  libklogg_tbbmalloc.so          [.] rml::internal::internalPoolMalloc
+     2.06%  Thread (pooled)  libklogg_tbbmalloc.so          [.] __TBB_malloc_safer_free
+     2.01%  Thread (pooled)  klogg_portable_pcre            [.] std::vector&lt;QString, std::allocator&lt;QString&gt; &gt;::~vector
+     1.80%  Thread (pooled)  libpcre2-16.so.0.10.0          [.] pcre2_match_16
+     1.70%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QMutex::lock
+     1.47%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QRegularExpression::QRegularExpression
+     1.39%  klogg_portable_  libc-2.32.so                   [.] 0x000000000015e01f
+     1.37%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QMutex::unlock
+     1.34%  Thread (pooled)  libpcre2-16.so.0.10.0          [.] pcre2_jit_match_16
+     1.13%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QThreadStorageData::get
+     1.13%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QRegularExpression::QRegularExpression
+</code></pre><p>Most time is spent inside PCRE2 library. Moreover, there is a noticeable impact of QMutex.
+Klogg does not use QMutex, so this must be from  QRegularExpression implementation details.</p>
+<p>On my development PC the above search takes about 3.5 seconds. From Klogg own logs:</p>
+<pre><code>Searching done, overall duration 3570.39 ms
+Line reading took 814.359 ms
+Results combining took 112.078 ms
+Matching took 3311.02 ms
+Matching took 3343.09 ms
+Matching took 3289.59 ms
+Matching took 3320.46 ms
+Searching perf 2548970 lines/s
+Searching io perf 251.642 MiB/s
+</code></pre><h3 id="hyperscan-regular-expressions-engine">
+  Hyperscan regular expressions engine
+  <a class="anchor" href="#hyperscan-regular-expressions-engine">#</a>
+</h3>
+<p>I&rsquo;ve done some research about existing regular expressions libraries.
+It seems like PCRE2 is the only one that can do matching directly on UTF-16 encoded strings.
+This is important because Klogg uses Qt for text encoding conversions, and QTextCodec can
+only convert input data to UTF-16. In order to use other libraries UTF-16 strings have to
+be encoded to UTF-8. That additional overhead has to be taken into account when evaluating
+other regular expression engines.</p>
+<p>Several articles pointed out that <a href="https://www.hyperscan.io/">Hyperscan</a> library shows
+very promising results. For example, Rust Leipzig&rsquo;s <a href="https://rust-leipzig.github.io/regex/2017/03/28/comparison-of-regex-engines/">research</a> claimed that Hyperscan can be 3 times faster than PCRE2.
+This result appears in another <a href="https://software.intel.com/content/www/us/en/develop/articles/why-and-how-to-replace-pcre-with-hyperscan.html">article</a> from Intel.</p>
+<p>I decided that the 3x speedup is so huge, that text re-encoding overhead can be ignored.
+Integrating Hyperscan was rather easy, thanks to good <a href="http://intel.github.io/hyperscan/dev-reference/">documentation</a>.
+It is a C library, so some RAII had to be implemented to avoid memory leaks.</p>
+<p>The results for the same file now looks like this:</p>
+<pre><code>Searching done, overall duration 1804.83 ms
+Line reading took 907.165 ms
+Results combining took 49.838 ms
+Matching took 1428.87 ms
+Matching took 1398.59 ms
+Matching took 1369.43 ms
+Matching took 1404.81 ms
+Searching perf 5042484 lines/s
+Searching io perf 497.81 MiB/s
+</code></pre><p>And perf report:</p>
+<pre><code># Overhead  Command          Shared Object                  Symbol  
+     4.84%  Thread (pooled)  klogg_portable                 [.] std::vector&lt;QString, std::allocator&lt;QString&gt; &gt;::~vector
+     3.83%  Thread (pooled)  libklogg_tbbmalloc.so          [.] rml::internal::internalPoolMalloc
+     3.15%  Thread (pooled)  klogg_portable                 [.] noodExec
+     2.97%  klogg_portable   libc-2.32.so                   [.] 0x000000000015e01f
+     2.92%  Thread (pooled)  klogg_portable                 [.] hs_scan
+     2.78%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QString::toUtf8_helper
+     2.37%  Thread (pooled)  klogg_portable                 [.] HsMatcher::hasMatch
+     2.07%  Thread (pooled)  libklogg_tbbmalloc.so          [.] __TBB_malloc_safer_free
+     2.05%  Thread (pooled)  klogg_portable                 [.] CompressedLinePositionStorage::at
+     1.91%  Thread (pooled)  klogg_portable                 [.] IndexOperation::parseDataBlock
+     1.71%  Thread (pooled)  libicuuc.so.68.2               [.] 0x00000000000e86b8
+     1.59%  Thread (pooled)  libQt5Core.so.5.15.2           [.] 0x00000000002d8920
+     1.49%  Thread (pooled)  libQt5Core.so.5.15.2           [.] QArrayData::allocate
+     1.48%  Thread (pooled)  libicuuc.so.68.2               [.] ucnv_toUnicode
+     1.26%  Thread (pooled)  klogg_portable                 [.] LogData::decodeLines
+
+</code></pre><p>Now it looks like creating and destroying strings takes more time than actual matching.
+Although text encoding overhead is visible (that <code>QString::toUtf8_helper</code> line), QMutex related
+code is now gone, so that seems to be ok.</p>
+<p>Overall search is now about 2 times faster. And there is still room for improvement.
+However, there is a downside. Hyperscan library needs boost and ragel to compile.
+And compilation takes a lot of time. CI builds now run 2 times slower.</p>
+<p>One more drawback of Hyperscan library is that does not support full PCRE2 syntax.
+In particular these constructs are not supported:</p>
+<ul>
+<li>Backreferences and capturing sub-expressions.</li>
+<li>Arbitrary zero-width assertions.</li>
+<li>Subroutine references and recursive patterns.</li>
+<li>Conditional patterns.</li>
+<li>Backtracking control verbs.</li>
+<li>The \C “single-byte” directive (which breaks UTF-8 sequences).</li>
+<li>The \R newline match.</li>
+<li>The \K start of match reset directive.</li>
+<li>Callouts and embedded code.</li>
+<li>Atomic grouping and possessive quantifiers.</li>
+</ul>
+<p>QRegularExpression also does not support full PCRE2 syntax. However, in case these patterns do work with Qt engine, there is an option in Advanced settings to switch back to it.</p>
+<p>Although, switching regular expression engine seemed to be quite easy I expect next few
+development builds to be somewhat less stable. So any feedback is very welcome.</p>
+</article>
+ 
+      
+
+      <footer class="book-footer">
+        
+  <div class="flex flex-wrap justify-between">
+
+
+
+
+
+  <div>
+    <a class="flex align-center" href="https://github.com/variar/klogg/edit/master/website/content//docs/news/hyperscan.md" target="_blank" rel="noopener">
+      <img src="/svg/edit.svg" class="book-icon" alt="Edit" />
+      <span>Edit this page</span>
+    </a>
+  </div>
+
+</div>
+
+ 
+        <script
+  src="https://code.jquery.com/jquery-3.5.1.min.js"
+  integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0="
+  crossorigin="anonymous"></script>
+
+<script defer src="/js/unitegallery.min.js"></script>
+<script defer src="/js/ug-theme-carousel.js"></script>
+<script defer src="/fa/brands.min.js"></script>
+<script async defer src="https://buttons.github.io/buttons.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("#gallery").unitegallery();
+    });
+</script>
+      </footer>
+
+      
+  
+  <div class="book-comments">
+
+</div>
+  
+ 
+
+      <label for="menu-control" class="hidden book-menu-overlay"></label>
+    </div>
+
+    
+    <aside class="book-toc">
+      
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#swiching-to-hyprescan-regular-expressions-engine">Swiching to Hyprescan regular expressions engine</a>
+      <ul>
+        <li><a href="#performance-testing">Performance testing</a></li>
+        <li><a href="#hyperscan-regular-expressions-engine">Hyperscan regular expressions engine</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+ 
+    </aside>
+    
+  </main>
+
+  <meta name="saashub-verification" content="ixjlnvk4an7y" />
+
+
+<script type="text/javascript" src="//www.FreePrivacyPolicy.com/cookie-consent/releases/3.0.0/cookie-consent.js"></script>
+<script type="text/javascript">
+document.addEventListener('DOMContentLoaded', function () {
+    cookieconsent.run({"notice_banner_type":"simple","consent_type":"implied","palette":"light","change_preferences_selector":"#changePreferences","language":"en","website_name":"klogg"});
+});
+</script>
+
+
+
+<script type="text/plain" cookie-consent="tracking" >
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+    m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+    (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+ 
+    ym(55695499, "init", {
+         clickmap:true,
+         trackLinks:true,
+         accurateTrackBounce:true
+    });
+ </script>
+ <noscript><div><img src="https://mc.yandex.ru/watch/55695499" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+ 
+
+
+
+<noscript>GDPR Cookie Consent by <a href="https://www.freeprivacypolicy.com/">Free Privacy Policy</a></noscript>
+
+
+<link rel="stylesheet" href="/fa/all.min.css">
+<link rel="stylesheet" href="/fa/brands.min.css">
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
