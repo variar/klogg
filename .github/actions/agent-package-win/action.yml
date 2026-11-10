@@ -1,5 +1,5 @@
 name: "Prepare windows packages"
-description: ""
+description: "Package klogg portable zip and installer for Windows"
 inputs:
   s3-key-id:
     required: true

@@ -1,12 +1,26 @@
 name: "Setup agent"
-description: ""
+description: "Install Ninja, Qt and Boost on the build agent"
 runs:
   using: "composite"
   steps:
     - name: Install Ninja
-      uses: seanmiddleditch/gha-setup-ninja@v6
-      with:
-        version: 1.13.2
+      shell: bash
+      env:
+        NINJA_VERSION: 1.13.2
+      run: |
+        case "$RUNNER_OS" in
+          Windows) asset=ninja-win.zip ;;
+          macOS)   asset=ninja-mac.zip ;;
+          *)       asset=ninja-linux.zip ;;
+        esac
+        dir="$RUNNER_TEMP/ninja"
+        mkdir -p "$dir"
+        curl --fail --silent --show-error --location --output "$dir/ninja.zip" \
+          "https://github.com/ninja-build/ninja/releases/download/v$NINJA_VERSION/$asset"
+        unzip -o -q "$dir/ninja.zip" -d "$dir"
+        rm "$dir/ninja.zip"
+        echo "$dir" >> "$GITHUB_PATH"
+        "$dir/ninja" --version
 
     - name: Cache Qt
       id: cache-qt
@@ -23,7 +37,7 @@ runs:
         arch: ${{ matrix.config.qt_arch }}
         cache: ${{ steps.cache-qt.outputs.cache-hit }}
         modules: ${{ matrix.config.qt_modules }}
-        archives: qtbase qtimageformats qtsvg qttools qttranslations icu
+        archives: ${{ matrix.config.qt_archives || 'qtbase qtimageformats qtsvg qttools qttranslations icu' }}
 
     - name: Set boost env vars
       shell: sh

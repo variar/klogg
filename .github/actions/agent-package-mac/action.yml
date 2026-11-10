@@ -1,5 +1,5 @@
 name: "Prepare klogg mac packages"
-description: ""
+description: "Deploy Qt, sign, notarize and package klogg for macOS"
 inputs:
   p12-file-base64:
     required: false
@@ -62,10 +62,20 @@ runs:
         codesign -v -f -o runtime --deep --timestamp -s "${{ env.KLOGG_CODESIGN }}" ./output/klogg.app;
     
     - name: Mac pack dmg
-      shell: sh
+      shell: bash
       run: |
         cd $KLOGG_BUILD_ROOT
-        cpack --verbose -G "DragNDrop"
+        # hdiutil on GitHub macOS runners sometimes fails with "Resource busy"
+        # when detaching the temporary image, retry a few times
+        for attempt in 1 2 3; do
+          if cpack --verbose -G "DragNDrop"; then
+            exit 0
+          fi
+          echo "cpack failed (attempt $attempt), retrying..."
+          hdiutil detach /Volumes/klogg -force || true
+          sleep 10
+        done
+        exit 1
 
     - name: Mac rename dmg
       shell: sh

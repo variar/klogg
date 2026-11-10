@@ -1,5 +1,5 @@
 name: "Set common env vars"
-description: ""
+description: "Set common build env vars and restore dependency cache"
 runs:
   using: "composite"
   steps:

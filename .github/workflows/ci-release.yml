@@ -4,90 +4,97 @@ on:
   workflow_dispatch:
     inputs:
       ci-run-id:
-        description: "Run ID of CI workflow"
+        description: "Run ID of the CI Build workflow (empty = last successful run on master)"
         required: false
+      tag:
+        description: "Release tag. 'continuous' is replaced on every release, any other tag must not exist yet"
+        required: true
+        default: continuous
+      prerelease:
+        description: "Mark as pre-release"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: ci-release
+  cancel-in-progress: false
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ inputs.tag }}
     steps:
-    - uses: actions/checkout@v7.0.1
-    - name: Download artifacts for last successful CI workflow
-      if: ${{ !github.event.inputs.ci-run-id }}
-      uses: dawidd6/action-download-artifact@v28
-      with:
-        workflow: ci-build.yml
-        workflow_conclusion: success
+      - uses: actions/checkout@v7.0.1
 
-    - name: Download artifacts for CI workflow with provided run id
-      if: ${{ github.event.inputs.ci-run-id }}
-      uses: dawidd6/action-download-artifact@v28
-      with:
-        workflow: ci-build.yml
-        run_id: ${{ github.event.inputs.ci-run-id }}
+      - name: Find CI run
+        run: |
+          run_id="${{ inputs.ci-run-id }}"
+          if [ -z "$run_id" ]; then
+            run_id=$(gh run list --workflow ci-build.yml --branch master --status success \
+                       --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "::error::No successful CI Build run found"
+            exit 1
+          fi
+          head_sha=$(gh run view "$run_id" --json headSha --jq .headSha)
+          echo "Using CI run $run_id (commit $head_sha)"
+          echo "CI_RUN_ID=$run_id" >> "$GITHUB_ENV"
+          echo "CI_HEAD_SHA=$head_sha" >> "$GITHUB_ENV"
 
-    - name: Initialize version
-      run: echo "KLOGG_VERSION=`cat klogg_version/klogg_version.txt`" >> $GITHUB_ENV
+      - name: Download artifacts
+        run: |
+          gh run download "$CI_RUN_ID" --dir artifacts --pattern 'packages-*' --pattern 'klogg_version'
+          ls -R artifacts
 
-    - name: Display structure of downloaded files
-      run: ls -R ./packages-*
+      - name: Prepare release assets
+        run: |
+          ./.github/scripts/prepare-release.sh artifacts release
+          echo "KLOGG_VERSION=$(cat artifacts/klogg_version/klogg_version.txt)" >> "$GITHUB_ENV"
 
-    - name: Unpack linux symbols
-      shell: sh
-      run: |
-        xz -d ./packages-noble/klogg_noble.debug.xz
-        xz -d ./packages-resolute/klogg_resolute.debug.xz
+      - name: Publish release
+        run: |
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            if [ "$RELEASE_TAG" = "continuous" ]; then
+              gh release delete "$RELEASE_TAG" --cleanup-tag --yes
+            else
+              echo "::error::Release $RELEASE_TAG already exists"
+              exit 1
+            fi
+          fi
 
-    - name: Cleanup release artifacts
-      shell: sh
-      run: |
-        rm -rf ./packages-noble/klogg_noble
-        rm -rf ./packages-resolute/klogg_resolute
-        rm -rf ./packages-macos-arm-qt6/klogg-arm64.app
-        mkdir ./linux-debug
-        mv ./packages-noble/klogg_noble.debug ./linux-debug
-        mv ./packages-resolute/klogg_resolute.debug ./linux-debug
-        tar -cJf ./linux-debug/klogg-$KLOGG_VERSION-symbols.tar.xz ./linux-debug/*
-        rm ./linux-debug/*.debug
+          prerelease_flag=""
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            prerelease_flag="--prerelease"
+          fi
 
-    - name: Prepare binary artifacts
-      shell: sh
-      run: |
-        mkdir ./packages-bin
-        ar p  ./packages-noble/klogg-$KLOGG_VERSION-noble.deb data.tar.gz > ./packages-bin/klogg-$KLOGG_VERSION-bin.tar.gz
-        mv ./klogg_version/klogg_version.txt ./packages-bin
+          cat > notes.md <<NOTES
+          klogg $KLOGG_VERSION
 
-    - name: Prepare checksums
-      shell: sh
-      run: |
-        sha256sum --binary ./packages-bin/* ./packages-noble/* ./packages-resolute/* > ./packages-bin/klogg-$KLOGG_VERSION-sha256.txt
-        
-    - name: Release win
-      uses: "marvinpinto/action-automatic-releases@v1.2.1"
-      with:
-        repo_token: ${{ secrets.KLOGG_GITHUB_TOKEN }}
-        automatic_release_tag: continuous-win
-        prerelease: true
-        files: |
-          ./packages-windows-x64-qt6/*
+          Built by CI run https://github.com/$GH_REPO/actions/runs/$CI_RUN_ID from commit $CI_HEAD_SHA.
 
-    - name: Release linux
-      uses: "marvinpinto/action-automatic-releases@v1.2.1"
-      with:
-        repo_token: ${{ secrets.KLOGG_GITHUB_TOKEN }}
-        automatic_release_tag: continuous-linux
-        prerelease: true
-        files: |
-          ./packages-noble/*
-          ./packages-resolute/*
-          ./packages-bin/*
-          ./linux-debug/*
+          | Platform | Files |
+          |---|---|
+          | Windows x64 | \`*-setup.exe\` installer, \`*-portable.zip\` |
+          | Ubuntu 24.04 | \`*-noble.deb\` |
+          | Ubuntu 26.04 | \`*-resolute.deb\` |
+          | Linux (any distro with glibc 2.35+) | \`*-x86_64.AppImage\` |
+          | Linux (other) | \`*-linux-bin.tar.gz\` |
+          | macOS (Apple Silicon) | \`*-mac-arm64.dmg\` |
 
-    - name: Release mac
-      uses: "marvinpinto/action-automatic-releases@v1.2.1"
-      with:
-        repo_token: ${{ secrets.KLOGG_GITHUB_TOKEN }}
-        automatic_release_tag: continuous-osx
-        prerelease: true
-        files: |
-          ./packages-macos-arm-qt6/*
+          Debug symbols: \`*-pdb.zip\`, \`*-linux-symbols.tar\`, \`*-dSYM.zip\`. Checksums: \`*-sha256.txt\`.
+          NOTES
+
+          gh release create "$RELEASE_TAG" release/* \
+            --target "$CI_HEAD_SHA" \
+            --title "klogg $KLOGG_VERSION" \
+            --notes-file notes.md \
+            $prerelease_flag
