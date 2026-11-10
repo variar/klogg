@@ -119,6 +119,8 @@ jobs:
             qt_version: 6.8.3
             qt_arch: linux_gcc_64
             qt_modules: qt5compat
+            # qtwayland provides the wayland platform plugin bundled by linuxdeploy-plugin-qt
+            qt_archives: qtbase qtimageformats qtsvg qttools qttranslations icu qtwayland
             arch: x64
             cc: gcc-12
             cxx: g++-12
